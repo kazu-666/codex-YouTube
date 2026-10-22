@@ -1,0 +1,21 @@
+﻿確認日,資料,URL,結果,確認できた範囲
+2026-10-22,GeoSports公開ルール,https://geosports.app/how-it-works,取得成功,公開本文・JSONまたはヘッダー
+2026-10-22,GeoSportsプライバシーポリシー,https://geosports.app/privacy,取得成功,公開本文・JSONまたはヘッダー
+2026-10-22,GeoSports利用規約,https://geosports.app/terms,取得成功,公開本文・JSONまたはヘッダー
+2026-10-22,GeoSports地図スタイル,https://geosports.app/map-style.json,取得成功,公開本文・JSONまたはヘッダー
+2026-10-22,GeoSports配信ヘッダー,https://geosports.app/play,取得成功,公開本文・JSONまたはヘッダー
+2026-10-22,GeoSports Proページ,https://geosports.app/pro,取得成功,ProはLoading表示で価格は未確認
+2026-10-22,Render料金,https://render.com/pricing,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Render無料枠,https://render.com/docs/free,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Vercel料金,https://vercel.com/pricing,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Vercel Hobby条件,https://vercel.com/docs/plans/hobby,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Cloudflare Workers料金,https://developers.cloudflare.com/workers/platform/pricing/,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Cloudflare D1料金,https://developers.cloudflare.com/d1/platform/pricing/,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,OpenFreeMap配信条件,https://openfreemap.org/,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,ArcGIS料金,https://developers.arcgis.com/pricing/,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,国土地理院タイル一覧,https://maps.gsi.go.jp/development/ichiran.html,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Neon料金,https://neon.tech/pricing,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Upstash料金,https://upstash.com/pricing,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,Resend料金,https://resend.com/pricing,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,PostHog料金,https://posthog.com/pricing,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。
+2026-10-22,ArcGIS条件,https://developers.arcgis.com/terms/,プロキシ CONNECT 403,本文未取得。価格・無料枠・利用条件を確認済みとはしない。

@@ -1,0 +1,149 @@
+{
+  "prepared_on": "2026-10-22",
+  "status": "planning_model_not_a_provider_quote",
+  "assumptions": {
+    "days_per_month": 30,
+    "rounds_per_daily_active_player": 1,
+    "questions_per_round": 5,
+    "planning_api_requests_per_round": 10,
+    "explanation_images_per_round": 5,
+    "optimized_image_bytes": 200000,
+    "rounded_app_plus_api_bytes_per_round": 500000,
+    "estimated_saved_data_bytes_per_round": 3000,
+    "map_tiles_per_round_sensitivity": [
+      50,
+      200,
+      1000
+    ],
+    "illustrative_fx_jpy_per_usd": 150,
+    "pricing_status": "current_official_prices_not_verified",
+    "notes": [
+      "DAUは毎日1ラウンド遊ぶ人数。月間訪問者数とは別。",
+      "画像は今後追加する想定。現在のデモに現地写真はない。",
+      "アプリは毎回初回相当を取得する保守的な概算で、実際にはキャッシュや再訪で変わる。",
+      "地図タイルは外部配信なのでアプリ側の配信量に含めない。利用条件と料金は別途確認が必要。",
+      "3000バイト/ラウンドは索引・集計などを含む仮置きで、DB実測ではない。"
+    ]
+  },
+  "measured_local_snapshot": {
+    "measured_on": "2026-10-22",
+    "maplibre_package_license": "BSD-3-Clause",
+    "local_build_assets": [
+      {
+        "name": "index-BWdE6Oeq.css",
+        "bytes": 89089,
+        "gzipBytes": 14650
+      },
+      {
+        "name": "index-JchLcMh4.js",
+        "bytes": 1084388,
+        "gzipBytes": 300835
+      },
+      {
+        "name": "maplibre-gl-worker-HZYoAjW0.js",
+        "bytes": 516709,
+        "gzipBytes": 150448
+      }
+    ],
+    "local_gzip_asset_total": 465933,
+    "simulated_six_api_responses": [
+      {
+        "answered": 0,
+        "bytes": 1733,
+        "gzipBytes": 1007
+      },
+      {
+        "answered": 1,
+        "bytes": 2345,
+        "gzipBytes": 1350
+      },
+      {
+        "answered": 2,
+        "bytes": 3044,
+        "gzipBytes": 1591
+      },
+      {
+        "answered": 3,
+        "bytes": 3648,
+        "gzipBytes": 1769
+      },
+      {
+        "answered": 4,
+        "bytes": 4336,
+        "gzipBytes": 1970
+      },
+      {
+        "answered": 5,
+        "bytes": 4982,
+        "gzipBytes": 2152
+      }
+    ],
+    "simulated_api_raw_total": 20088,
+    "simulated_api_gzip_total": 9839,
+    "note": "手元ビルドをgzipした大きさと、既存の出力関数で作った応答の大きさ。実サービスの圧縮・キャッシュ・通信量の実測ではない。地図と今後の現地写真は含まない。"
+  },
+  "scenarios": [
+    {
+      "daily_active_players": 100,
+      "monthly_rounds": 3000,
+      "monthly_api_requests": 30000,
+      "monthly_saved_answers": 15000,
+      "monthly_image_gets_before_cache": 15000,
+      "monthly_app_and_image_delivery_gb": 4.5,
+      "estimated_saved_data_growth_mb": 9.0,
+      "monthly_map_tiles_low": 150000,
+      "monthly_map_tiles_middle": 600000,
+      "monthly_map_tiles_high": 3000000
+    },
+    {
+      "daily_active_players": 1000,
+      "monthly_rounds": 30000,
+      "monthly_api_requests": 300000,
+      "monthly_saved_answers": 150000,
+      "monthly_image_gets_before_cache": 150000,
+      "monthly_app_and_image_delivery_gb": 45.0,
+      "estimated_saved_data_growth_mb": 90.0,
+      "monthly_map_tiles_low": 1500000,
+      "monthly_map_tiles_middle": 6000000,
+      "monthly_map_tiles_high": 30000000
+    },
+    {
+      "daily_active_players": 10000,
+      "monthly_rounds": 300000,
+      "monthly_api_requests": 3000000,
+      "monthly_saved_answers": 1500000,
+      "monthly_image_gets_before_cache": 1500000,
+      "monthly_app_and_image_delivery_gb": 450.0,
+      "estimated_saved_data_growth_mb": 900.0,
+      "monthly_map_tiles_low": 15000000,
+      "monthly_map_tiles_middle": 60000000,
+      "monthly_map_tiles_high": 300000000
+    }
+  ],
+  "budget_targets": [
+    {
+      "phase": "現行の体験用試作",
+      "usd_per_month": [
+        0,
+        0
+      ],
+      "basis": "render.yamlはfree。実請求明細・外部地図の利用権は未確認。正式公開用の永続化は未整備。"
+    },
+    {
+      "phase": "小規模の無料公開",
+      "usd_per_month": [
+        10,
+        30
+      ],
+      "basis": "設計時のインフラ予算目標。地図が適法に追加料金なしで使え、画像を軽量配信し、サーバー採点と永続保存を維持する場合。公式料金表に基づく見積もりではない。"
+    },
+    {
+      "phase": "1万人/日を想定する準備予算",
+      "usd_per_month": [
+        30,
+        150
+      ],
+      "basis": "CDN・軽量画像・効率的なDB・地図従量料金なしを前提に確保する設計予算の仮置き。容量保証・性能試験・事業者見積もりではなく、請求上限でもない。"
+    }
+  ]
+}
