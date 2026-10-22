@@ -1,112 +1,108 @@
-import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo';
-import { feature, mesh } from 'topojson-client';
-import world from 'world-atlas/countries-110m.json';
+import { createAtlas } from './atlas.js';
 import './style.css';
 
 const app = document.querySelector('#app');
-const projection = geoMercator().scale(158).translate([500, 275]);
-const path = geoPath(projection);
-const land = feature(world, world.objects.countries);
-const borders = mesh(world, world.objects.countries, (a, b) => a !== b);
-const graticule = geoGraticule10();
 const words = {
-  ja: { brand: '土着信仰調査室', sub: 'FIELDNOTES ATLAS / 地理クイズ', daily: '今日の調査', prototype: '試作版：5問を日替わりで並べ替えています。出典と座標は公開前の確認待ちです。', free: '無料', premium: '有料デモ', plan: '表示モード', clue: '手がかり', extra: '追加の手がかりを開く', used: '追加ヒント使用', map: '地図上で場所を選んでください', answer: 'この場所で回答する', selected: '選択地点', result: '調査結果', correct: '正解', distance: '正解まで', pts: '獲得点', story: '場所の話', sources: '資料・確認状況', pending: '公開前の照合待ち', next: '次の場所へ', finish: '今日の結果へ', reset: '全体表示', ad: '広告掲載予定エリア', adNote: '無料モードのみ。実際の広告は表示していません。', complete: '本日の調査、完了。', total: '合計点', max: '最高 1,000 点', note: '試作版ではランキング・課金はありません。', review: '各問の資料を確認する', loading: '読み込み中…', error: '通信エラー。再読み込みしてください。', round: '問', future: '今日の次の問題です', tap: 'タップで地点を指定。拡大して細かく選べます。' },
-  en: { brand: 'Fieldnotes Atlas', sub: 'GEOGRAPHY QUIZ / FIELD NOTES', daily: "Today's expedition", prototype: 'Prototype: the same five places rotate daily. Sources and coordinates await pre-publication review.', free: 'Free', premium: 'Premium demo', plan: 'Display mode', clue: 'Clue', extra: 'Reveal extra clue', used: 'Extra clue used', map: 'Choose a place on the map', answer: 'Lock in this location', selected: 'Selected location', result: 'Your finding', correct: 'Answer', distance: 'Distance away', pts: 'Points', story: 'The story', sources: 'Sources & review status', pending: 'Pending publication review', next: 'Next place', finish: "Today's results", reset: 'Show whole world', ad: 'Reserved ad placement', adNote: 'Free mode only. No live ad is served.', complete: 'Expedition complete.', total: 'Total score', max: 'Maximum 1,000', note: 'This prototype has no ranking or billing.', review: 'Review sources for each place', loading: 'Loading…', error: 'Connection error. Please reload.', round: 'Q', future: 'The next question is here', tap: 'Tap to mark a place. Zoom in for precision.' }
+  ja: { brand: '土着信仰調査室', sub: 'FIELDNOTES ATLAS', daily: '今日の調査', prototype: '試作版：同じ5問を日替わりで並べ替えます。事実・座標・翻訳は公開前の照合待ちです。無料／有料の切替はデモで、決済はありません。', free: '無料モード', premium: '有料デモ', plan: '体験するプラン', clue: '手がかり', extra: '追加の手がかり', used: '追加ヒント使用', map: 'この場所は、どこだ？', answer: '地球儀をタップすると回答が確定します', result: '調査結果', correct: '正解', yours: 'あなたの地点', distance: '正解までの距離', pts: '獲得点', story: 'この場所の物語', sources: '資料を確認', pending: '出典・座標は照合待ち', next: '次の場所を調査', finish: '今日の結果を見る', reset: '地球全体へ', ad: '広告掲載予定エリア', adNote: '無料モードのみ。実際の広告は表示していません。', complete: '今日の調査を記録しました。', note: '追加ヒントの使用を記録しています。試作版にはランキング・課金はありません。', loading: '調査記録を読み込み中…', error: '接続できませんでした。ページを再読み込みしてください。', tap: '1本指で回す · 2本指で拡大 · タップで回答', center: '中央を回答する', mapLoading: '地図を読み込み中', imageryError: '衛星写真を取得できません。地図表示で続けられます。', mapError: '地図の読み込みに失敗しました。通信を確認し、再試行してください。', retry: '再試行', settings: '表示設定・試作について', detail: '街や島まで拡大できます', field: '地球を回して手がかりを探す' },
+  en: { brand: 'Fieldnotes Atlas', sub: 'SACRED PLACES · WORLD EXPLORATION', daily: 'Daily expedition', prototype: 'Prototype: the same five places rotate daily. Facts, coordinates and translations await review. The plan switch is a demo; no payment is collected.', free: 'Free mode', premium: 'Premium demo', plan: 'Try a plan', clue: 'The clue', extra: 'Reveal another clue', used: 'Extra clue used', map: 'Where in the world?', answer: 'Tap the globe to lock in your answer', result: 'Your finding', correct: 'Answer', yours: 'Your pin', distance: 'Distance from the answer', pts: 'Points earned', story: 'The story of this place', sources: 'View sources', pending: 'Sources & coordinates await review', next: 'Explore the next place', finish: "See today's results", reset: 'Show the globe', ad: 'Reserved ad placement', adNote: 'Free mode only. No live ad is served.', complete: 'Your expedition is recorded.', note: 'Extra clue use is recorded. This prototype has no ranking or billing.', loading: 'Opening your fieldnotes…', error: 'Unable to connect. Please reload this page.', tap: 'Drag to turn · Pinch to zoom · Tap to answer', center: 'Answer at map center', mapLoading: 'Loading map', imageryError: 'Satellite imagery is unavailable. You can continue on the map.', mapError: 'Map could not load. Check your connection and retry.', retry: 'Retry', settings: 'Display settings & prototype information', detail: 'Zoom in to streets and islands', field: 'Turn the world. Follow the clues.' }
 };
 let locale = localStorage.getItem('fieldnotes-locale') === 'en' ? 'en' : 'ja';
 let state;
 let uiIndex;
 let selected;
-let box = { x: 0, y: 0, w: 1000, h: 550 };
+let atlas;
+let view;
+let toastTimer;
+let submitting = false;
 const t = key => words[locale][key];
 const localized = value => value?.[locale] || '';
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+const compass = '<svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="17"/><path d="m26 11-3 12-9 6 3-12 9-6Z"/><path d="m17 17 6 6M20 1v5m0 28v5M1 20h5m28 0h5"/></svg>';
 const api = async (route, body) => {
   const response = await fetch(route, { method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Request failed');
   return data;
 };
-function currentIndex() {
-  const firstOpen = state.questions.findIndex(q => !q.answer);
-  return firstOpen < 0 ? 4 : firstOpen;
+function currentIndex() { const firstOpen = state.questions.findIndex(q => !q.answer); return firstOpen < 0 ? 4 : firstOpen; }
+function adSlot() { return `<div class="ad-slot"><span>${t('ad')}</span><small>${t('adNote')}</small></div>`; }
+function notify(message) {
+  const toast = document.querySelector('#toast');
+  toast.textContent = message; toast.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 5000);
 }
-function marker(coord, klass, label) {
-  if (!coord) return '';
-  const [x, y] = projection([coord[1], coord[0]]);
-  return `<g class="${klass}" transform="translate(${x} ${y})"><circle r="11"/><circle r="4"/><text x="15" y="-13">${escapeHtml(label)}</text></g>`;
+function clueMarkup(question) {
+  return `<div class="clue-title"><span>FIELD NOTE / 0${uiIndex + 1}</span><span>${question.answer ? t('result') : t('clue')}</span></div><h1>${question.answer ? escapeHtml(localized(question.title)) : t('map')}</h1><p class="clue-text">${escapeHtml(localized(question.hint))}</p>${question.extraHint ? `<p class="extra-clue"><span>✦ ${t('used')}</span>${escapeHtml(localized(question.extraHint))}</p>` : !question.answer && state.plan === 'premium' ? `<button class="hint-button" id="extra-hint">✦ ${t('extra')}</button>` : ''}`;
 }
-function adSlot() { return `<div class="ad-slot" aria-label="${t('ad')}"><span>${t('ad')}</span><small>${t('adNote')}</small></div>`; }
+function resultMarkup(question) {
+  const result = question.answer;
+  return `<div class="result-stats"><div><strong>${result.distanceKm.toLocaleString()}<small> km</small></strong><span>${t('distance')}</span></div><div><strong>${result.points}<small> / ${question.maxPoints}</small></strong><span>${t('pts')}</span></div></div><div class="focus-controls"><button id="focus-guess"><span class="dot amber"></span>${t('yours')}</button><button id="focus-answer"><span class="dot mint"></span>${t('correct')}</button></div><section class="story"><h2>${t('story')}</h2><p>${escapeHtml(localized(question.fact))}</p><details class="sources"><summary>${t('sources')} ↗</summary><p>${t('pending')}</p><ul>${question.sources.map(s => `<li><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.label)} ↗</a></li>`).join('')}</ul></details></section>${state.plan === 'free' && uiIndex === 2 ? adSlot() : ''}`;
+}
 function mapMarkup(question) {
-  const answer = question.answer;
-  const guess = answer?.guess || selected;
-  const solution = answer && question.coordinate;
-  const line = guess && solution ? `<path class="measure-line" d="M${projection([guess[1], guess[0]]).join(' ')}L${projection([solution[1], solution[0]]).join(' ')}"/>` : '';
-  return `<div class="map-shell"><div class="map-top"><span>${t('map')}</span><span class="map-hint">${t('tap')}</span></div><svg id="map" viewBox="${box.x} ${box.y} ${box.w} ${box.h}" role="img" aria-label="Interactive world map"><rect class="ocean" x="0" y="0" width="1000" height="550"/><path class="graticule" d="${path(graticule)}"/><path class="land" d="${path(land)}"/><path class="borders" d="${path(borders)}"/>${line}${marker(guess, 'guess-marker', locale === 'ja' ? 'あなた' : 'You')}${marker(solution, 'answer-marker', locale === 'ja' ? '正解' : 'Answer')}</svg><div class="map-controls"><button type="button" id="zoom-in" aria-label="Zoom in">+</button><button type="button" id="zoom-out" aria-label="Zoom out">−</button><button type="button" id="reset-map">${t('reset')}</button></div></div>`;
+  return `<section class="atlas-stage" aria-label="${t('field')}"><div id="atlas"></div><div class="map-heading"><span class="live-dot"></span><span id="map-level">WORLD EXPLORATION</span><small>${t('detail')}</small></div><div class="map-status" id="map-status"><span class="spinner"></span>${t('mapLoading')}</div><div class="map-error" id="map-error" hidden><p>${t('mapError')}</p><button id="retry-map">${t('retry')}</button></div><div class="imagery-warning" id="imagery-warning" hidden>${t('imageryError')}</div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="reset-map" aria-label="${t('reset')}" title="${t('reset')}">◎</button></div><div class="gesture-guide">${t('tap')}</div>${!question.answer ? `<button class="center-pin" id="center-pin">⌖ ${t('center')}</button>` : ''}</section>`;
 }
 function renderQuestion(question) {
-  const index = uiIndex;
-  const isRevealed = !!question.answer;
-  const result = question.answer;
-  return `<section class="game-grid"><div class="prompt-pane"><div class="eyebrow">${t('daily')} / ${t('round')} ${index + 1} <span class="points-badge">${question.maxPoints} PTS</span></div><h1>${isRevealed ? escapeHtml(localized(question.title)) : t('map')}</h1><div class="clue-card"><span class="clue-label">01 / ${t('clue')}</span><p>${escapeHtml(localized(question.hint))}</p></div>${question.extraHint ? `<div class="extra-card"><span class="clue-label">02 / ${t('used')}</span><p>${escapeHtml(localized(question.extraHint))}</p></div>` : !isRevealed && state.plan === 'premium' ? `<button class="hint-button" id="extra-hint">✦ ${t('extra')}</button>` : ''}${isRevealed ? `<div class="result-card"><div class="result-head">${t('result')}</div><div class="result-stats"><div><strong>${result.distanceKm.toLocaleString()} <small>km</small></strong><span>${t('distance')}</span></div><div><strong>${result.points} <small>/ ${question.maxPoints}</small></strong><span>${t('pts')}</span></div></div><p class="correct-name">${t('correct')} · ${escapeHtml(localized(question.title))}</p><p class="story-label">${t('story')}</p><p class="story-text">${escapeHtml(localized(question.fact))}</p><details class="sources"><summary>${t('sources')} · ${t('pending')}</summary><ul>${question.sources.map(s => `<li><a href="${escapeHtml(s.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.label)} ↗</a></li>`).join('')}</ul></details></div>${state.plan === 'free' && index === 2 ? adSlot() : ''}<button class="primary" id="next">${index === 4 ? t('finish') : t('next')} →</button>` : `<p class="selection">${selected ? `${t('selected')}: ${selected[0].toFixed(3)}°, ${selected[1].toFixed(3)}°` : t('tap')}</p><button class="primary" id="submit-answer" ${selected ? '' : 'disabled'}>${t('answer')} →</button>`}</div><div class="map-pane">${mapMarkup(question)}</div></section>`;
+  return `<div class="game-board ${question.answer ? 'revealed' : ''}">${mapMarkup(question)}<aside class="field-panel"><div class="panel-content">${clueMarkup(question)}${question.answer ? resultMarkup(question) : ''}</div><div class="answer-dock">${!question.answer ? `<div class="tap-callout" id="tap-callout">⌖ ${t('answer')}</div>` : `<button class="primary" id="next"><span>${uiIndex === 4 ? t('finish') : t('next')}</span><span>→</span></button>`}</div></aside></div>`;
 }
 function renderSummary() {
-  return `<section class="summary"><div class="eyebrow">${t('daily')} / ${state.day}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span>0${i + 1} · ${escapeHtml(localized(q.title))}</span><strong>${q.answer.points} / ${q.maxPoints}</strong>${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</button>`).join('')}</div>${state.plan === 'free' ? adSlot() : ''}</section>`;
+  return `<section class="summary"><div class="summary-symbol">${compass}</div><div class="eyebrow">EXPEDITION COMPLETE · ${state.day}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span class="summary-number">0${i + 1}</span><span>${escapeHtml(localized(q.title))}${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</span><strong>${q.answer.points}<small> / ${q.maxPoints}</small></strong><span>↗</span></button>`).join('')}</div>${state.plan === 'free' ? adSlot() : ''}</section>`;
 }
 function render() {
   if (!state) { app.innerHTML = `<p class="loading">${t('loading')}</p>`; return; }
+  submitting = false;
+  if (atlas) { view = atlas.getView(); atlas.destroy(); atlas = null; }
   document.documentElement.lang = locale;
   const summary = uiIndex === 5;
-  const question = state.questions[uiIndex];
-  app.innerHTML = `<div class="site"><header class="site-header"><div class="brand"><span class="brand-mark">✳</span><div><strong>${t('brand')}</strong><small>${t('sub')}</small></div></div><div class="header-actions"><button id="locale" class="text-button">${locale === 'ja' ? 'EN' : '日本語'}</button><label class="plan-select">${t('plan')} <select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label></div></header><main><div class="topline"><span>${state.day} · JST</span><span>${state.total} / 1000 PTS</span></div><div class="progress" aria-label="Round progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''}>${i + 1}</button>`).join('')}</div><p class="prototype">ⓘ ${t('prototype')}</p>${summary ? renderSummary() : renderQuestion(question)}</main><footer>FIELDNOTES ATLAS · ${t('brand')}</footer></div>`;
+  app.innerHTML = `<div class="game-app"><header class="app-header"><div class="brand"><span class="brand-mark">${compass}</span><div><strong>${t('brand')}</strong><small>${t('sub')}</small></div></div><div class="header-actions"><button id="locale" class="text-button">${locale === 'ja' ? 'EN' : '日本語'}</button><details class="settings"><summary aria-label="${t('settings')}">☷</summary><div class="settings-panel"><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><p>${t('prototype')}</p><span>GLOBE PREVIEW · v0.2</span></div></details></div></header><main class="play-area"><div class="round-bar"><div class="round-heading"><span>${t('daily')}</span><small>${state.day} · JST</small></div><nav class="progress" aria-label="Round progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''} aria-label="Question ${i + 1}"><span>${q.answer ? '✓' : `0${i + 1}`}</span><small>${q.maxPoints}</small></button>`).join('')}</nav><div class="score-total"><span>SCORE</span><strong>${state.total}<small> / 1000</small></strong></div></div>${summary ? renderSummary() : renderQuestion(state.questions[uiIndex])}</main><div id="toast" role="alert" hidden></div></div>`;
   bind();
 }
-function setBox(next) { box = next; const svg = document.querySelector('#map'); if (svg) svg.setAttribute('viewBox', `${box.x} ${box.y} ${box.w} ${box.h}`); }
-function zoom(multiplier) {
-  const w = Math.max(90, Math.min(1000, box.w * multiplier));
-  const h = w * .55;
-  setBox({ x: Math.max(0, Math.min(1000 - w, box.x + (box.w - w) / 2)), y: Math.max(0, Math.min(550 - h, box.y + (box.h - h) / 2)), w, h });
-}
-function bindMap() {
-  const svg = document.querySelector('#map');
-  let down;
-  svg.addEventListener('pointerdown', event => { down = { x: event.clientX, y: event.clientY, box: { ...box }, moved: false }; svg.setPointerCapture(event.pointerId); });
-  svg.addEventListener('pointermove', event => {
-    if (!down) return;
-    const dx = event.clientX - down.x, dy = event.clientY - down.y;
-    if (Math.hypot(dx, dy) > 5) down.moved = true;
-    if (!down.moved) return;
-    const rect = svg.getBoundingClientRect();
-    setBox({ ...box, x: Math.max(0, Math.min(1000 - box.w, down.box.x - dx / rect.width * down.box.w)), y: Math.max(0, Math.min(550 - box.h, down.box.y - dy / rect.height * down.box.h)) });
-  });
-  svg.addEventListener('pointerup', event => {
-    if (!down) return;
-    const wasDrag = down.moved;
-    down = null;
-    if (wasDrag || state.questions[uiIndex].answer) return;
-    const point = svg.createSVGPoint();
-    point.x = event.clientX; point.y = event.clientY;
-    const local = point.matrixTransform(svg.getScreenCTM().inverse());
-    const coordinate = projection.invert([local.x, local.y]);
-    if (!coordinate || !Number.isFinite(coordinate[0]) || !Number.isFinite(coordinate[1])) return;
-    selected = [Math.max(-85, Math.min(85, coordinate[1])), Math.max(-180, Math.min(180, coordinate[0]))];
-    render();
-  });
-  document.querySelector('#zoom-in').onclick = () => zoom(.6);
-  document.querySelector('#zoom-out').onclick = () => zoom(1 / .6);
-  document.querySelector('#reset-map').onclick = () => setBox({ x: 0, y: 0, w: 1000, h: 550 });
+function goTo(index) {
+  // Dispose before dropping the old view, so a new question starts at the globe.
+  if (atlas) { atlas.destroy(); atlas = null; }
+  uiIndex = index; selected = null; submitting = false; view = null; render();
+  window.scrollTo({ top: 0 });
 }
 function bind() {
   document.querySelector('#locale').onclick = () => { locale = locale === 'ja' ? 'en' : 'ja'; localStorage.setItem('fieldnotes-locale', locale); render(); };
-  document.querySelector('#plan').onchange = async event => { try { state = await api('/api/demo-plan', { plan: event.target.value }); render(); } catch (error) { alert(error.message); render(); } };
-  document.querySelectorAll('[data-step], [data-index]').forEach(button => button.onclick = () => { uiIndex = Number(button.dataset.step ?? button.dataset.index); selected = null; box = { x: 0, y: 0, w: 1000, h: 550 }; render(); });
+  document.querySelector('#plan').onchange = async event => { try { state = await api('/api/demo-plan', { plan: event.target.value }); render(); } catch (error) { notify(error.message); } };
+  document.querySelectorAll('[data-step], [data-index]').forEach(button => button.onclick = () => goTo(Number(button.dataset.step ?? button.dataset.index)));
   if (uiIndex === 5) return;
-  bindMap();
-  const hint = document.querySelector('#extra-hint');
-  if (hint) hint.onclick = async () => { try { state = await api('/api/hint', { questionId: state.questions[uiIndex].id }); render(); } catch (error) { alert(error.message); } };
-  const answer = document.querySelector('#submit-answer');
-  if (answer) answer.onclick = async () => { if (!selected) return; answer.disabled = true; try { state = await api('/api/answer', { questionId: state.questions[uiIndex].id, lat: selected[0], lng: selected[1] }); render(); } catch (error) { alert(error.message); state = await api('/api/state'); render(); } };
-  const next = document.querySelector('#next');
-  if (next) next.onclick = () => { uiIndex = uiIndex === 4 ? 5 : uiIndex + 1; selected = null; box = { x: 0, y: 0, w: 1000, h: 550 }; render(); };
+  const question = state.questions[uiIndex];
+  atlas = createAtlas({
+    container: document.querySelector('#atlas'), locale, view,
+    guess: question.answer?.guess || selected, correct: question.answer && question.coordinate, readOnly: !!question.answer,
+    async onSelect(coord) {
+      if (submitting) return;
+      submitting = true;
+      selected = coord;
+      document.querySelector('#tap-callout').classList.add('is-submitting');
+      try { state = await api('/api/answer', { questionId: question.id, lat: coord[0], lng: coord[1] }); render(); }
+      catch (error) {
+        notify(error.message);
+        try { state = await api('/api/state'); render(); }
+        catch { submitting = false; document.querySelector('#tap-callout')?.classList.remove('is-submitting'); }
+      }
+    },
+    onStatus(status) {
+      document.querySelector('#map-status').hidden = status !== 'loading';
+      document.querySelector('#map-error').hidden = status !== 'error';
+      if (status === 'imagery-error') document.querySelector('#imagery-warning').hidden = false;
+    },
+    onView(zoom) { document.querySelector('#map-level').textContent = zoom < 3 ? 'WORLD EXPLORATION' : zoom < 9 ? 'REGIONAL SURVEY' : 'LOCAL EXPLORATION'; }
+  });
+  document.querySelector('#zoom-in').onclick = () => atlas?.zoomIn?.();
+  document.querySelector('#zoom-out').onclick = () => atlas?.zoomOut?.();
+  document.querySelector('#reset-map').onclick = () => atlas?.reset?.();
+  document.querySelector('#retry-map').onclick = () => render();
+  const center = document.querySelector('#center-pin');
+  if (center) center.onclick = () => atlas?.centerPin?.();
+  document.querySelector('#focus-guess')?.addEventListener('click', () => atlas?.focus?.(question.answer.guess));
+  document.querySelector('#focus-answer')?.addEventListener('click', () => atlas?.focus?.(question.coordinate));
+  document.querySelector('#extra-hint')?.addEventListener('click', async event => {
+    event.currentTarget.disabled = true;
+    try { state = await api('/api/hint', { questionId: question.id }); render(); } catch (error) { notify(error.message); event.currentTarget.disabled = false; }
+  });
+  document.querySelector('#next')?.addEventListener('click', () => goTo(uiIndex === 4 ? 5 : uiIndex + 1));
 }
-try { state = await api('/api/state'); uiIndex = currentIndex(); render(); } catch (error) { app.innerHTML = `<p class="loading">${t('error')}</p>`; console.error(error); }
+try { state = await api('/api/state'); uiIndex = currentIndex(); render(); }
+catch (error) { app.innerHTML = `<p class="loading">${t('error')}</p>`; console.error(error); }

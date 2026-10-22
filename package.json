@@ -7,14 +7,14 @@
     "dev": "node server/index.js",
     "build": "vite build",
     "start": "NODE_ENV=production node server/index.js",
-    "test": "node --test"
-  },
-  "dependencies": {
-    "d3-geo": "^3.1.1",
-    "topojson-client": "^3.1.0",
-    "world-atlas": "^2.0.2"
+    "test": "node --test",
+    "test:browser": "npm run build && node e2e/mobile.pw.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "vite": "^7.1.12"
+  },
+  "dependencies": {
+    "maplibre-gl": "^6.15.0"
   }
 }
