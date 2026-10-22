@@ -1,0 +1,102 @@
+[
+  {
+    "id": "itsukushima",
+    "coordinate": [34.2958, 132.3197],
+    "status": "needs_review",
+    "verifiedAt": null,
+    "verifiedBy": null,
+    "sources": [{ "label": "UNESCO: Itsukushima Shinto Shrine", "url": "https://whc.unesco.org/en/list/776/" }],
+    "ja": {
+      "title": "厳島神社",
+      "hint": "東アジアの島にある神社。海に面した社殿と、潮の満ち引きで景色を変える鳥居が手がかりです。",
+      "extraHint": "日本の瀬戸内海、広島県の宮島にあります。",
+      "fact": "厳島神社の社殿は海上に建てられ、周囲の海や背後の山と一体になった景観が世界遺産として評価されています。"
+    },
+    "en": {
+      "title": "Itsukushima Shrine",
+      "hint": "This Shinto shrine stands on an island in East Asia. Its seaside buildings and a gate transformed by the tides are the clues.",
+      "extraHint": "It is on Miyajima in Japan's Seto Inland Sea, in Hiroshima Prefecture.",
+      "fact": "The shrine's buildings stand over the sea. UNESCO recognizes the way they form a landscape with the water and the mountain behind them."
+    }
+  },
+  {
+    "id": "kiyomizudera",
+    "coordinate": [34.9948, 135.7850],
+    "status": "needs_review",
+    "verifiedAt": null,
+    "verifiedBy": null,
+    "sources": [{ "label": "UNESCO: Historic Monuments of Ancient Kyoto", "url": "https://whc.unesco.org/en/list/688/" }, {"label": "Kiyomizu-dera official site", "url": "https://www.kiyomizudera.or.jp/en/"}],
+    "ja": {
+      "title": "清水寺",
+      "hint": "東アジアの古都にある寺院。山の斜面にせり出す木造の舞台で知られます。",
+      "extraHint": "日本の京都市東部、音羽山の斜面にあります。",
+      "fact": "清水寺は『古都京都の文化財』を構成する寺院の一つです。本堂の舞台は斜面へ大きく張り出しています。"
+    },
+    "en": {
+      "title": "Kiyomizu-dera",
+      "hint": "A temple in an old East Asian capital is known for its wooden stage projecting from a hillside.",
+      "extraHint": "It stands on the slopes of Mount Otowa in eastern Kyoto, Japan.",
+      "fact": "Kiyomizu-dera is part of the Historic Monuments of Ancient Kyoto World Heritage property. Its main hall has a large stage extending from the hillside."
+    }
+  },
+  {
+    "id": "angkorwat",
+    "coordinate": [13.4125, 103.8667],
+    "status": "needs_review",
+    "verifiedAt": null,
+    "verifiedBy": null,
+    "sources": [{ "label": "UNESCO: Angkor", "url": "https://whc.unesco.org/en/list/668/" }],
+    "ja": {
+      "title": "アンコール・ワット",
+      "hint": "東南アジアの広大な遺跡群にある寺院。かつてのクメール王国の中心地でした。",
+      "extraHint": "カンボジア北西部、シェムリアップ近郊にあります。",
+      "fact": "アンコールはクメール王国の諸都市や寺院からなる広域の遺跡群です。アンコール・ワットはその中で特に知られる寺院です。"
+    },
+    "en": {
+      "title": "Angkor Wat",
+      "hint": "This temple is part of a vast archaeological area in Southeast Asia, once central to the Khmer Empire.",
+      "extraHint": "It lies near Siem Reap in northwestern Cambodia.",
+      "fact": "Angkor contains the remains of Khmer capitals and temples across a large area. Angkor Wat is one of its best-known temples."
+    }
+  },
+  {
+    "id": "stonehenge",
+    "coordinate": [51.1789, -1.8262],
+    "status": "needs_review",
+    "verifiedAt": null,
+    "verifiedBy": null,
+    "sources": [{ "label": "UNESCO: Stonehenge, Avebury and Associated Sites", "url": "https://whc.unesco.org/en/list/373/" }],
+    "ja": {
+      "title": "ストーンヘンジ",
+      "hint": "ヨーロッパ北西部の平原に立つ先史時代の巨石遺構。石の配置は太陽の動きと関連しています。",
+      "extraHint": "イングランド南部、ウィルトシャーにあります。",
+      "fact": "ストーンヘンジは先史時代の巨石遺構で、エーヴベリーなどとともに世界遺産を構成します。石の配置は夏至・冬至の太陽の動きと結びついています。"
+    },
+    "en": {
+      "title": "Stonehenge",
+      "hint": "A prehistoric stone monument stands on a plain in northwestern Europe. Its layout relates to the sun's movement.",
+      "extraHint": "It is in Wiltshire, southern England.",
+      "fact": "Stonehenge is a prehistoric monument within a World Heritage property that also includes Avebury. Its alignment relates to the sun at the solstices."
+    }
+  },
+  {
+    "id": "machupicchu",
+    "coordinate": [-13.1631, -72.5450],
+    "status": "needs_review",
+    "verifiedAt": null,
+    "verifiedBy": null,
+    "sources": [{ "label": "UNESCO: Historic Sanctuary of Machu Picchu", "url": "https://whc.unesco.org/en/list/274/" }],
+    "ja": {
+      "title": "マチュ・ピチュ",
+      "hint": "南米のアンデス山脈にある、山の稜線に築かれたインカ時代の遺跡です。",
+      "extraHint": "ペルー南部、クスコの北西にあります。",
+      "fact": "マチュ・ピチュはアンデスの山地に築かれたインカ時代の遺構で、周囲の自然環境も含めて複合遺産に登録されています。"
+    },
+    "en": {
+      "title": "Machu Picchu",
+      "hint": "An Inca-era site built on a mountain ridge in South America's Andes.",
+      "extraHint": "It is northwest of Cusco in southern Peru.",
+      "fact": "Machu Picchu is an Inca-era site in the Andes. Its World Heritage designation recognizes both cultural remains and the surrounding natural setting."
+    }
+  }
+]

@@ -1,0 +1,14 @@
+# Free review deployment. No paid disk or external account keys are created.
+services:
+  - type: web
+    name: fieldnotes-atlas-preview
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: NODE_ENV
+        value: production
