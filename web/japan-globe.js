@@ -3,9 +3,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import land from './japan-land.json';
 import { globeVector, coordinateFromVector, toGlobe, JAPAN_GLOBE } from './japan-projection.js';
 import { pointAlong } from './route.js';
+import { glide, REVEAL_DURATION_MS } from './reveal-motion.js';
 
 const IMAGERY = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile';
-const INITIAL_DISTANCE = 3.35;
+const INITIAL_DISTANCE = 3.05;
 const DETAIL_DISTANCE = 1.85;
 const tileLatitude = (y, n) => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
 const cities = [
@@ -16,7 +17,7 @@ const cities = [
 
 export function createJapanGlobe({ container, locale, view, guess, correct, readOnly, animate = false, routeColor, onSelect, onStatus, onReveal, onDetail }) {
   let disposed = false, dirty = true, frame, finished = false, progress = 0;
-  let cameraTransition, routeStart, transitioning = false;
+  let cameraTransition, routeStart, arrivalStart, transitioning = false;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const shouldAnimate = !!(correct && animate && !reduced);
   const width = () => Math.max(1, container.clientWidth), height = () => Math.max(1, container.clientHeight);
@@ -106,35 +107,78 @@ export function createJapanGlobe({ container, locale, view, guess, correct, read
     dirty = true;
   }
 
-  let tube, head;
+  let curve, head, headGlow, glowTexture;
+  const routeUniforms = {
+    uProgress: { value: shouldAnimate ? 0 : 1 }, uArrived: { value: shouldAnimate ? 0 : 1 },
+    uColor: { value: new THREE.Color(routeColor || '#e4b974') }
+  };
   if (guess && correct && Math.hypot(...guess.map((n,i)=>n-correct[i])) > 1e-8) {
-    const points = Array.from({ length: 121 }, (_, i) => {
-      const [lng,lat] = pointAlong(guess,correct,i / 120);
-      return new THREE.Vector3(...globeVector([lat,lng],1.009));
+    const start = new THREE.Vector3(...globeVector(guess));
+    const end = new THREE.Vector3(...globeVector(correct));
+    const lift = Math.min(.14, Math.acos(THREE.MathUtils.clamp(start.dot(end), -1, 1)) * .07);
+    const points = Array.from({ length: 181 }, (_, i) => {
+      const t = i / 180, [lng,lat] = pointAlong(guess,correct,t);
+      return new THREE.Vector3(...globeVector([lat,lng],1.012 + Math.sin(Math.PI*t)*lift));
     });
-    tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 180, .0035, 6, false), new THREE.MeshBasicMaterial({ color: routeColor || '#e4b974' }));
-    head = new THREE.Mesh(new THREE.SphereGeometry(.012, 12, 8), new THREE.MeshBasicMaterial({color: '#fff2ce'}));
-    scene.add(tube,head); objects.push(tube,head);
-    const destination = new THREE.Vector3(...globeVector(guess)).add(new THREE.Vector3(...globeVector(correct))).normalize().multiplyScalar(fitDistance);
-    cameraTransition = shouldAnimate ? { start: performance.now(), from: camera.position.clone(), to: destination } : null;
-    if (!shouldAnimate) camera.position.copy(destination);
-    routeStart = performance.now() + (shouldAnimate ? 650 : 0);
+    curve = new THREE.CatmullRomCurve3(points);
+    function routeMaterial(glow) {
+      return new THREE.ShaderMaterial({
+        uniforms: { ...routeUniforms, uGlow: { value: glow ? 1 : 0 } },
+        vertexShader: 'varying float vTravel; void main(){vTravel=uv.x;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+        fragmentShader: `varying float vTravel;
+          uniform float uProgress; uniform float uArrived; uniform float uGlow; uniform vec3 uColor;
+          void main(){
+            float visible=1.0-smoothstep(uProgress-0.001,uProgress+0.002,vTravel);
+            float hot=exp(-max(0.0,uProgress-vTravel)*22.0)*(1.0-uArrived);
+            float alpha=visible*mix(0.4,1.0,hot);
+            if(uGlow>0.5)alpha*=hot*0.23;
+            if(alpha<0.002)discard;
+            gl_FragColor=vec4(mix(uColor,vec3(1.0,0.96,0.83),hot*0.85),alpha);
+          }`,
+        transparent: true, depthWrite: false, toneMapped: false,
+        blending: glow ? THREE.AdditiveBlending : THREE.NormalBlending
+      });
+    }
+    const core = new THREE.Mesh(new THREE.TubeGeometry(curve, 256, .0028, 6, false), routeMaterial(false));
+    const glow = new THREE.Mesh(new THREE.TubeGeometry(curve, 256, .012, 6, false), routeMaterial(true));
+    head = new THREE.Mesh(new THREE.SphereGeometry(.007, 12, 8), new THREE.MeshBasicMaterial({color: '#fff4d8'}));
+    const lightCanvas = document.createElement('canvas'); lightCanvas.width=64;lightCanvas.height=64;
+    const lightContext=lightCanvas.getContext('2d');
+    const gradient=lightContext.createRadialGradient(32,32,0,32,32,32);
+    gradient.addColorStop(0,'#fff9e6ff');gradient.addColorStop(.15,'#ffe6b7d0');gradient.addColorStop(.45,'#edbd6555');gradient.addColorStop(1,'#edbd6500');
+    lightContext.fillStyle=gradient;lightContext.fillRect(0,0,64,64);
+    glowTexture=new THREE.CanvasTexture(lightCanvas);
+    headGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTexture,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+    headGlow.scale.set(.075,.075,1);
+    scene.add(core,glow,head,headGlow);objects.push(core,glow,head,headGlow);
+    // Turn only when the answer is behind the sphere, retaining the exact zoom.
+    // Interpolate direction on a fixed radius rather than fitting the whole globe.
+    const visible = end.dot(camera.position.clone().sub(end)) > .08;
+    if (!visible) {
+      const direction=start.clone().add(end);
+      if(direction.lengthSq()<1e-8)direction.copy(end);
+      direction.normalize();
+      const rotation=new THREE.Quaternion().setFromUnitVectors(camera.position.clone().normalize(),direction);
+      cameraTransition={start:performance.now(),from:camera.position.clone(),rotation};
+    }
+    routeStart = performance.now() + (cameraTransition && shouldAnimate ? 420 : 80);
   }
-  if (guess && correct && !routeStart) routeStart = performance.now() + (shouldAnimate ? 650 : 0);
+  if (guess && correct && !routeStart) routeStart = performance.now() + 80;
   function updateRoute(value) {
     progress = value;
-    if (tube) {
-      tube.geometry.setDrawRange(0, Math.floor(value * 180) * 36);
-      const [lng, lat] = pointAlong(guess,correct,value);
-      head.position.fromArray(globeVector([lat,lng],1.015));
-      head.visible = value < 1;
+    routeUniforms.uProgress.value=value;
+    if(curve) {
+      const position=curve.getPointAt(value);
+      head.position.copy(position);headGlow.position.copy(position);
+      head.visible=value<1;headGlow.visible=value<1;
     }
-    container.dataset.routeProgress = String(value);
-    dirty = true;
+    container.dataset.routeProgress=String(value);dirty=true;
   }
   function finishReveal() {
     if (!correct || finished || disposed) return;
     finished = true; updateRoute(1);
+    routeUniforms.uArrived.value=1;
+    if(headGlow && shouldAnimate){arrivalStart=performance.now();headGlow.visible=true;}
     correctLabel.el.classList.remove('awaiting-reveal');
     correctLabel.el.classList.add('arrived');
     container.dataset.reveal = 'complete';
@@ -154,8 +198,8 @@ export function createJapanGlobe({ container, locale, view, guess, correct, read
     return [Math.min(...coords.map(p=>p[0])), Math.min(...coords.map(p=>p[1])), Math.max(...coords.map(p=>p[0])), Math.max(...coords.map(p=>p[1]))];
   });
   const requests = [];
-  const z = 5, n = 2 ** z;
-  for (let x=26;x<=29;x++) for (let y=11;y<=14;y++) {
+  const z = 6, n = 2 ** z;
+  for (let x=53;x<=57;x++) for (let y=22;y<=28;y++) {
     const west=x/n*360-180, east=(x+1)/n*360-180, north=tileLatitude(y,n), south=tileLatitude(y+1,n);
     if (!boxes.some(b=>b[0]<=east && b[2]>=west && b[1]<=north && b[3]>=south)) continue;
     requests.push(new Promise(resolve => {
@@ -187,7 +231,8 @@ export function createJapanGlobe({ container, locale, view, guess, correct, read
   function underPointer(x=0,y=0) {
     raycaster.setFromCamera(new THREE.Vector2(x,y),camera);
     const hit=raycaster.intersectObject(globe,false)[0];
-    return hit && coordinateFromVector(hit.point.toArray());
+    const coordinate=hit && coordinateFromVector(hit.point.toArray());
+    return coordinate && coordinate.every(Number.isFinite) && Math.abs(coordinate[0])<=85 ? coordinate : null;
   }
   const pointers=new Map(); let multiTouch=false;
   function down(event) {
@@ -218,19 +263,26 @@ export function createJapanGlobe({ container, locale, view, guess, correct, read
       transitioning=true; onDetail({center:[coordinate[1],coordinate[0]],zoom:6.3,bearing:0,pitch:0});
     }
   });
-  const resize=new ResizeObserver(()=>{if(disposed)return;const distance=INITIAL_DISTANCE/Math.min(1,width()/height());camera.position.multiplyScalar(distance/fitDistance);if(cameraTransition){cameraTransition.from.multiplyScalar(distance/fitDistance);cameraTransition.to.multiplyScalar(distance/fitDistance);}fitDistance=distance;controls.maxDistance=fitDistance*1.5;camera.aspect=width()/height();camera.updateProjectionMatrix();renderer.setSize(width(),height());dirty=true;});resize.observe(container);
+  const resize=new ResizeObserver(()=>{if(disposed)return;const distance=INITIAL_DISTANCE/Math.min(1,width()/height());camera.position.multiplyScalar(distance/fitDistance);if(cameraTransition){cameraTransition.from.multiplyScalar(distance/fitDistance);}fitDistance=distance;controls.maxDistance=fitDistance*1.5;camera.aspect=width()/height();camera.updateProjectionMatrix();renderer.setSize(width(),height());dirty=true;});resize.observe(container);
   const projected=new THREE.Vector3();
   function tick(now) {
     if(disposed)return;
     if(cameraTransition) {
-      const t=Math.min(1,(now-cameraTransition.start)/650), ease=1-(1-t)**3;
-      camera.position.lerpVectors(cameraTransition.from,cameraTransition.to,ease);dirty=true;
+      const t=reduced ? 1 : Math.min(1,(now-cameraTransition.start)/700);
+      const rotation=new THREE.Quaternion().slerpQuaternions(new THREE.Quaternion(),cameraTransition.rotation,glide(t));
+      camera.position.copy(cameraTransition.from).applyQuaternion(rotation);dirty=true;
       if(t===1)cameraTransition=null;
     }
     controls.update();
     if(correct&&!finished&&now>=routeStart) {
-      const t=Math.min(1,(now-routeStart)/1250);updateRoute(t*(2-t));onReveal?.(progress,false);
+      const t=Math.min(1,(now-routeStart)/REVEAL_DURATION_MS);
+      updateRoute(glide(t));onReveal?.(progress,false);
       if(t===1)finishReveal();
+    }
+    if(arrivalStart && headGlow) {
+      const t=Math.min(1,(now-arrivalStart)/650);
+      headGlow.scale.setScalar(.075+t*.17);headGlow.material.opacity=(1-t)**2;dirty=true;
+      if(t===1){headGlow.visible=false;arrivalStart=null;}
     }
     if(dirty) {
       renderer.render(scene,camera);
@@ -244,7 +296,10 @@ export function createJapanGlobe({ container, locale, view, guess, correct, read
       }
       const coordinate=coordinateFromVector(camera.position.toArray());
       container.dataset.zoom=String(3.4+Math.log2(fitDistance/camera.position.length())*1.4);
-      container.dataset.latitude=String(coordinate[0]);container.dataset.longitude=String(coordinate[1]);dirty=false;
+      container.dataset.latitude=String(coordinate[0]);container.dataset.longitude=String(coordinate[1]);
+      container.dataset.cameraDistance=String(camera.position.length());
+      container.dataset.camera=JSON.stringify(camera.position.toArray());
+      dirty=false;
     }
     frame=requestAnimationFrame(tick);
   }
@@ -257,6 +312,6 @@ export function createJapanGlobe({ container, locale, view, guess, correct, read
     centerPin(){if(readOnly)return;const coordinate=underPointer();if(coordinate){setGuess(coordinate);onSelect(coordinate);}},
     focus(coordinate){onDetail({center:[coordinate[1],coordinate[0]],zoom:16,bearing:0,pitch:0});},
     skipReveal:finishReveal,
-    destroy(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();controls.dispose();canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);labels.forEach(l=>l.el.remove());attribution.remove();[globe,halo,...objects].forEach(object=>{object.geometry.dispose();object.material.dispose();});texture.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
+    destroy(){disposed=true;cancelAnimationFrame(frame);resize.disconnect();controls.dispose();canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',cancel);labels.forEach(l=>l.el.remove());attribution.remove();[globe,halo,...objects].forEach(object=>{if(!object.isSprite)object.geometry.dispose();object.material.dispose();});texture.dispose();glowTexture?.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();}
   };
 }

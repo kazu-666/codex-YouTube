@@ -23,12 +23,13 @@ export function pointAlong(a, b, progress) {
 }
 
 /** A growing great-circle line, split where it crosses the antimeridian. */
-export function routeBetween(a, b, progress = 1) {
+export function routeBetween(a, b, progress = 1, start = 0) {
   const limit = Math.max(0, Math.min(1, progress));
+  const beginning = Math.max(0, Math.min(limit, start));
   const lines = [[]];
-  const count = Math.max(1, Math.ceil(limit * 100));
+  const count = Math.max(1, Math.ceil((limit - beginning) * 100));
   for (let i = 0; i <= count; i++) {
-    const coord = pointAlong(a, b, limit * i / count);
+    const coord = pointAlong(a, b, beginning + (limit - beginning) * i / count);
     const line = lines.at(-1), last = line.at(-1);
     if (last && Math.abs(last[0] - coord[0]) > 180) {
       const side = last[0] > 0 ? 180 : -180;

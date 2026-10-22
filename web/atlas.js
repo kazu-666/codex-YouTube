@@ -29,7 +29,7 @@ export function createAtlas(options) {
       const {createDetailMap}=await import('./detail-map.js');
       if(disposed||ticket!==generation)return;
       mode='detail';container.dataset.mode='detail';
-      active=createDetailMap({...options,view,animate:false,onReveal:complete,onView:zoom=>{
+      active=createDetailMap({...options,view,animate:options.animate&&!revealComplete,onReveal:complete,onView:zoom=>{
         options.onView?.(zoom);
         if(zoom<5.2)queueMicrotask(()=>globe());
       }});
@@ -37,7 +37,7 @@ export function createAtlas(options) {
       if(!disposed){console.warn('Detailed map unavailable:',error.message);options.onStatus('error');if(options.correct)complete(1,true);}
     }
   }
-  if(options.view?.mode==='detail' && !options.correct)detail(options.view);
+  if(options.view?.mode==='detail')detail(options.view);
   else globe(options.view);
   return {
     getView:()=>({...(active?.getView?.() || savedView || {}),mode:mode==='loading-detail'?'detail':mode}),

@@ -83,7 +83,7 @@ function cleanup() {
   if (atlas) { view = atlas.getView(); atlas.destroy(); atlas = null; }
 }
 function settingsMarkup() {
-  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker" aria-label="${locale === 'ja' ? '体験する巻' : 'Choose a volume'}">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress" aria-label="Round progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''} aria-label="Question ${i + 1}">${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><p>${t('radius')}</p><span>JAPAN · COMPACT PREVIEW v0.4</span></div></details>`;
+  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker" aria-label="${locale === 'ja' ? '体験する巻' : 'Choose a volume'}">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress" aria-label="Round progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''} aria-label="Question ${i + 1}">${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><p>${t('radius')}</p><span>JAPAN · GLOBE MOTION v0.5</span></div></details>`;
 }
 function render() {
   if (!state) { app.innerHTML = `<p class="loading">${t('loading')}</p>`; return; }
@@ -112,11 +112,13 @@ async function switchRound(id) {
 async function lockAnswer(q) {
   if (!selected || submitting || switching) return;
   submitting = true;
+  const answerScroll = window.scrollY;
   document.querySelector('#lock-answer').disabled = true;
   document.querySelectorAll('[data-round], [data-step], #locale, #plan, #extra-hint').forEach(el => { el.disabled = true; });
   try {
     state = await api('/api/answer', { questionId: q.id, lat: selected[0], lng: selected[1] });
     freshReveal = q.id; render();
+    window.scrollTo({ top: answerScroll, behavior: 'auto' });
   } catch (error) {
     try { state = await api(stateRoute(state.roundId)); } catch {}
     render(); notify(error.message);

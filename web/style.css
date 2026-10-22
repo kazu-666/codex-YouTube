@@ -50,11 +50,11 @@ a { color: var(--mint); }
 .extra-clue { padding: 10px; margin: 10px 0 0; border: 1px solid #8ead7955; border-radius: 3px; background: #1f302766; color: #c8d9c8; font-size: 12px; line-height: 1.8; }
 .extra-clue span { display: block; margin-bottom: 4px; color: var(--gold); font-size: 10px; }
 .hint-button { margin: 4px 8px; border: 0; padding: 5px 0; background: transparent; color: var(--gold); font-size: 11px; }
-.game-board { display: flex; flex-direction: column; }
+.game-board { display: flex; flex-direction: column; overflow-anchor: none; }
 .atlas-stage { height: clamp(360px, calc(100svh - 205px), 820px); position: relative; isolation: isolate; overflow: hidden; background: radial-gradient(ellipse at 50% 50%, #192c33, #080d13 70%); }
 #atlas { position: absolute; inset: 0; }
 #atlas .maplibregl-canvas { outline: none; }
-.revealed .atlas-stage { height: clamp(290px, calc(100svh - 322px), 720px); }
+/* Answering keeps the map height and apparent globe size unchanged. */
 .map-controls { position: absolute; right: 12px; bottom: 48px; display: flex; flex-direction: column; gap: 5px; z-index: 2; }
 .map-controls button { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid #b0bca544; border-radius: 5px; background: #0f1c24df; color: #e4e8db; font-size: 23px; font-weight: 350; box-shadow: 0 3px 8px #0005; }
 .map-controls button:last-child { font-size: 25px; }
@@ -103,7 +103,7 @@ a { color: var(--mint); }
  .app-header { height: 44px; padding: 0 12px; }.brand { font-size: 14px; }.header-actions { gap: 12px; }.header-actions time { font-size: 9px; }
  .question-bar { grid-template-columns: 50px minmax(0,1fr); gap: 8px; padding: 8px 7px; }.score-total { min-height: 75px; }.score-total > span { font-size: 7px; }.score-total strong { font-size: 23px; }
  .clue-strip { padding: 4px 7px; font-size: 10px; }.clue-strip small { font-size: 9px; }.clue-text { margin: 6px 5px 4px; font-size: 13px; line-height: 1.7; letter-spacing: 0; }
- .atlas-stage { height: max(340px, calc(100svh - 218px)); }.revealed .atlas-stage { height: max(275px, calc(100svh - 344px)); }
+ .atlas-stage { height: max(340px, calc(100svh - 218px)); }
  .answer-dock { padding: 7px 9px max(9px, env(safe-area-inset-bottom)); }.pin-instructions { font-size: 10px; }.center-pin { font-size: 10px; }.primary { font-size: 12px; min-height: 43px; }
  .answer-card { padding: 9px 11px; }.answer-card h2 { font-size: 13px; }.answer-card > p { font-size: 11px; line-height: 1.75; }.route-actions { font-size: 9px; margin-bottom: 4px; }.route-actions button { font-size: 9px; }.earned-points { font-size: 13px; }
  .map-controls { right: 10px; }.map-controls button { width: 33px; height: 33px; }.summary h1 { font-size: 22px; }

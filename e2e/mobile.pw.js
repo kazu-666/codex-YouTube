@@ -83,6 +83,12 @@ try {
   assert.equal(await page.locator('#lock-answer').isEnabled(), true, 'a tap places a provisional pin');
   let provisional = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
   assert.equal(provisional.questions[0].answer, undefined, 'placing a pin must not submit an answer');
+  const beforeAnswer = await page.evaluate(() => ({
+    height: document.querySelector('.atlas-stage').getBoundingClientRect().height,
+    mode: document.querySelector('#atlas').dataset.mode,
+    radius: Number(document.querySelector('#atlas').dataset.cameraDistance),
+    zoom: Number(document.querySelector('#atlas').dataset.zoom)
+  }));
   await page.locator('#lock-answer').click();
   await page.locator('#next').waitFor();
   await page.waitForFunction(() => {
@@ -95,12 +101,21 @@ try {
   await page.locator('#atlas[data-reveal="complete"]').waitFor();
   await page.locator('#next:enabled').waitFor();
   assert.equal(await page.locator('.result-stats').count(), 1, 'confirming records and animates the answer');
+  const afterAnswer = await page.evaluate(() => ({
+    height: document.querySelector('.atlas-stage').getBoundingClientRect().height,
+    mode: document.querySelector('#atlas').dataset.mode,
+    radius: Number(document.querySelector('#atlas').dataset.cameraDistance)
+  }));
+  assert.ok(Math.abs(afterAnswer.height-beforeAnswer.height)<1, 'answering must not shrink the map');
+  assert.equal(afterAnswer.mode,beforeAnswer.mode,'answering must retain the display mode');
+  if(beforeAnswer.mode==='globe') assert.ok(Math.abs(afterAnswer.radius-beforeAnswer.radius)<.005,'answering must not pull the camera back');
+
   const answered = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
   assert.equal(await page.locator('#points-number').textContent(), String(answered.questions[0].answer.points));
   assert.ok(Math.abs(Number((await page.locator('#distance-number').textContent()).replace(/,/g, '')) - answered.questions[0].answer.distanceKm) <= .5);
   assert.equal(await page.locator('.result-details').isVisible(), true);
   assert.equal(await page.locator('#question-text').textContent(), provisional.questions[0].hint.ja, 'question must remain above the map after answering');
-  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), 'globe', 'answer reveal returns to the Japan-sized sphere');
+  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), beforeAnswer.mode, 'answer reveal keeps the current map');
   await page.locator('#replay-reveal').click();
   await page.locator('#skip-reveal').click();
   await page.locator('#next:enabled').waitFor();
@@ -249,6 +264,19 @@ try {
   }
   await layoutPage.locator('#atlas[data-mode="globe"][data-ready="true"]').waitFor();
   await layoutPage.screenshot({ path: '/tmp/georoots-mini-japan-desktop.png' });
+  for(let n=0;n<7 && await layoutPage.locator('#atlas').getAttribute('data-mode')==='globe';n++) {
+    await layoutPage.locator('#zoom-in').click(); await layoutPage.waitForTimeout(100);
+  }
+  await layoutPage.locator('#atlas[data-mode="detail"][data-ready="true"]').waitFor();
+  const detailView = await layoutPage.locator('#atlas').evaluate(el=>({zoom:Number(el.dataset.zoom),lat:Number(el.dataset.latitude),lng:Number(el.dataset.longitude)}));
+  await layoutPage.locator('#center-pin').click();
+  await layoutPage.locator('#lock-answer').click();
+  await layoutPage.locator('#next:enabled').waitFor();
+  assert.equal(await layoutPage.locator('#atlas').getAttribute('data-mode'),'detail','street-scale answers must stay in the detailed map');
+  const detailResult = await layoutPage.locator('#atlas').evaluate(el=>({zoom:Number(el.dataset.zoom),lat:Number(el.dataset.latitude),lng:Number(el.dataset.longitude)}));
+  assert.ok(Math.abs(detailResult.zoom-detailView.zoom)<.001,'street-scale answers must retain their zoom');
+  assert.ok(Math.abs(detailResult.lat-detailView.lat)<.001 && Math.abs(detailResult.lng-detailView.lng)<.001,'street-scale answers must retain their centre');
+
   await layoutContext.close();
   console.log('PASS: Japan-sized 3D globe, rotation/pinch, accurate detail transition, compact question/result, two-line clues in both languages at 320/390/1280px, ten answers, animation and sharing. External imagery and native sharing are mocked.');
   console.log('PASS: mobile gestures, provisional pins, animated route growth, arrival, skip/replay, detailed pins, all 10 answers, independent volume saves, reduced motion, image sharing, no spoilers, English and map fallback. Map data and native sharing are mocked.');

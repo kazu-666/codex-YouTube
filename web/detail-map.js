@@ -2,6 +2,7 @@ import * as maplibregl from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { routeBetween, pointAlong } from './route.js';
+import { glide, REVEAL_DURATION_MS } from './reveal-motion.js';
 
 // Bundle the worker and its imports for both Vite development and static builds.
 maplibregl.setWorkerUrl(workerUrl);
@@ -72,6 +73,7 @@ export function createDetailMap({ container, locale, view, guess, correct, readO
   }
   function updateRoute(progress) {
     map.getSource('answer-route')?.setData(routeBetween(guess, correct, progress));
+    map.getSource('route-trail')?.setData(routeBetween(guess, correct, progress, Math.max(0,progress-.16)));
     map.getSource('route-head')?.setData({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: pointAlong(guess, correct, progress) } });
     container.dataset.routeProgress = String(progress);
   }
@@ -84,6 +86,8 @@ export function createDetailMap({ container, locale, view, guess, correct, readO
     correctMarker?.getElement().classList.remove('awaiting-reveal');
     correctMarker?.getElement().classList.add('arrived');
     if (map.getLayer('route-head')) map.setPaintProperty('route-head', 'circle-opacity', 0);
+    if (map.getLayer('route-head-glow')) map.setPaintProperty('route-head-glow', 'circle-opacity', 0);
+    if (map.getLayer('route-trail')) map.setPaintProperty('route-trail', 'line-opacity', 0);
     container.dataset.reveal = 'complete';
     onReveal?.(1, true);
   }
@@ -93,8 +97,8 @@ export function createDetailMap({ container, locale, view, guess, correct, readO
     container.dataset.reveal = 'drawing';
     function draw(now) {
       if (destroyed || revealed) return;
-      const t = Math.min(1, (now - started) / 1250);
-      const progress = t * (2 - t);
+      const t = Math.min(1, (now - started) / REVEAL_DURATION_MS);
+      const progress = glide(t);
       updateRoute(progress);
       onReveal?.(progress, false);
       if (t < 1) frame = requestAnimationFrame(draw);
@@ -125,15 +129,18 @@ export function createDetailMap({ container, locale, view, guess, correct, readO
     }
     if (guess && correct) {
       map.addSource('answer-route', { type: 'geojson', data: routeBetween(guess, correct, animate && !reduceMotion ? 0 : 1) });
-      map.addLayer({ id: 'answer-route-glow', type: 'line', source: 'answer-route', paint: { 'line-color': routeColor, 'line-width': 10, 'line-opacity': .2, 'line-blur': 4 } });
-      map.addLayer({ id: 'answer-route', type: 'line', source: 'answer-route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': routeColor, 'line-width': 3 } });
+      map.addLayer({ id: 'answer-route-glow', type: 'line', source: 'answer-route', paint: { 'line-color': routeColor, 'line-width': 9, 'line-opacity': .12, 'line-blur': 4 } });
+      map.addLayer({ id: 'answer-route', type: 'line', source: 'answer-route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': routeColor, 'line-width': 2.2, 'line-opacity': .7 } });
+      map.addSource('route-trail', { type: 'geojson', data: routeBetween(guess, correct, 0) });
+      map.addLayer({ id: 'route-trail', type: 'line', source: 'route-trail', layout: { 'line-cap': 'round' }, paint: { 'line-color': '#fff2d2', 'line-width': 5, 'line-opacity': .6, 'line-blur': 2 } });
       map.addSource('route-head', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: pointAlong(guess, correct, 0) } } });
-      map.addLayer({ id: 'route-head', type: 'circle', source: 'route-head', paint: { 'circle-radius': 5, 'circle-color': '#fff3d6', 'circle-stroke-width': 5, 'circle-stroke-color': routeColor, 'circle-stroke-opacity': .4 } });
+      map.addLayer({ id: 'route-head-glow', type: 'circle', source: 'route-head', paint: { 'circle-radius': 14, 'circle-color': routeColor, 'circle-opacity': .55, 'circle-blur': 1 } });
+      map.addLayer({ id: 'route-head', type: 'circle', source: 'route-head', paint: { 'circle-radius': 4, 'circle-color': '#fff3d6', 'circle-stroke-width': 5, 'circle-stroke-color': routeColor, 'circle-stroke-opacity': .4 } });
       if (!view) map.fitBounds(boundsFor(guess, correct), { padding: { top: 90, bottom: 90, left: 60, right: 60 }, maxZoom: 13, duration: animate && !reduceMotion ? 650 : 0 });
       if (revealed) {
         updateRoute(1);
         map.setPaintProperty('route-head', 'circle-opacity', 0);
-      } else if (animate && !reduceMotion) revealTimer = setTimeout(animateRoute, 700);
+      } else if (animate && !reduceMotion) revealTimer = setTimeout(animateRoute, 80);
       else finishReveal();
     }
     container.dataset.ready = 'true';
