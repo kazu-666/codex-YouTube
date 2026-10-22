@@ -1,5 +1,6 @@
 import { createAtlas } from './atlas.js';
 import { mountResultShare } from './share.js';
+import { showDiscovery } from './discovery.js';
 import './style.css';
 
 const app = document.querySelector('#app');
@@ -70,7 +71,8 @@ Object.assign(words.en, {
 });
 let locale = localStorage.getItem('fieldnotes-locale') === 'en' ? 'en' : 'ja';
 let basemap = localStorage.getItem('georoots-basemap') === 'map' ? 'map' : 'satellite';
-let state, uiIndex, selected, atlas, activeMapKey, disposeShare, freshReveal, freshUnlock, toastTimer, revealFallback;
+let state, uiIndex, selected, atlas, activeMapKey, disposeShare, freshReveal, toastTimer, revealFallback;
+let freshUnlock = [];
 let submitting = false, switching = false;
 const t = key => words[locale][key];
 const localized = value => value?.[locale] || '';
@@ -102,10 +104,10 @@ function mapMarkup(q) {
 }
 function records(q) {
   const last = q.attempts.at(-1);
-  return `<section class="investigation-records ${freshUnlock ? 'record-unlocked' : ''}" aria-label="${t('records')}"><div class="record-heading"><span class="stage-badge" data-stage="${q.stage}">${t('stages')[q.stage]}</span><span class="attempt-dots" aria-label="${q.attempts.length} / ${q.maxAttempts}">${Array.from({ length: q.maxAttempts }, (_, i) => `<i class="${i < q.attempts.length ? 'used' : ''}"></i>`).join('')} ${t('remaining')} ${q.maxAttempts - q.attempts.length}</span></div>${last ? `<p class="last-check" role="status">${t('investigate')} ${q.attempts.length}：<strong>${number(last.distanceKm)} km</strong> · ${t('proximity')} ${t('directions')[last.direction]}</p>` : ''}<div class="record-cards">${[1, 2].map(level => {
+  return `<section class="investigation-records ${freshUnlock.length ? 'record-unlocked' : ''}" aria-label="${t('records')}"><div class="record-heading"><span class="stage-badge" data-stage="${q.stage}">${t('stages')[q.stage]}</span><span class="attempt-dots" aria-label="${q.attempts.length} / ${q.maxAttempts}">${Array.from({ length: q.maxAttempts }, (_, i) => `<i class="${i < q.attempts.length ? 'used' : ''}"></i>`).join('')} ${t('remaining')} ${q.maxAttempts - q.attempts.length}</span></div>${last ? `<p class="last-check" role="status">${t('investigate')} ${q.attempts.length}：<strong>${number(last.distanceKm)} km</strong> · ${t('proximity')} ${t('directions')[last.direction]}</p>` : ''}<div class="record-cards">${[1, 2].map(level => {
     const item = q.unlocked.find(r => r.level === level);
-    return `<div class="record-card ${item ? 'open' : 'locked'}"><span>${item ? '✦' : '◇'} ${level === 1 ? (locale === 'ja' ? '地域メモ' : 'Regional note') : (locale === 'ja' ? '曰くの断片' : 'Story fragment')}</span><p>${item ? esc(localized(item.text)) : t(level === 1 ? 'locked1' : 'locked2')}</p></div>`;
-  }).join('')}</div>${q.extraHint ? `<p class="extra-clue"><span>✦ ${t('used')}</span>${esc(localized(q.extraHint))}</p>` : state.plan === 'premium' ? `<button class="hint-button" id="extra-hint">+ ${t('extra')}</button>` : ''}${q.attempts.length ? `<details class="attempt-history"><summary>${t('records')} · ${t('best')} ${number(Math.min(...q.attempts.map(a => a.distanceKm)))} km</summary>${q.attempts.map((a, i) => `<button data-attempt="${i}">${i + 1} · ${number(a.distanceKm)} km · ${t('pin')} ↗</button>`).join('')}</details>` : ''}</section>`;
+    return `<div class="record-card ${item ? 'open' : 'locked'} ${freshUnlock.includes(level) ? 'just-unlocked' : ''}"><span>${item ? '✦' : '◇'} ${level === 1 ? (locale === 'ja' ? '地域メモ' : 'Regional note') : (locale === 'ja' ? '曰くの断片' : 'Story fragment')}</span><p>${item ? esc(localized(item.text)) : t(level === 1 ? 'locked1' : 'locked2')}</p></div>`;
+  }).join('')}</div>${q.extraHint ? `<p class="extra-clue"><span>✦ ${t('used')}</span>${esc(localized(q.extraHint))}</p>` : state.plan === 'premium' ? `<button class="hint-button" id="extra-hint">+ ${t('extra')}</button>` : ''}${q.attempts.length ? `<details class="attempt-history"><summary>${t('records')} · ${t('best')} ${number(Math.min(...q.attempts.map(a => a.distanceKm)))} km</summary>${q.attempts.map((a, i) => `<button data-attempt="${i}">${i + 1} · ${number(a.distanceKm)} km · ${t('pin')} ↗</button>`).join('')}</details>` : ''}${q.unlocked.length ? `<button class="review-discovery" id="review-discovery">✦ ${locale === 'ja' ? '見つかった手がかりを読む' : 'Read your discovered evidence'} ↗</button>` : ''}</section>`;
 }
 function resultMarkup(q, animate) {
   const r = q.answer;
@@ -119,7 +121,7 @@ function renderSummary() {
   return `<section class="summary"><div class="summary-symbol">${compass}</div><div class="eyebrow">EXPEDITION COMPLETE · ${state.day} · ${esc(localized(state.roundLabel))}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><section class="share-panel" aria-labelledby="share-title"><h2 id="share-title">${t('shareTitle')}</h2><img id="share-preview" alt="${t('shareAlt')}" width="1200" height="1200" hidden><button class="primary" id="share-result" disabled>${t('share')}</button><div class="share-actions"><button id="save-result" disabled>${t('save')}</button><button id="copy-result">${t('copy')}</button></div><p id="share-status" role="status" aria-live="polite"></p><details class="share-post"><summary>${t('post')}</summary><textarea id="share-text" aria-label="${t('post')}" readonly rows="7"></textarea></details></section><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span class="summary-number">0${i + 1}</span><span>${esc(localized(q.title))}${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</span><strong>${q.answer.points}<small> / ${q.maxPoints}</small></strong><span>↗</span></button>`).join('')}</div><button class="other-round" id="other-round">${t('other')} →</button>${state.plan === 'free' ? adSlot() : ''}</section>`;
 }
 function settingsMarkup() {
-  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''}>${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><span>JAPAN · FIELD INVESTIGATION v0.6</span></div></details>`;
+  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''}>${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><span>JAPAN · FIELD DISCOVERY v0.7</span></div></details>`;
 }
 function render() {
   if (!state) return;
@@ -128,13 +130,13 @@ function render() {
   if (uiIndex === 5) { atlas?.destroy(); atlas = null; activeMapKey = null; }
   document.documentElement.lang = locale;
   document.title = locale === 'ja' ? 'ジオルーツ｜現場を探して、物語をひらく' : 'GeoRoots · Locate the site, uncover its story';
-  app.innerHTML = `<div class="game-app"><header class="app-header"><a class="brand" href="/">${t('brand')}</a><div class="header-actions"><button class="help-button" id="how-to">? ${t('how')}</button><time>${state.day.replaceAll('-', '.')}</time>${settingsMarkup()}</div></header><main class="play-area">${uiIndex === 5 ? renderSummary() : renderQuestion(state.questions[uiIndex])}</main><dialog id="evidence-dialog"><div class="dialog-bar"><strong>${t('evidence')}</strong><button id="close-evidence">${t('close')} ×</button></div><img id="evidence-full" alt="${t('evidenceNote')}"><p>${t('evidenceNote')}</p><p class="evidence-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a> · OpenMapTiles · OpenFreeMap</p><p id="evidence-error" hidden>${locale === 'ja' ? '資料を取得できませんでした。開き直して再試行してください。' : 'Could not load the site map. Close and reopen to retry.'}</p></dialog><dialog id="help-dialog"><div class="dialog-bar"><strong>${t('how')}</strong><button id="close-help">${t('close')} ×</button></div><p>${t('help')}</p></dialog><div id="toast" role="alert" hidden></div><div class="sr-only" id="live-status" role="status" aria-live="polite"></div></div>`;
+  app.innerHTML = `<div class="game-app"><header class="app-header"><a class="brand" href="/">${t('brand')}</a><div class="header-actions"><button class="help-button" id="how-to">? ${t('how')}</button><time>${state.day.replaceAll('-', '.')}</time>${settingsMarkup()}</div></header><main class="play-area">${uiIndex === 5 ? renderSummary() : renderQuestion(state.questions[uiIndex])}</main><dialog id="evidence-dialog"><div class="dialog-bar"><strong>${t('evidence')}</strong><button id="close-evidence">${t('close')} ×</button></div><img id="evidence-full" alt="${t('evidenceNote')}"><p>${t('evidenceNote')}</p><p class="evidence-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a> · OpenMapTiles · OpenFreeMap</p><p id="evidence-error" hidden>${locale === 'ja' ? '資料を取得できませんでした。開き直して再試行してください。' : 'Could not load the site map. Close and reopen to retry.'}</p></dialog><dialog id="discovery-dialog"></dialog><dialog id="help-dialog"><div class="dialog-bar"><strong>${t('how')}</strong><button id="close-help">${t('close')} ×</button></div><p>${t('help')}</p></dialog><div id="toast" role="alert" hidden></div><div class="sr-only" id="live-status" role="status" aria-live="polite"></div></div>`;
   if (mapNode && atlas) document.querySelector('#atlas').replaceWith(mapNode);
   bind();
 }
 function goTo(index) {
   if (submitting || switching) return;
-  freshReveal = null; freshUnlock = false; uiIndex = index;
+  freshReveal = null; freshUnlock = []; uiIndex = index;
   selected = state.questions[index]?.attempts.at(-1)?.guess || null;
   render(); window.scrollTo({ top: 0 });
 }
@@ -142,7 +144,7 @@ async function switchRound(id) {
   if (switching || submitting || state.roundId === id) return;
   switching = true; disableInputs();
   try {
-    state = await api(stateRoute(id)); freshReveal = null; freshUnlock = false;
+    state = await api(stateRoute(id)); freshReveal = null; freshUnlock = [];
     uiIndex = state.completed ? 5 : currentIndex(); selected = state.questions[uiIndex]?.attempts.at(-1)?.guess || null;
     history.replaceState(null, '', `?round=${id}`); render(); window.scrollTo({ top: 0 });
   } catch (error) { render(); notify(error.message); }
@@ -159,9 +161,12 @@ async function investigate(q, reveal = false) {
     const body = reveal ? { questionId: q.id } : { questionId: q.id, lat: selected[0], lng: selected[1], expectedAttempt: q.attempts.length, requestId: crypto.randomUUID() };
     const [next] = await Promise.all([api(reveal ? '/api/reveal' : '/api/answer', body), new Promise(resolve => setTimeout(resolve, reduced() ? 0 : 650))]);
     state = next; const updated = state.questions[uiIndex];
-    freshReveal = updated.answer ? q.id : null; freshUnlock = !updated.answer && updated.stage > q.stage;
+    freshReveal = updated.answer ? q.id : null;
+    freshUnlock = updated.answer ? [] : updated.unlocked.filter(record => !q.unlocked.some(previous => previous.level === record.level)).map(record => record.level);
+    const newLevels = freshUnlock;
     render(); window.scrollTo({ top: scroll, behavior: 'auto' });
-    if (freshUnlock) notify(t('unlocked'));
+    freshUnlock = [];
+    if (newLevels.length) showDiscovery({ dialog: document.querySelector('#discovery-dialog'), question: updated, locale, levels: newLevels, isNew: true });
     document.querySelector('#live-status').textContent = updated.answer ? t('result') : `${t('stages')[updated.stage]} · ${number(updated.attempts.at(-1).distanceKm)} km`;
   } catch (error) {
     try { state = await api(stateRoute(state.roundId)); } catch {}
@@ -259,6 +264,7 @@ function bind() {
   document.querySelector('#lock-answer')?.addEventListener('click', () => investigate(q));
   document.querySelector('#reveal-destination')?.addEventListener('click', () => investigate(q, true));
   document.querySelector('#extra-hint')?.addEventListener('click', () => updateDemo('/api/hint', { questionId: q.id }));
+  document.querySelector('#review-discovery')?.addEventListener('click', () => showDiscovery({ dialog: document.querySelector('#discovery-dialog'), question: q, locale }));
   document.querySelectorAll('[data-attempt]').forEach(b => b.onclick = () => atlas.focus(q.attempts[Number(b.dataset.attempt)].guess, atlas.getView().zoom));
   document.querySelector('#focus-answer')?.addEventListener('click', () => { atlas.focus(q.coordinate); document.querySelector('.atlas-stage').scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }); });
   document.querySelector('#focus-guess')?.addEventListener('click', () => { atlas.focus(q.answer.guess); document.querySelector('.atlas-stage').scrollIntoView({ block: 'start' }); });

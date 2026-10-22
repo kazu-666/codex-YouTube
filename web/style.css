@@ -151,8 +151,8 @@ a { color: var(--mint); }
 .record-card p { margin: 6px 0 0; color: #81958c; font-size: 10px; line-height: 1.7; }
 .record-card.open { border-color: #b79c6877; background: #263229; }
 .record-card.open > span { color: #e5ca9b; }.record-card.open p { color: #d1ddca; font-size: 11px; }
-.record-unlocked .record-card.open { animation: record-open .6s cubic-bezier(.2,.8,.2,1); }
-.record-unlocked .record-card.open:after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 20%, #f7e7bd44 50%, transparent 80%); transform: translateX(-130%); animation: record-shine .75s ease-out; pointer-events: none; }
+.record-card.just-unlocked { animation: record-open .6s cubic-bezier(.2,.8,.2,1); }
+.record-card.just-unlocked:after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 20%, #f7e7bd44 50%, transparent 80%); transform: translateX(-130%); animation: record-shine .75s ease-out; pointer-events: none; }
 @keyframes record-open { from { transform: translateY(7px); opacity: .2; } to { transform: translateY(0); opacity: 1; } }
 @keyframes record-shine { to { transform: translateX(130%); } }
 .attempt-history { margin-top: 9px; font-size: 10px; color: #9eb4a3; }.attempt-history summary { cursor: pointer; padding: 5px 0; }
@@ -170,7 +170,7 @@ dialog::backdrop { background: #030a10bf; }
 dialog > p { font-size: 12px; line-height: 1.9; }.evidence-credit { font-size: 9px; color: #a4b6a7; }
 @media(max-width:600px) { .atlas-stage { height: max(320px, calc(100svh - 410px)); }.map-controls button { width: 37px; height: 37px; }.header-actions { gap: 9px; }.help-button { font-size: 10px; }.record-cards { gap: 6px; }.record-card { padding: 8px; }.record-card.open p { font-size: 10px; } }
 @media(max-width:350px) { .header-actions time { display: none; }.evidence-preview { width: 128px; }.map-shortcuts button { padding: 8px; font-size: 10px; }.record-cards { grid-template-columns: 1fr; } }
-@media(prefers-reduced-motion:reduce) { .scan-sweep { display: none; }.record-unlocked .record-card.open:after { display: none; } }
+@media(prefers-reduced-motion:reduce) { .scan-sweep { display: none; }.record-card.just-unlocked:after { display: none; } }
 .basemap-switch { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; border: 1px solid #c2d1b077; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 8px #0004; }
 .basemap-switch button { min-height: 36px; padding: 7px 9px; border: 0; background: #112328ef; color: #c6d3bf; font-size: 10px; }
 .basemap-switch button[aria-pressed=true] { background: #e2d9bc; color: #1f332d; }
@@ -178,3 +178,35 @@ dialog > p { font-size: 12px; line-height: 1.9; }.evidence-credit { font-size: 9
 .map-status { top: 55px; max-width: 155px; white-space: normal; }
 .tile-warning { top: 55px; }
 @media(max-width:350px) { .basemap-switch button { padding: 7px; font-size: 9px; } }
+/* Discovery is presented in the viewport, rather than under a transient toast. */
+.discovery-dialog { width: min(500px, calc(100vw - 24px)); padding: 18px; border-color: #d1ad6d; background: radial-gradient(ellipse at 50% 20%, #294039, #101e24 70%); }
+.discovery-dialog::backdrop { background: #030b13d9; }
+.discovery-top { margin-bottom: 5px; }.discovery-top > span { color: #a8b9a5; font-size: 10px; letter-spacing: .12em; }
+.discovery-heading { text-align: center; }.discovery-kicker { color: #e8c58b; font-size: 11px; letter-spacing: .2em; }
+.discovery-heading h2 { margin: 8px 0; color: #f3e8cd; font-size: clamp(20px, 5vw, 26px); font-weight: 600; }
+.discovery-heading p { margin: 0; color: #a9c5b2; font-size: 12px; }.discovery-heading strong { margin-left: 5px; color: #f0d29b; font-size: 18px; font-weight: 500; }
+.discovery-art { position: relative; height: 115px; display: grid; place-items: center; margin: 6px 0; overflow: hidden; perspective: 600px; }
+.discovery-ring { position: absolute; width: 100px; height: 100px; border: 1px solid #cfdfb700; border-radius: 50%; opacity: 0; }
+.discovery-envelope { position: relative; width: 156px; height: 66px; margin-top: 30px; perspective: 500px; }
+.envelope-back { position: absolute; inset: 0; background: #a98b59; border: 1px solid #e8ca8d; border-radius: 4px; }
+.envelope-page { position: absolute; width: 126px; height: 68px; left: 15px; top: -24px; z-index: 1; border: 1px solid #f1e4bf; border-radius: 3px; background: #e9e1c9; color: #364b3b; text-align: center; }
+.envelope-page span { display: block; margin-top: 7px; font-size: 23px; }.envelope-page i { display: block; width: 60px; height: 2px; margin: 4px auto; background: #8a9b7a88; }.envelope-page i:last-child { width: 42px; }
+.envelope-pocket { position: absolute; inset: 0; z-index: 2; border: 1px solid #dbbb7b; border-radius: 3px; background: #b89b67; clip-path: polygon(0 0, 50% 51%, 100% 0, 100% 100%, 0 100%); }
+.envelope-flap { position: absolute; z-index: 3; left: 0; top: 0; width: 100%; height: 39px; transform-origin: 50% 0; transform: rotateX(-170deg); backface-visibility: hidden; clip-path: polygon(0 0, 100% 0, 50% 100%); background: #dfc38c; }
+.envelope-seal { position: absolute; z-index: 4; left: 0; right: 0; bottom: 11px; text-align: center; font-size: 8px; letter-spacing: .15em; color: #3c4937; }
+.discovery-cards { display: grid; gap: 9px; }
+.discovery-card { padding: 13px 14px; border: 1px solid #e1c18a88; border-radius: 4px; background: #d9dbc212; }
+.discovery-card > div { display: flex; justify-content: space-between; align-items: center; gap: 10px; }.discovery-card span { color: #efd39c; font-size: 12px; }.discovery-card small { color: #a7bca4; font-size: 9px; }
+.discovery-card p { margin: 10px 0 0; font-size: 14px; line-height: 1.9; color: #ebefda; }
+.discovery-dialog > .discovery-note { margin: 13px 0; font-size: 11px; color: #afc4af; }
+.discovery-dialog .primary { font-size: 12px; }
+.review-discovery { width: 100%; min-height: 40px; margin-top: 8px; border: 1px solid #c2a57266; border-radius: 4px; background: #28352c; color: #e5d0a2; font-size: 11px; }
+.discovery-dialog[data-animation=opening] .envelope-flap { animation: envelope-unseal .85s cubic-bezier(.2,.7,.2,1) both; }
+.discovery-dialog[data-animation=opening] .envelope-page { animation: evidence-extract .95s cubic-bezier(.2,.8,.2,1) both; }
+.discovery-dialog[data-animation=opening] .discovery-ring { animation: discovery-pulse 1.1s ease-out both; }
+.discovery-dialog[data-animation=opening] .discovery-card { animation: evidence-arrive .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(.35s + var(--order) * .12s); }
+@keyframes envelope-unseal { 0%, 12% { transform: rotateX(0); } 75%, 100% { transform: rotateX(-170deg); } }
+@keyframes evidence-extract { 0%, 25% { transform: translateY(26px); } 100% { transform: translateY(0); } }
+@keyframes discovery-pulse { 0%, 10% { opacity: 0; transform: scale(.6); } 30% { opacity: .8; border-color: #dce8ad; } 100% { opacity: 0; transform: scale(2.2); border-color: #dce8ad; } }
+@keyframes evidence-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@media(max-width:350px) { .discovery-dialog { padding: 13px; }.discovery-art { height: 100px; }.discovery-card { padding: 11px; }.discovery-card p { font-size: 13px; }.discovery-card > div { gap: 5px; }.discovery-card small { font-size: 8px; } }
