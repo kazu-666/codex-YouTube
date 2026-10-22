@@ -1,0 +1,6 @@
+﻿確認日,URL,関連ID,調査先,接続結果,本文取得,注記
+2026-10-22,https://whc.unesco.org/en/list/393/,EU09,UNESCO,proxy CONNECT 403,未取得,サイト自体の404・不存在を確認したものではない
+2026-10-22,https://amanoiwato-jinja.jp/,JP03,天岩戸神社,proxy CONNECT 403,未取得,サイト自体の404・不存在を確認したものではない
+2026-10-22,https://www.nationaltrust.org.uk/visit/northern-ireland/giants-causeway,EU01,National Trust,proxy CONNECT 403,未取得,サイト自体の404・不存在を確認したものではない
+2026-10-22,https://www.doc.govt.nz/parks-and-recreation/places-to-go/northland/places/cape-reinga-te-rerenga-wairua/,OC01,DOC,proxy CONNECT 403,未取得,サイト自体の404・不存在を確認したものではない
+2026-10-22,https://www.japan.travel/en/,共通,日本政府観光局,proxy CONNECT 403,未取得,サイト自体の404・不存在を確認したものではない
