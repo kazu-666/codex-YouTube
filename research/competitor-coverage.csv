@@ -1,0 +1,16 @@
+game,scope,official_candidate_url,official_http_access,primary_material,live_playtest,remaining
+GeoGuessr,benchmark,https://www.geoguessr.com/,blocked,not_consulted,not_played,current official onboarding modes plans and developer writing
+OpenGuessr,user_list,https://openguessr.com/,blocked,official_related_UI_and_education_consulted,not_played,core game rules fees and current live interface
+WorldGuessr,user_list,https://www.worldguessr.com/,blocked,official_repository_consulted,not_played,live match to repository; vendor pricing independent verification
+FreeGuessr / Guess Where You Are,user_list,https://freeguessr.com/ ; https://guesswhereyouare.com/,blocked,identity_unresolved,not_played,identify provider and whether names refer to same game
+Geotastic,user_list,https://geotastic.net/,blocked,not_consulted,not_played,current donor ad account and multiplayer conditions
+GeoSports,user_list,https://geosports.app/how-it-works,200,official_rules_privacy_consulted,not_played_this_round,current interactive round; prior client inspection in REFERENCE_REVIEW.md
+Anime GeoGuessr,user_list,,not_identified,identity_unresolved,not_played,exact official product and URL; no request to guessed domain
+AutoGuessr,user_list,https://autoguessr.com/,blocked,official_repository_consulted,not_played,live match to source; content source and author rationale
+City Guesser,user_list,https://virtualvacation.us/guess,blocked,not_consulted,not_played,current video audio controls and developer statement
+TimeGuessr,user_list,https://timeguessr.com/,blocked,not_consulted,not_played,photo context reveal sourcing author writing and fees
+EraGuessr,user_list,https://eraguessr.ai/,blocked,not_consulted,not_played,identity; verify AI panorama claim; distinguish similar repos
+Worldle,user_list,https://worldle.teuteuf.fr/,blocked,not_consulted,not_played,official current rules and author writing; guessed official repo was 404
+Globle,user_list,https://globle-game.com/,blocked,author_repository_consulted,not_played,current live version; repository changelog includes 2022 features
+Travle,user_list,https://travle.earth/,blocked,not_consulted,not_played,official scoring adjacency exceptions hints daily return and author writing
+MapTap,additional_reference,https://maptap.gg/,not_requested,GeoSports_official_cites_inspiration,not_played,direct official acquisition after access configuration applied
