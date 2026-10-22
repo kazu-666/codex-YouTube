@@ -1,0 +1,11 @@
+id,volume,title_ja,latitude,longitude,story,coordinate,translation,photo,playability,release_status
+a7c2e1,first,殺生石,37.1001,139.9985,pending,pending,pending,not_licensed,pending,needs_review
+f4b8d3,first,道成寺,33.9112,135.174,source_read,pending,pending,not_licensed,pending,needs_review
+c9e1a6,first,カッパ淵,39.3587,141.5848,source_read,pending,pending,not_licensed,pending,needs_review
+d2a5f8,first,白兎神社,35.5254,134.1185,pending,pending,pending,not_licensed,pending,needs_review
+e6b3c9,first,天岩戸神社・西本宮,32.7344,131.3505,source_read,pending,pending,not_licensed,pending,needs_review
+b1d7e4,second,鞍馬寺,35.1179,135.771,pending,pending,pending,not_licensed,pending,needs_review
+a8f2b5,second,太宰府天満宮,33.5215,130.5348,pending,pending,pending,not_licensed,pending,needs_review
+c3a9e7,second,戸隠神社・奥社参道入口,36.7529,138.0733,source_read,pending,pending,not_licensed,pending,needs_review
+f7e5a2,second,恐山菩提寺,41.3264,141.0902,pending,pending,pending,not_licensed,pending,needs_review
+d8c4b1,second,出雲大社,35.4006,132.6851,pending,pending,pending,not_licensed,pending,needs_review

@@ -1,13 +1,14 @@
 import * as maplibregl from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { routeBetween, pointAlong } from './route.js';
 
 // Bundle the worker and its imports for both Vite development and static builds.
 maplibregl.setWorkerUrl(workerUrl);
 
 export const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 export const IMAGERY_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-export const INITIAL_VIEW = { center: [115, 25], zoom: .55, bearing: 0, pitch: 0 };
+export const INITIAL_VIEW = { center: [137, 36.5], zoom: 3.4, bearing: 0, pitch: 0 };
 
 export function boundsFor(guess, correct) {
   let end = correct[1];
@@ -16,40 +17,18 @@ export function boundsFor(guess, correct) {
   return [[Math.min(guess[1], end), Math.min(guess[0], correct[0])], [Math.max(guess[1], end), Math.max(guess[0], correct[0])]];
 }
 
-/** A spherical great circle, split at the antimeridian for GeoJSON rendering. */
-export function routeBetween(a, b) {
-  const vector = ([lat, lng]) => {
-    const phi = lat * Math.PI / 180, theta = lng * Math.PI / 180;
-    return [Math.cos(phi) * Math.cos(theta), Math.cos(phi) * Math.sin(theta), Math.sin(phi)];
-  };
-  const start = vector(a), end = vector(b);
-  const angle = Math.acos(Math.max(-1, Math.min(1, start.reduce((sum, n, i) => sum + n * end[i], 0))));
-  // For coincident/antipodal endpoints there is no unique useful interpolation.
-  if (Math.sin(angle) < 1e-8) return { type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: [] } };
-  const lines = [[]];
-  for (let i = 0; i <= 80; i++) {
-    const t = i / 80;
-    const p = start.map((n, k) => (n * Math.sin((1 - t) * angle) + end[k] * Math.sin(t * angle)) / Math.sin(angle));
-    const coord = [Math.atan2(p[1], p[0]) * 180 / Math.PI, Math.atan2(p[2], Math.hypot(p[0], p[1])) * 180 / Math.PI];
-    const line = lines.at(-1), last = line.at(-1);
-    if (last && Math.abs(last[0] - coord[0]) > 180) {
-      const side = last[0] > 0 ? 180 : -180;
-      const unwrapped = coord[0] + (side > 0 ? 360 : -360);
-      const lat = last[1] + (coord[1] - last[1]) * (side - last[0]) / (unwrapped - last[0]);
-      line.push([side, lat]);
-      lines.push([[-side, lat]]);
-    }
-    lines.at(-1).push(coord);
-  }
-  return { type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: lines } };
-}
-
-export function createAtlas({ container, locale, view, guess, correct, readOnly, onSelect, onStatus, onView }) {
+export function createAtlas({ container, locale, view, guess, correct, readOnly, animate = false, routeColor = '#d7a164', onReveal, onSelect, onStatus, onView }) {
   let map;
   let guessMarker;
+  let correctMarker;
+  let frame;
+  let revealTimer;
+  let destroyed = false;
+  let revealed = false;
   let imageryFailed = false;
   const markers = [];
-  const initialView = { ...INITIAL_VIEW, zoom: Math.max(0, Math.min(2.2, .55 + Math.log2(Math.min(container.clientWidth, container.clientHeight) * .82 / 225))) };
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const initialView = { ...INITIAL_VIEW, zoom: INITIAL_VIEW.zoom + Math.log2(Math.min(container.clientWidth, container.clientHeight) / 390) };
   try {
     map = new maplibregl.Map({
       container, style: MAP_STYLE, ...initialView, ...(view || {}),
@@ -62,6 +41,7 @@ export function createAtlas({ container, locale, view, guess, correct, readOnly,
     });
   } catch (error) {
     onStatus('error');
+    onReveal?.(1, true);
     return { destroy() {}, getView: () => view };
   }
   map.touchZoomRotate.disableRotation();
@@ -84,7 +64,42 @@ export function createAtlas({ container, locale, view, guess, correct, readOnly,
     else guessMarker = marker(coordinate, 'guess');
   }
   if (guess) setGuess(guess);
-  if (correct) marker(correct, 'correct');
+  if (correct) {
+    correctMarker = marker(correct, 'correct');
+    if (animate && !reduceMotion) correctMarker.getElement().classList.add('awaiting-reveal');
+  }
+  function updateRoute(progress) {
+    map.getSource('answer-route')?.setData(routeBetween(guess, correct, progress));
+    map.getSource('route-head')?.setData({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: pointAlong(guess, correct, progress) } });
+    container.dataset.routeProgress = String(progress);
+  }
+  function finishReveal() {
+    if (destroyed || revealed || !correct) return;
+    revealed = true;
+    clearTimeout(revealTimer);
+    cancelAnimationFrame(frame);
+    updateRoute(1);
+    correctMarker?.getElement().classList.remove('awaiting-reveal');
+    correctMarker?.getElement().classList.add('arrived');
+    if (map.getLayer('route-head')) map.setPaintProperty('route-head', 'circle-opacity', 0);
+    container.dataset.reveal = 'complete';
+    onReveal?.(1, true);
+  }
+  function animateRoute() {
+    if (destroyed || revealed) return;
+    const started = performance.now();
+    container.dataset.reveal = 'drawing';
+    function draw(now) {
+      if (destroyed || revealed) return;
+      const t = Math.min(1, (now - started) / 1250);
+      const progress = t * (2 - t);
+      updateRoute(progress);
+      onReveal?.(progress, false);
+      if (t < 1) frame = requestAnimationFrame(draw);
+      else finishReveal();
+    }
+    frame = requestAnimationFrame(draw);
+  }
   map.on('style.load', () => {
     map.setProjection({ type: 'globe' });
     map.setSky({ 'sky-color': '#090f16', 'horizon-color': '#88aab0', 'sky-horizon-blend': .2, 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, .7, 5, 0] });
@@ -107,9 +122,17 @@ export function createAtlas({ container, locale, view, guess, correct, readOnly,
       }
     }
     if (guess && correct) {
-      map.addSource('answer-route', { type: 'geojson', data: routeBetween(guess, correct) });
-      map.addLayer({ id: 'answer-route', type: 'line', source: 'answer-route', paint: { 'line-color': '#cf8f48', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
-      map.fitBounds(boundsFor(guess, correct), { padding: 65, maxZoom: 16, duration: 0 });
+      map.addSource('answer-route', { type: 'geojson', data: routeBetween(guess, correct, animate && !reduceMotion ? 0 : 1) });
+      map.addLayer({ id: 'answer-route-glow', type: 'line', source: 'answer-route', paint: { 'line-color': routeColor, 'line-width': 10, 'line-opacity': .2, 'line-blur': 4 } });
+      map.addLayer({ id: 'answer-route', type: 'line', source: 'answer-route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': routeColor, 'line-width': 3 } });
+      map.addSource('route-head', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: pointAlong(guess, correct, 0) } } });
+      map.addLayer({ id: 'route-head', type: 'circle', source: 'route-head', paint: { 'circle-radius': 5, 'circle-color': '#fff3d6', 'circle-stroke-width': 5, 'circle-stroke-color': routeColor, 'circle-stroke-opacity': .4 } });
+      map.fitBounds(boundsFor(guess, correct), { padding: { top: 90, bottom: 90, left: 60, right: 60 }, maxZoom: 13, duration: animate && !reduceMotion ? 650 : 0 });
+      if (revealed) {
+        updateRoute(1);
+        map.setPaintProperty('route-head', 'circle-opacity', 0);
+      } else if (animate && !reduceMotion) revealTimer = setTimeout(animateRoute, 700);
+      else finishReveal();
     }
     container.dataset.ready = 'true';
     onStatus('ready');
@@ -140,7 +163,8 @@ export function createAtlas({ container, locale, view, guess, correct, readOnly,
     zoomOut() { map.zoomOut({ duration: 250 }); },
     reset() { map.flyTo({ ...initialView, duration: 900 }); },
     focus(coordinate) { map.flyTo({ center: [coordinate[1], coordinate[0]], zoom: 16, pitch: 0, bearing: 0, duration: 1000 }); },
+    skipReveal: finishReveal,
     centerPin() { if (readOnly || !map.isStyleLoaded()) return; const c = map.getCenter(); const coord = [c.lat, ((c.lng + 180) % 360 + 360) % 360 - 180]; setGuess(coord); onSelect(coord); },
-    destroy() { markers.forEach(m => m.remove()); map.remove(); }
+    destroy() { destroyed = true; clearTimeout(revealTimer); cancelAnimationFrame(frame); markers.forEach(m => m.remove()); map.remove(); }
   };
 }

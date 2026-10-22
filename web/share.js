@@ -1,17 +1,17 @@
 const copy = {
   ja: {
-    title: '土着信仰調査室', ready: '投稿用の画像です。正解の場所は載せていません。',
+    title: 'ジオルーツ', ready: '投稿用の画像です。正解の場所は載せていません。',
     loading: '結果画像を作成中…', share: '画像つきで共有', download: '画像を保存', copied: '投稿文をコピーしました。',
     selected: '投稿文を選択しました。長押ししてコピーできます。', failed: '共有できませんでした。「画像を保存」から投稿できます。',
     imageFailed: '画像を作成できませんでした。投稿文をコピーして共有できます。', saved: '画像を保存しました。SNSで画像を添付して投稿できます。',
-    noHints: '追加ヒントなし', hints: count => `追加ヒント ${count}/5問`, challenge: 'あなたは何点とれる？', unit: '点'
+    noHints: '追加ヒントなし', hints: count => `追加ヒント ${count}/5問`, challenge: '日本の怪異と伝説、どこまで探せる？', unit: '点'
   },
   en: {
-    title: 'Fieldnotes Atlas', ready: 'Your share image. Answer locations are kept hidden.',
+    title: 'GeoRoots', ready: 'Your share image. Answer locations are kept hidden.',
     loading: 'Creating your result image…', share: 'Share with image', download: 'Save image', copied: 'Post text copied.',
     selected: 'Post text selected. Press and hold to copy.', failed: 'Sharing failed. Save the image to attach it to your post.',
     imageFailed: 'Could not create the image. You can still copy the post text.', saved: 'Image saved. Attach it to your social post.',
-    noHints: 'No extra hints', hints: count => `Extra hints: ${count}/5 places`, challenge: 'Can you beat my score?', unit: ' points'
+    noHints: 'No extra hints', hints: count => `Extra hints: ${count}/5 places`, challenge: 'Find the places behind Japan’s myths.', unit: ' points'
   }
 };
 
@@ -24,7 +24,7 @@ const tier = q => {
 export function buildShareText(state, locale, url) {
   const words = copy[locale];
   const hints = hintCount(state);
-  return `${words.title} | ${state.day}\n${state.total.toLocaleString()} / ${state.maxTotal.toLocaleString()}${words.unit}\n${state.questions.map(q => tier(q)[0]).join('')}\n${hints ? words.hints(hints) : words.noHints}\n${words.challenge}\n${url}`;
+  return `${words.title} | ${state.day} · ${state.roundLabel?.[locale] || ""}\n${state.total.toLocaleString()} / ${state.maxTotal.toLocaleString()}${words.unit}\n${state.questions.map(q => tier(q)[0]).join('')}\n${hints ? words.hints(hints) : words.noHints}\n${words.challenge}\n${url}`;
 }
 
 /** Draw our own score artwork; never export map tiles or answer locations. */
@@ -57,13 +57,13 @@ export async function createResultImage(state, locale, url) {
   }
   ctx.restore();
 
-  text('FIELDNOTES ATLAS', 88, 108, 25, '#d7b47c', 600);
-  text(state.day, 1112, 108, 26, '#a6bcb2', 400, 'right');
-  text(locale === 'ja' ? '土着信仰調査室' : 'DAILY WORLD EXPLORATION', 88, 168, 34);
+  text('GEOROOTS', 88, 108, 25, '#d7b47c', 600);
+  text(`${state.day} · ${state.roundLabel?.[locale] || ''}`, 1112, 108, 26, '#a6bcb2', 400, 'right');
+  text(locale === 'ja' ? '土着信仰調査室' : 'JAPAN · MYTHS & MYSTERIES', 88, 168, 34);
   text('DAILY SCORE', 88, 282, 24, '#a1cab7', 600);
   text(state.total.toLocaleString(), 76, 491, 202, '#e5c18b', 600);
   text(`/ ${state.maxTotal.toLocaleString()}`, 88, 554, 44, '#a6bcb2');
-  text('05 PLACES · ONE WORLD', 88, 663, 25, '#a1cab7', 500);
+  text('05 PLACES · UNWRITTEN DISCOVERIES', 88, 663, 25, '#a1cab7', 500);
   state.questions.forEach((q, index) => {
     const x = 88 + index * 210;
     const color = tier(q)[1];
@@ -78,7 +78,7 @@ export async function createResultImage(state, locale, url) {
   });
   const hints = hintCount(state);
   text(hints ? words.hints(hints) : words.noHints, 88, 979, 27, '#a6bcb2');
-  text(words.challenge, 88, 1070, 39, '#e5c18b', 500);
+  text(words.challenge, 88, 1070, 35, '#e5c18b', 500);
   text(new URL(url).host, 88, 1122, 23, '#a6bcb2');
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Image export failed')), 'image/png'));
 }
@@ -122,7 +122,7 @@ export function mountResultShare({ state, locale, url }) {
   };
   createResultImage(state, locale, url).then(blob => {
     if (disposed) return;
-    file = new File([blob], `fieldnotes-${state.day}.png`, { type: 'image/png' });
+    file = new File([blob], `georoots-${state.day}-${state.roundId}.png`, { type: 'image/png' });
     imageUrl = URL.createObjectURL(blob);
     preview.src = imageUrl; preview.hidden = false;
     shareButton.textContent = navigator.share && navigator.canShare?.({ files: [file] }) ? words.share : words.download;

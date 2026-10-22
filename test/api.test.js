@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import questions from '../content/questions.json' with { type: 'json' };
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -33,8 +34,9 @@ test('five answers, saved progress, one-answer rule, hints and results', { timeo
     assert.equal(script.status, 200);
     assert.match(script.headers.get('content-type'), /javascript/);
     let cookie;
-    async function call(route, body) {
-      const response = await fetch(`http://127.0.0.1:${port}${route}`, { method: body ? 'POST' : 'GET', headers: { ...(cookie ? { Cookie: cookie } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    async function call(route, body, roundId = 'first') {
+      if (!body && route === '/api/state') route += `?round=${roundId}`;
+      const response = await fetch(`http://127.0.0.1:${port}${route}`, { method: body ? 'POST' : 'GET', headers: { ...(cookie ? { Cookie: cookie } : {}), ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, roundId }) : undefined });
       cookie ||= response.headers.get('set-cookie')?.split(';')[0];
       return { status: response.status, data: await response.json() };
     }
@@ -42,6 +44,12 @@ test('five answers, saved progress, one-answer rule, hints and results', { timeo
     assert.equal(result.data.questions.length, 5);
     assert.equal(result.data.questions[0].coordinate, undefined);
     assert.equal(result.data.questions[0].fact, undefined);
+    assert.equal(result.data.questions[0].title, undefined);
+    assert.equal(result.data.questions[0].sources, undefined);
+    assert.match(result.data.questions[0].id, /^[a-f0-9]{6}$/);
+    assert.equal((await call('/api/state', null, 'bogus')).status, 400);
+    assert.equal((await call('/api/answer', { questionId: result.data.questions[1].id, lat: 35, lng: 135 })).status, 409);
+    assert.equal((await call('/api/answer', { questionId: result.data.questions[0].id, lat: 91, lng: 135 })).status, 400);
     assert.equal((await call('/api/hint', { questionId: result.data.questions[0].id })).status, 403);
     assert.equal((await call('/api/demo-plan', { plan: 'premium' })).status, 200);
     assert.equal((await call('/api/hint', { questionId: result.data.questions[0].id })).status, 200);
@@ -57,6 +65,19 @@ test('five answers, saved progress, one-answer rule, hints and results', { timeo
     assert.equal(result.data.maxTotal, 1000);
     assert.equal(result.data.questions[0].answer.usedHint, true);
     assert.equal((await call('/api/state')).data.total, result.data.total);
+    const second = await call('/api/state', null, 'second');
+    assert.equal(second.data.completed, false);
+    assert.equal(second.data.total, 0);
+    assert.ok(second.data.questions.every(q => !q.answer));
+    assert.ok(second.data.questions.every(q => !result.data.questions.find(other => other.id === q.id)));
+    assert.equal((await call('/api/answer', { questionId: second.data.questions[0].id, lat: 35, lng: 135 }, 'first')).status, 400);
+    const target = questions.find(q => q.id === second.data.questions[0].id);
+    const exact = await call('/api/answer', { questionId: target.id, lat: target.coordinate[0], lng: target.coordinate[1] }, 'second');
+    assert.equal(exact.status, 200);
+    assert.equal(exact.data.questions[0].answer.points, 100);
+    assert.equal(exact.data.questions[0].answer.distanceKm, 0);
+    assert.equal(exact.data.questions[0].answer.withinRadius, true);
+    assert.equal((await call('/api/state')).data.completed, true, 'switching must preserve finished first-volume answers');
   } finally {
     child.kill();
     fs.rmSync(dataDir, { recursive: true, force: true });

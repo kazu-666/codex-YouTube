@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { dailyKey, roundFor, distanceKm, score, publicQuestion, revealedQuestion, POINTS } from './game.js';
+import { dailyKey, defaultRound, roundFor, distanceKm, score, publicQuestion, revealedQuestion, POINTS, CONTENT_VERSION, ROUND_IDS, ROUND_LABELS } from './game.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dataDir = process.env.FIELDNOTES_DATA_DIR || path.join(root, '.data');
@@ -32,18 +32,20 @@ function sessionFor(req, res) {
   persist();
   return sessions[id];
 }
-function dayFor(session, day) {
-  if (!session.days[day]) session.days[day] = { answers: {}, hints: {} };
-  return session.days[day];
+function dayFor(session, day, roundId) {
+  const key = `${CONTENT_VERSION}:${day}:${roundId}`;
+  if (!session.days[key]) session.days[key] = { answers: {}, hints: {} };
+  return session.days[key];
 }
-function state(session) {
+function state(session, roundId) {
   const day = dailyKey();
-  const round = roundFor(day);
-  const saved = dayFor(session, day);
+  roundId ||= defaultRound(day);
+  const round = roundFor(day, roundId);
+  const saved = dayFor(session, day, roundId);
   const questions = round.map((q, index) => saved.answers[q.id]
     ? revealedQuestion(q, index, saved.answers[q.id])
     : publicQuestion(q, index, saved.hints[q.id]));
-  return { day, timeZone: 'Asia/Tokyo', plan: session.plan, demo: true, questions, completed: Object.keys(saved.answers).length === round.length, total: Object.values(saved.answers).reduce((sum, x) => sum + x.points, 0), maxTotal: POINTS.reduce((a, b) => a + b, 0) };
+  return { day, roundId, roundLabel: ROUND_LABELS[roundId], dailyRoundId: defaultRound(day), rounds: ROUND_IDS.map(id => ({ id, label: ROUND_LABELS[id] })), contentVersion: CONTENT_VERSION, fullScoreRadiusKm: 1, timeZone: 'Asia/Tokyo', plan: session.plan, demo: true, questions, completed: Object.keys(saved.answers).length === round.length, total: Object.values(saved.answers).reduce((sum, x) => sum + x.points, 0), maxTotal: POINTS.reduce((a, b) => a + b, 0) };
 }
 async function readJson(req) {
   let raw = '';
@@ -62,19 +64,22 @@ function sameOrigin(req) {
 async function api(req, res, pathname) {
   if (req.method === 'POST' && !sameOrigin(req)) return send(res, 403, { error: 'Invalid origin' });
   const session = sessionFor(req, res);
-  if (pathname === '/api/state' && req.method === 'GET') return send(res, 200, state(session));
+  const body = req.method === 'POST' ? await readJson(req) : {};
+  const roundId = body.roundId ?? new URL(req.url, 'http://localhost').searchParams.get('round') ?? defaultRound(dailyKey());
+  if (!ROUND_IDS.includes(roundId)) return send(res, 400, { error: 'Invalid round' });
+  if (pathname === '/api/state' && req.method === 'GET') return send(res, 200, state(session, roundId));
   if (pathname === '/api/demo-plan' && req.method === 'POST') {
-    const { plan } = await readJson(req);
+    const { plan } = body;
     if (!['free', 'premium'].includes(plan)) return send(res, 400, { error: 'Invalid plan' });
     session.plan = plan;
     persist();
-    return send(res, 200, state(session));
+    return send(res, 200, state(session, roundId));
   }
   const day = dailyKey();
-  const round = roundFor(day);
-  const saved = dayFor(session, day);
+  const round = roundFor(day, roundId);
+  const saved = dayFor(session, day, roundId);
   if (pathname === '/api/hint' && req.method === 'POST') {
-    const { questionId } = await readJson(req);
+    const { questionId } = body;
     const q = round.find(item => item.id === questionId);
     if (!q) return send(res, 400, { error: 'Invalid question' });
     if (session.plan !== 'premium') return send(res, 403, { error: 'Premium demo required' });
@@ -82,19 +87,19 @@ async function api(req, res, pathname) {
     if (round.find(item => !saved.answers[item.id])?.id !== q.id) return send(res, 409, { error: 'Not current question' });
     saved.hints[q.id] = true;
     persist();
-    return send(res, 200, state(session));
+    return send(res, 200, state(session, roundId));
   }
   if (pathname === '/api/answer' && req.method === 'POST') {
-    const { questionId, lat, lng } = await readJson(req);
+    const { questionId, lat, lng } = body;
     const index = round.findIndex(item => item.id === questionId);
     if (index < 0 || !Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return send(res, 400, { error: 'Invalid answer' });
     const q = round[index];
-    if (saved.answers[q.id]) return send(res, 409, { error: 'Already answered', state: state(session) });
+    if (saved.answers[q.id]) return send(res, 409, { error: 'Already answered', state: state(session, roundId) });
     if (round.find(item => !saved.answers[item.id])?.id !== q.id) return send(res, 409, { error: 'Not current question' });
     const distance = distanceKm([lat, lng], q.coordinate);
-    saved.answers[q.id] = { guess: [lat, lng], distanceKm: Math.round(distance), points: score(distance, index), usedHint: !!saved.hints[q.id] };
+    saved.answers[q.id] = { guess: [lat, lng], distanceKm: Math.round(distance * 10) / 10, points: score(distance, index), usedHint: !!saved.hints[q.id], withinRadius: distance <= 1 };
     persist();
-    return send(res, 200, state(session));
+    return send(res, 200, state(session, roundId));
   }
   return send(res, 404, { error: 'Not found' });
 }

@@ -44,13 +44,13 @@ try {
   let imageryRequests = 0;
   await page.route('https://tiles.openfreemap.org/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }));
   await page.route('https://server.arcgisonline.com/**', route => { imageryRequests++; return route.fulfill({ status: 200, contentType: 'image/png', body: transparentTile }); });
-  await page.goto(`http://127.0.0.1:${port}/`);
+  await page.goto(`http://127.0.0.1:${port}/?round=first`);
   await page.locator('#atlas[data-ready="true"]').waitFor({ timeout: 30000 });
   await page.waitForTimeout(500);
   await page.screenshot({ path: '/tmp/fieldnotes-globe-initial.png' });
   assert.ok(imageryRequests > 0, 'satellite imagery tiles should be requested');
   assert.equal(await page.locator('#imagery-warning').isHidden(), true, 'working satellite tiles should not show a warning');
-  assert.equal(await page.locator('#tap-callout').count(), 1, 'answer locks on a map tap');
+  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'a location must be chosen before confirmation');
   const rect = await page.locator('#atlas').boundingBox();
   assert.ok(rect.width <= 390, 'map should fit mobile width');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'no horizontal overflow');
@@ -66,7 +66,7 @@ try {
   await page.waitForTimeout(600);
   const pinchZoom = Number(await page.locator('#atlas').getAttribute('data-zoom'));
   assert.ok(pinchZoom > initialZoom + .7, `pinch should zoom: ${initialZoom} -> ${pinchZoom}`);
-  assert.equal(await page.locator('#tap-callout').count(), 1, 'pinch must not answer');
+  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'pinch must not place or confirm a pin');
   const lng = Number(await page.locator('#atlas').getAttribute('data-longitude'));
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx - 55, y: cy, id: 0 }] });
   for (let n = 1; n <= 8; n++) {
@@ -75,11 +75,32 @@ try {
   }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await page.waitForTimeout(600);
-  assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-longitude')) - lng) > 5, 'drag should turn the globe');
-  assert.equal(await page.locator('#tap-callout').count(), 1, 'drag must not answer');
+  assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-longitude')) - lng) > .01, 'drag should move the map');
+  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'drag must not place or confirm a pin');
   await page.touchscreen.tap(cx, cy);
+  assert.equal(await page.locator('#lock-answer').isEnabled(), true, 'a tap places a provisional pin');
+  let provisional = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
+  assert.equal(provisional.questions[0].answer, undefined, 'placing a pin must not submit an answer');
+  await page.locator('#lock-answer').click();
   await page.locator('#next').waitFor();
-  assert.equal(await page.locator('.result-stats').count(), 1, 'one tap should record the answer and reveal the score');
+  await page.waitForFunction(() => {
+    const p = Number(document.querySelector('#atlas')?.dataset.routeProgress);
+    return p > .05 && p < .9;
+  });
+  assert.equal(await page.locator('#next').isDisabled(), true, 'route is revealed before advancing');
+  assert.equal(await page.locator('.correct').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'correct pin arrives at the end of the line');
+  await page.screenshot({ path: '/tmp/georoots-reveal-midway.png', fullPage: true });
+  await page.locator('#atlas[data-reveal="complete"]').waitFor();
+  await page.locator('#next:enabled').waitFor();
+  assert.equal(await page.locator('.result-stats').count(), 1, 'confirming records and animates the answer');
+  const answered = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
+  assert.equal(await page.locator('#points-number').textContent(), String(answered.questions[0].answer.points));
+  assert.ok(Math.abs(Number((await page.locator('#distance-number').textContent()).replace(/,/g, '')) - answered.questions[0].answer.distanceKm) <= .5);
+  assert.equal(await page.locator('.result-details').isVisible(), true);
+  await page.locator('#replay-reveal').click();
+  await page.locator('#skip-reveal').click();
+  await page.locator('#next:enabled').waitFor();
+  assert.equal(await page.locator('#points-number').textContent(), String(answered.questions[0].answer.points), 'skipping must keep the server score');
   await page.screenshot({ path: '/tmp/fieldnotes-globe-mobile.png', fullPage: true });
   let checkedDetail = false;
   for (let i = 0; i < 5; i++) {
@@ -90,17 +111,17 @@ try {
       await page.locator('.extra-clue').waitFor();
       await page.locator('#atlas[data-ready="true"]').waitFor();
     }
-    if (i > 0) await page.locator('#center-pin').click();
-    await page.locator('#next').waitFor();
+    if (i > 0) { await page.locator('#center-pin').click(); await page.locator('#lock-answer').click(); }
+    await page.locator('#next:enabled').waitFor();
     await page.locator('#focus-answer').waitFor();
     await page.locator('#atlas[data-ready="true"]').waitFor();
-    if ((await page.locator('h1').textContent()) === '厳島神社') {
+    if ((await page.locator('h1').textContent()) === '殺生石') {
       await page.locator('#focus-answer').click();
       await page.waitForTimeout(1500);
       const zoom = Number(await page.locator('#atlas').getAttribute('data-zoom'));
       assert.ok(zoom >= 15.9, `detail zoom should reach street scale: ${zoom}`);
-      assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-latitude')) - 34.2958) < .001, 'detail view must center on Itsukushima latitude');
-      assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-longitude')) - 132.3197) < .001, 'detail view must center on Itsukushima longitude');
+      assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-latitude')) - 37.1001) < .001, 'detail view must center on Sessho-seki latitude');
+      assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-longitude')) - 139.9985) < .001, 'detail view must center on Sessho-seki longitude');
       await page.waitForTimeout(1800);
       const pin = await page.locator('.correct .pin-dot').boundingBox();
       assert.ok(pin.width < 32 && pin.height < 32, 'pin stays small at high zoom');
@@ -114,11 +135,11 @@ try {
     await page.locator('#next').click();
     if (i < 4) await page.locator('#atlas[data-ready="true"]').waitFor();
   }
-  assert.equal(checkedDetail, true, 'Itsukushima detail scenario must execute');
+  assert.equal(checkedDetail, true, 'Sessho-seki detail scenario must execute');
   await page.locator('#share-result:enabled').waitFor();
   assert.equal(await page.locator('#share-preview').evaluate(img => img.naturalWidth), 1200);
   assert.equal(await page.locator('#share-preview').evaluate(img => img.naturalHeight), 1200);
-  const resultState = await page.evaluate(async () => (await fetch('/api/state')).json());
+  const resultState = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
   const post = await page.locator('#share-text').inputValue();
   assert.ok(post.includes(`${resultState.total.toLocaleString()} / 1,000点`), 'post must contain the actual total');
   assert.ok(post.includes('追加ヒント 1/5問'), 'post must disclose extra hint use');
@@ -150,17 +171,35 @@ try {
   assert.ok((await page.locator('#share-text').inputValue()).includes('Extra hints: 1/5 places'));
   const downloadPage = await context.newPage();
   await downloadPage.addInitScript(() => { Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => false }); });
-  await downloadPage.goto(`http://127.0.0.1:${port}/`);
+  await downloadPage.goto(`http://127.0.0.1:${port}/?round=first`);
   await downloadPage.locator('#share-result:enabled').waitFor();
   assert.equal(await downloadPage.locator('#share-result').textContent(), 'Save image', 'unsupported native sharing must offer image saving');
   const fallbackDownload = downloadPage.waitForEvent('download');
   await downloadPage.locator('#share-result').click();
-  assert.match((await fallbackDownload).suggestedFilename(), /^fieldnotes-\d{4}-\d{2}-\d{2}\.png$/);
+  assert.match((await fallbackDownload).suggestedFilename(), /^georoots-\d{4}-\d{2}-\d{2}-first\.png$/);
   await downloadPage.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined }); });
   await downloadPage.locator('#copy-result').click();
   assert.equal(await downloadPage.locator('.share-post').getAttribute('open'), '', 'unavailable clipboard must reveal selectable post text');
   assert.equal(await downloadPage.locator('#share-text').evaluate(el => el.selectionEnd - el.selectionStart), (await downloadPage.locator('#share-text').inputValue()).length);
   await downloadPage.close();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.locator('#other-round').click();
+  await page.locator('#atlas[data-ready="true"]').waitFor();
+  assert.equal(await page.locator('[data-round="second"]').getAttribute('aria-pressed'), 'true');
+  for (let i = 0; i < 5; i++) {
+    await page.locator('#atlas[data-ready="true"]').waitFor();
+    await page.locator('#center-pin').click();
+    await page.locator('#lock-answer').click();
+    await page.locator('#next:enabled').waitFor();
+    await page.locator('#atlas[data-reveal="complete"]').waitFor();
+    assert.equal(await page.locator('#skip-reveal').isHidden(), true, 'reduced motion must show final results without animation');
+    await page.locator('#next').click();
+  }
+  await page.locator('#share-result:enabled').waitFor();
+  assert.ok((await page.locator('#share-text').inputValue()).includes('Volume II'));
+  await page.locator('[data-round="first"]').click();
+  await page.locator('#share-result:enabled').waitFor();
+  assert.ok((await page.locator('#share-text').inputValue()).includes('Volume I'), 'switching must preserve first volume results');
   assert.deepEqual(errors, [], 'no browser JavaScript exceptions');
   const fallbackContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const fallbackPage = await fallbackContext.newPage();
@@ -170,9 +209,10 @@ try {
   await fallbackPage.locator('#atlas[data-ready="true"]').waitFor({ timeout: 30000 });
   await fallbackPage.locator('#imagery-warning:visible').waitFor({ timeout: 30000 });
   await fallbackPage.locator('#center-pin').click();
-  await fallbackPage.locator('.result-stats').waitFor();
+  await fallbackPage.locator('#lock-answer').click();
+  await fallbackPage.locator('#next:enabled').waitFor();
   await fallbackContext.close();
-  console.log('PASS: mobile globe gestures, detailed pins, five answers, native image sharing, PNG download, hint disclosure, no-spoiler post, English, completed-round reload and map fallback. Map data and native sharing are mocked.');
+  console.log('PASS: mobile gestures, provisional pins, animated route growth, arrival, skip/replay, detailed pins, all 10 answers, independent volume saves, reduced motion, image sharing, no spoilers, English and map fallback. Map data and native sharing are mocked.');
 } finally {
   await browser?.close();
   child.kill();

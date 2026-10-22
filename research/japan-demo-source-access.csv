@@ -1,0 +1,17 @@
+checked_at_jst,url,http_status,result,body_sha256
+2026-10-22,https://amanoiwato-jinja.jp/pages/6/,200,retrieved,f2b67cff7d3c51dfd2678457e5a736cf5707bba2c26d4bef30a83d8e2171dc25
+2026-10-22,https://amanoiwato-jinja.jp/pages/8/,200,retrieved,0f99d55b1d2672028349d97477f535c52e7460b9a0e6f58c906975aa8cb42f3e
+2026-10-22,https://aomori-tourism.com/,000,"curl: (56) CONNECT tunnel failed, response 403
+",
+2026-10-22,https://dojoji.com/story/#anchin,200,retrieved,f453cfc7473887932b95e3bcf624d7fad389c2feec1802fb2aabcd8f31f2180b
+2026-10-22,https://hakutojinja.jp/,000,"curl: (56) CONNECT tunnel failed, response 403
+",
+2026-10-22,https://izumooyashiro.or.jp/,503,source unavailable,b8ee3203130a6c42630021a1454aac5bfca33432711c3644e9121db110c993c3
+2026-10-22,https://tonojikan.jp/tourism/kappabuchi-pool/,200,retrieved,da36b1c2fa3db0f6121f1ec78ab5e56bbf22ed72ea9a1a8788819056d82e5c7e
+2026-10-22,https://www.dazaifutenmangu.or.jp/,000,"curl: (56) CONNECT tunnel failed, response 403
+",
+2026-10-22,https://www.kuramadera.or.jp/,000,"curl: (56) CONNECT tunnel failed, response 403
+",
+2026-10-22,https://www.nasukogen.org/,503,source unavailable,6bb116249b28877d83cfbf421a0e5537ecd9e9d2f67c968990a94c950c168915
+2026-10-22,https://www.togakushi-jinja.jp/,000,"curl: (56) CONNECT tunnel failed, response 403
+",
