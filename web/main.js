@@ -1,4 +1,5 @@
 import { createAtlas } from './atlas.js';
+import { mountResultShare } from './share.js';
 import './style.css';
 
 const app = document.querySelector('#app');
@@ -6,6 +7,8 @@ const words = {
   ja: { brand: '土着信仰調査室', sub: 'FIELDNOTES ATLAS', daily: '今日の調査', prototype: '試作版：同じ5問を日替わりで並べ替えます。事実・座標・翻訳は公開前の照合待ちです。無料／有料の切替はデモで、決済はありません。', free: '無料モード', premium: '有料デモ', plan: '体験するプラン', clue: '手がかり', extra: '追加の手がかり', used: '追加ヒント使用', map: 'この場所は、どこだ？', answer: '地球儀をタップすると回答が確定します', result: '調査結果', correct: '正解', yours: 'あなたの地点', distance: '正解までの距離', pts: '獲得点', story: 'この場所の物語', sources: '資料を確認', pending: '出典・座標は照合待ち', next: '次の場所を調査', finish: '今日の結果を見る', reset: '地球全体へ', ad: '広告掲載予定エリア', adNote: '無料モードのみ。実際の広告は表示していません。', complete: '今日の調査を記録しました。', note: '追加ヒントの使用を記録しています。試作版にはランキング・課金はありません。', loading: '調査記録を読み込み中…', error: '接続できませんでした。ページを再読み込みしてください。', tap: '1本指で回す · 2本指で拡大 · タップで回答', center: '中央を回答する', mapLoading: '地図を読み込み中', imageryError: '衛星写真を取得できません。地図表示で続けられます。', mapError: '地図の読み込みに失敗しました。通信を確認し、再試行してください。', retry: '再試行', settings: '表示設定・試作について', detail: '街や島まで拡大できます', field: '地球を回して手がかりを探す' },
   en: { brand: 'Fieldnotes Atlas', sub: 'SACRED PLACES · WORLD EXPLORATION', daily: 'Daily expedition', prototype: 'Prototype: the same five places rotate daily. Facts, coordinates and translations await review. The plan switch is a demo; no payment is collected.', free: 'Free mode', premium: 'Premium demo', plan: 'Try a plan', clue: 'The clue', extra: 'Reveal another clue', used: 'Extra clue used', map: 'Where in the world?', answer: 'Tap the globe to lock in your answer', result: 'Your finding', correct: 'Answer', yours: 'Your pin', distance: 'Distance from the answer', pts: 'Points earned', story: 'The story of this place', sources: 'View sources', pending: 'Sources & coordinates await review', next: 'Explore the next place', finish: "See today's results", reset: 'Show the globe', ad: 'Reserved ad placement', adNote: 'Free mode only. No live ad is served.', complete: 'Your expedition is recorded.', note: 'Extra clue use is recorded. This prototype has no ranking or billing.', loading: 'Opening your fieldnotes…', error: 'Unable to connect. Please reload this page.', tap: 'Drag to turn · Pinch to zoom · Tap to answer', center: 'Answer at map center', mapLoading: 'Loading map', imageryError: 'Satellite imagery is unavailable. You can continue on the map.', mapError: 'Map could not load. Check your connection and retry.', retry: 'Retry', settings: 'Display settings & prototype information', detail: 'Zoom in to streets and islands', field: 'Turn the world. Follow the clues.' }
 };
+Object.assign(words.ja, { shareTitle: '今日の結果を投稿', share: '画像つきで共有', save: '画像を保存', copy: '投稿文をコピー', post: '投稿文を見る', shareAlt: '日付、合計点、5問の得点、追加ヒントの使用状況を記した共有画像' });
+Object.assign(words.en, { shareTitle: 'Share your expedition', share: 'Share with image', save: 'Save image', copy: 'Copy post text', post: 'View post text', shareAlt: 'Share image with date, total score, five question scores and extra hint use' });
 let locale = localStorage.getItem('fieldnotes-locale') === 'en' ? 'en' : 'ja';
 let state;
 let uiIndex;
@@ -14,6 +17,7 @@ let atlas;
 let view;
 let toastTimer;
 let submitting = false;
+let disposeShare;
 const t = key => words[locale][key];
 const localized = value => value?.[locale] || '';
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -45,10 +49,11 @@ function renderQuestion(question) {
   return `<div class="game-board ${question.answer ? 'revealed' : ''}">${mapMarkup(question)}<aside class="field-panel"><div class="panel-content">${clueMarkup(question)}${question.answer ? resultMarkup(question) : ''}</div><div class="answer-dock">${!question.answer ? `<div class="tap-callout" id="tap-callout">⌖ ${t('answer')}</div>` : `<button class="primary" id="next"><span>${uiIndex === 4 ? t('finish') : t('next')}</span><span>→</span></button>`}</div></aside></div>`;
 }
 function renderSummary() {
-  return `<section class="summary"><div class="summary-symbol">${compass}</div><div class="eyebrow">EXPEDITION COMPLETE · ${state.day}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span class="summary-number">0${i + 1}</span><span>${escapeHtml(localized(q.title))}${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</span><strong>${q.answer.points}<small> / ${q.maxPoints}</small></strong><span>↗</span></button>`).join('')}</div>${state.plan === 'free' ? adSlot() : ''}</section>`;
+  return `<section class="summary"><div class="summary-symbol">${compass}</div><div class="eyebrow">EXPEDITION COMPLETE · ${state.day}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><section class="share-panel" aria-labelledby="share-title"><h2 id="share-title">${t('shareTitle')}</h2><img id="share-preview" alt="${t('shareAlt')}" width="1200" height="1200" hidden><button class="primary" id="share-result" disabled>${t('share')}</button><div class="share-actions"><button id="save-result" disabled>${t('save')}</button><button id="copy-result">${t('copy')}</button></div><p id="share-status" role="status" aria-live="polite"></p><details class="share-post"><summary>${t('post')}</summary><textarea id="share-text" aria-label="${t('post')}" readonly rows="7"></textarea></details></section><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span class="summary-number">0${i + 1}</span><span>${escapeHtml(localized(q.title))}${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</span><strong>${q.answer.points}<small> / ${q.maxPoints}</small></strong><span>↗</span></button>`).join('')}</div>${state.plan === 'free' ? adSlot() : ''}</section>`;
 }
 function render() {
   if (!state) { app.innerHTML = `<p class="loading">${t('loading')}</p>`; return; }
+  disposeShare?.(); disposeShare = null;
   submitting = false;
   if (atlas) { view = atlas.getView(); atlas.destroy(); atlas = null; }
   document.documentElement.lang = locale;
@@ -66,7 +71,10 @@ function bind() {
   document.querySelector('#locale').onclick = () => { locale = locale === 'ja' ? 'en' : 'ja'; localStorage.setItem('fieldnotes-locale', locale); render(); };
   document.querySelector('#plan').onchange = async event => { try { state = await api('/api/demo-plan', { plan: event.target.value }); render(); } catch (error) { notify(error.message); } };
   document.querySelectorAll('[data-step], [data-index]').forEach(button => button.onclick = () => goTo(Number(button.dataset.step ?? button.dataset.index)));
-  if (uiIndex === 5) return;
+  if (uiIndex === 5) {
+    disposeShare = mountResultShare({ state, locale, url: new URL('/', location.href).href });
+    return;
+  }
   const question = state.questions[uiIndex];
   atlas = createAtlas({
     container: document.querySelector('#atlas'), locale, view,
@@ -104,5 +112,5 @@ function bind() {
   });
   document.querySelector('#next')?.addEventListener('click', () => goTo(uiIndex === 4 ? 5 : uiIndex + 1));
 }
-try { state = await api('/api/state'); uiIndex = currentIndex(); render(); }
+try { state = await api('/api/state'); uiIndex = state.completed ? 5 : currentIndex(); render(); }
 catch (error) { app.innerHTML = `<p class="loading">${t('error')}</p>`; console.error(error); }

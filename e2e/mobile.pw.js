@@ -31,6 +31,13 @@ try {
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader'], env: { ...process.env, XDG_CONFIG_HOME: '/tmp/fieldnotes-pw-config', XDG_CACHE_HOME: '/tmp/fieldnotes-pw-cache' } });
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    window.sharedResults = [];
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, writable: true, value: async data => {
+      window.sharedResults.push({ text: data.text, files: data.files.map(file => ({ name: file.name, size: file.size, type: file.type })) });
+    } });
+  });
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', msg => { if (['error', 'warning'].includes(msg.type())) console.log('Browser:', msg.text().slice(0,250)); });
@@ -76,6 +83,13 @@ try {
   await page.screenshot({ path: '/tmp/fieldnotes-globe-mobile.png', fullPage: true });
   let checkedDetail = false;
   for (let i = 0; i < 5; i++) {
+    if (i === 1) {
+      await page.locator('.settings > summary').click();
+      await page.locator('#plan').selectOption('premium');
+      await page.locator('#extra-hint').click();
+      await page.locator('.extra-clue').waitFor();
+      await page.locator('#atlas[data-ready="true"]').waitFor();
+    }
     if (i > 0) await page.locator('#center-pin').click();
     await page.locator('#next').waitFor();
     await page.locator('#focus-answer').waitFor();
@@ -96,12 +110,57 @@ try {
       await page.waitForTimeout(400);
       await page.screenshot({ path: '/tmp/fieldnotes-globe-detail-viewport.png' });
       checkedDetail = true;
-      break;
     }
     await page.locator('#next').click();
-    await page.locator('#atlas[data-ready="true"]').waitFor();
+    if (i < 4) await page.locator('#atlas[data-ready="true"]').waitFor();
   }
   assert.equal(checkedDetail, true, 'Itsukushima detail scenario must execute');
+  await page.locator('#share-result:enabled').waitFor();
+  assert.equal(await page.locator('#share-preview').evaluate(img => img.naturalWidth), 1200);
+  assert.equal(await page.locator('#share-preview').evaluate(img => img.naturalHeight), 1200);
+  const resultState = await page.evaluate(async () => (await fetch('/api/state')).json());
+  const post = await page.locator('#share-text').inputValue();
+  assert.ok(post.includes(`${resultState.total.toLocaleString()} / 1,000点`), 'post must contain the actual total');
+  assert.ok(post.includes('追加ヒント 1/5問'), 'post must disclose extra hint use');
+  for (const q of resultState.questions) assert.ok(!post.includes(q.title.ja), 'post must not spoil answer names');
+  await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.copiedPost = text; } } }); });
+  await page.locator('#copy-result').click();
+  assert.equal(await page.evaluate(() => window.copiedPost), post, 'copy button must copy the complete post');
+  await page.locator('#share-result').click();
+  const shared = await page.evaluate(() => window.sharedResults[0]);
+  assert.equal(shared.text, post);
+  assert.equal(shared.files[0].type, 'image/png');
+  assert.ok(shared.files[0].size > 10000, 'native share must receive an actual image file');
+  const downloadEvent = page.waitForEvent('download');
+  await page.locator('#save-result').click();
+  const download = await downloadEvent;
+  await download.saveAs('/tmp/fieldnotes-result-card.png');
+  const png = fs.readFileSync('/tmp/fieldnotes-result-card.png');
+  assert.equal(png.subarray(1, 4).toString(), 'PNG');
+  assert.equal(png.readUInt32BE(16), 1200);
+  assert.equal(png.readUInt32BE(20), 1200);
+  let unexpectedDownloads = 0;
+  page.on('download', () => unexpectedDownloads++);
+  await page.evaluate(() => { navigator.share = async () => { throw new DOMException('Cancelled', 'AbortError'); }; });
+  await page.locator('#share-result').click();
+  await page.waitForTimeout(100);
+  assert.equal(unexpectedDownloads, 0, 'cancelling native sharing must not download a file');
+  await page.locator('#locale').click();
+  await page.locator('#share-result:enabled').waitFor();
+  assert.ok((await page.locator('#share-text').inputValue()).includes('Extra hints: 1/5 places'));
+  const downloadPage = await context.newPage();
+  await downloadPage.addInitScript(() => { Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => false }); });
+  await downloadPage.goto(`http://127.0.0.1:${port}/`);
+  await downloadPage.locator('#share-result:enabled').waitFor();
+  assert.equal(await downloadPage.locator('#share-result').textContent(), 'Save image', 'unsupported native sharing must offer image saving');
+  const fallbackDownload = downloadPage.waitForEvent('download');
+  await downloadPage.locator('#share-result').click();
+  assert.match((await fallbackDownload).suggestedFilename(), /^fieldnotes-\d{4}-\d{2}-\d{2}\.png$/);
+  await downloadPage.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined }); });
+  await downloadPage.locator('#copy-result').click();
+  assert.equal(await downloadPage.locator('.share-post').getAttribute('open'), '', 'unavailable clipboard must reveal selectable post text');
+  assert.equal(await downloadPage.locator('#share-text').evaluate(el => el.selectionEnd - el.selectionStart), (await downloadPage.locator('#share-text').inputValue()).length);
+  await downloadPage.close();
   assert.deepEqual(errors, [], 'no browser JavaScript exceptions');
   const fallbackContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const fallbackPage = await fallbackContext.newPage();
@@ -113,7 +172,7 @@ try {
   await fallbackPage.locator('#center-pin').click();
   await fallbackPage.locator('.result-stats').waitFor();
   await fallbackContext.close();
-  console.log('PASS: imagery requested; pinch zooms; drag rotates without answering; one tap scores; street-scale camera and fixed-size pins work; vector fallback still accepts answers. External map data is mocked.');
+  console.log('PASS: mobile globe gestures, detailed pins, five answers, native image sharing, PNG download, hint disclosure, no-spoiler post, English, completed-round reload and map fallback. Map data and native sharing are mocked.');
 } finally {
   await browser?.close();
   child.kill();

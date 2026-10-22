@@ -2,6 +2,17 @@
 
 .tap-callout{border:1px solid #d9b17470;background:#253c35;color:#eed4ab;border-radius:6px;padding:13px 16px;text-align:center;font-size:12px;letter-spacing:.03em;line-height:1.5}
 .tap-callout.is-submitting{opacity:.6;pointer-events:none}
+.share-panel{margin-top:28px;padding:20px;background:#122126;border:1px solid var(--line);text-align:left}
+.share-panel h2{margin:0 0 15px;font-size:14px;font-weight:500;color:var(--mint);letter-spacing:.06em}
+#share-preview{display:block;width:100%;height:auto;border:1px solid #a1cab733}
+#share-result{justify-content:center;margin-top:16px;min-height:48px}
+.share-actions{display:flex;gap:10px;margin-top:10px}
+.share-actions button{flex:1;min-height:44px;padding:10px 8px;background:transparent;border:1px solid #a1cab744;color:#c0d2c7;font-size:12px;border-radius:5px}
+.share-actions button:disabled{opacity:.4}
+#share-status{font-size:11px;line-height:1.8;color:var(--muted);min-height:20px;margin:12px 0}
+.share-post{font-size:11px;color:var(--mint)}
+.share-post summary{cursor:pointer;padding:5px 0}
+.share-post textarea{display:block;resize:vertical;width:100%;margin-top:10px;padding:12px;background:#0c181d;border:1px solid #a1cab744;color:#d6e0d4;font:12px/1.8 system-ui,sans-serif;border-radius:4px}
 .imagery-warning{position:absolute;left:14px;right:14px;bottom:105px;padding:8px 12px;background:#152428e8;border:1px solid #9eac9a66;border-radius:5px;color:#d5dccd;font-size:10px;text-align:center;pointer-events:none;z-index:2}
 @media(max-width:849px){
   .game-board:not(.revealed) .field-panel{order:1;margin-top:0;border-top:0;border-bottom:1px solid #79988433;border-radius:0 0 16px 16px}
