@@ -27,5 +27,8 @@ test('all ten real site maps have attribution, a target crosshair, and reasonabl
     assert.ok(gzipSync(svg).length < 200000, `${q.id} must not require a large image download`);
     const photo = fs.readFileSync(new URL(`../content/evidence/${q.id}.jpg`, import.meta.url));
     assert.ok(photo.length < 150000 && photo[0] === 255 && photo[1] === 216);
+    const reportPhoto = fs.readFileSync(new URL(`../content/report-images/${q.id}.jpg`, import.meta.url));
+    assert.ok(reportPhoto.length < 250000 && reportPhoto[0] === 255 && reportPhoto[1] === 216);
+    assert.equal(q.reportImage.kind, 'aerial', 'aerial images must not be presented as ground photography');
   }
 });

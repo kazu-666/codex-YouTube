@@ -30,11 +30,13 @@ test('investigations save three checks, unlock by closest distance, hide destina
     assert.equal(state.contentVersion, 'japan-investigation-v3');
     const id = state.questions[0].id, target = questions.find(q => q.id === id);
     function hidden(q) {
-      for (const key of ['coordinate', 'title', 'fact', 'summary', 'sources', 'answer']) assert.equal(q[key], undefined, `${key} must remain private`);
+      for (const key of ['coordinate', 'title', 'fact', 'summary', 'report', 'reportImage', 'sources', 'answer']) assert.equal(q[key], undefined, `${key} must remain private`);
       assert.ok(q.attempts.every(a => a.rawDistance === undefined));
     }
     hidden(state.questions[0]);
     assert.equal(state.questions[0].stage, 0);
+    assert.equal(state.questions[0].prompt.ja, target.ja.prompt);
+    assert.equal((await fetch(`${base}/api/report-image/${id}.jpg?round=first`, { headers: { Cookie: cookie } })).status, 403, 'report photos are unavailable before the answer');
     assert.equal((await call('/api/state', null, 'bogus')).status, 400);
     assert.equal((await check(state.questions[1].id, [35, 135], 0)).status, 409);
     assert.equal((await check(id, [91, 135], 0)).status, 400);
@@ -66,6 +68,11 @@ test('investigations save three checks, unlock by closest distance, hide destina
     assert.equal(state.questions[0].attempts.length, 3);
     assert.deepEqual(state.questions[0].answer.guess, nearCoord, 'best attempt determines score and displayed route');
     assert.equal(state.questions[0].answer.points, score(distanceKm(nearCoord, target.coordinate), 0));
+    assert.equal(state.questions[0].report.ja.headline, target.ja.report.headline);
+    assert.ok(state.questions[0].report.ja.sections.length >= 2);
+    const reportPhoto = await fetch(`${base}${state.questions[0].reportImage.url}?round=first`, { headers: { Cookie: cookie } });
+    assert.equal(reportPhoto.status, 200); assert.equal(reportPhoto.headers.get('content-type'), 'image/jpeg');
+    assert.equal((await fetch(`${base}${state.questions[0].reportImage.url}?round=first`)).status, 403, 'another session must not read the answer photo');
     assert.equal((await check(id, target.coordinate, 3)).status, 409);
     assert.equal((await check(id, firstCoord, 0, requestId)).status, 200, 'retry remains idempotent after finalization');
     const next = state.questions[1], nextTarget = questions.find(q => q.id === next.id);

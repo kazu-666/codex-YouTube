@@ -81,6 +81,16 @@ async function api(req, res, pathname) {
   const day = dailyKey();
   const round = roundFor(day, roundId);
   const saved = dayFor(session, day, roundId);
+  const reportImageMatch = pathname.match(/^\/api\/report-image\/([a-f0-9]{6})\.jpg$/);
+  if (reportImageMatch && req.method === 'GET') {
+    const q = round.find(item => item.id === reportImageMatch[1]);
+    if (!q) return send(res, 404, { error: 'Not found' });
+    if (!saved.answers[q.id]) return send(res, 403, { error: 'Finish this investigation first' });
+    const file = path.join(root, 'content', 'report-images', `${q.id}.jpg`);
+    if (!fs.existsSync(file)) return send(res, 404, { error: 'Photo unavailable' });
+    res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+    return fs.createReadStream(file).pipe(res);
+  }
   const evidenceMatch = pathname.match(/^\/api\/evidence\/([a-f0-9]{6})\.(svg|jpg)$/);
   if (evidenceMatch && req.method === 'GET') {
     const q = round.find(item => item.id === evidenceMatch[1]);

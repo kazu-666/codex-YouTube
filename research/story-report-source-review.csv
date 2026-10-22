@@ -1,0 +1,5 @@
+checked_at_utc,url,http_status,scope,body_sha256
+2026-10-22,https://izumooyashiro.or.jp/inaba/,200,myth text consulted; location and translations still pending,dd2dfc264f98a8015c39b158a4828fff20a1322fa528bcd91cac7ef528ef3bc1
+2026-10-22,https://izumooyashiro.or.jp/ookami/,200,myth text consulted; location and translations still pending,ecca7f90ea21a4de6a8ef670050a51cc2047cec32656bd1187c2e06811c371e0
+2026-10-22,https://commons.wikimedia.org/,CONNECT 403,ground photo authorship/license could not be verified,
+2026-10-22,https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer,200,real aerial tiles; attribution retained; release terms pending; see report-aerial-manifest.json,

@@ -24,7 +24,11 @@ test('two disjoint five-place volumes contain all ten authored questions', () =>
     assert.ok(q.coordinate[0] > 24 && q.coordinate[0] < 46);
     assert.ok(q.coordinate[1] > 123 && q.coordinate[1] < 146);
     for (const locale of ['ja', 'en']) {
-      for (const field of ['title', 'hook', 'hint', 'extraHint', 'fact', 'summary']) assert.ok(q[locale][field]?.trim());
+      for (const field of ['title', 'hook', 'hint', 'extraHint', 'fact', 'summary', 'prompt']) assert.ok(q[locale][field]?.trim());
+      assert.ok(q[locale].report.lead.trim());
+      assert.ok(q[locale].report.sections.length >= 2);
+      assert.ok(q[locale].report.sections.every(section => section.title.trim() && section.body.trim()));
+      assert.ok(q[locale].report.trivia.body.trim());
     }
     assert.ok(q.sources.length);
     assert.equal(q.status, 'needs_review', 'Drafts must not claim publication review');

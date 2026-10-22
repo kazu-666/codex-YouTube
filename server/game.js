@@ -44,6 +44,7 @@ export function publicQuestion(q, index, usedHint, attempts = []) {
   const stage = investigationStage(bestDistance);
   return {
     id: q.id, number: index + 1, maxPoints: POINTS[index], usedHint: !!usedHint,
+    prompt: { ja: q.ja.prompt, en: q.en.prompt },
     area: q.investigation.area, searchBounds: q.investigation.bounds,
     evidenceUrl: `/api/evidence/${q.id}.jpg`, mapEvidenceUrl: `/api/evidence/${q.id}.svg`,
     attempts: attempts.map(({ rawDistance, ...attempt }) => attempt), maxAttempts: MAX_ATTEMPTS, stage,
@@ -56,5 +57,5 @@ export function publicQuestion(q, index, usedHint, attempts = []) {
 }
 
 export function revealedQuestion(q, index, answer, attempts = []) {
-  return { ...publicQuestion(q, index, answer.usedHint, attempts), answer, coordinate: q.coordinate, title: { ja: q.ja.title, en: q.en.title }, fact: { ja: q.ja.fact, en: q.en.fact }, summary: { ja: q.ja.summary, en: q.en.summary }, region: q.region, sources: q.sources, status: q.status };
+  return { ...publicQuestion(q, index, answer.usedHint, attempts), answer, coordinate: q.coordinate, title: { ja: q.ja.title, en: q.en.title }, fact: { ja: q.ja.fact, en: q.en.fact }, summary: { ja: q.ja.summary, en: q.en.summary }, report: { ja: q.ja.report, en: q.en.report }, reportImage: { ...q.reportImage, url: `/api/report-image/${q.id}.jpg` }, region: q.region, sources: q.sources, status: q.status };
 }

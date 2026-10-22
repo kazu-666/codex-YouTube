@@ -1,6 +1,7 @@
 import { createAtlas } from './atlas.js';
 import { mountResultShare } from './share.js';
 import { showDiscovery } from './discovery.js';
+import { storyReport, bindReportPhoto } from './report.js';
 import './style.css';
 
 const app = document.querySelector('#app');
@@ -36,15 +37,15 @@ const words = {
   }
 };
 Object.assign(words.ja, {
-  prototype: '実際の航空写真から現場を探す体験版。道路地図にも切替可能。各問3回まで照合でき、最も近い地点で採点します。1km以内で現場特定・満点。100km以内と20km以内で資料が開きます。「目的地を見る」でいつでも終了できます。巻一・巻二の固定10問です。座標・翻訳・一部の伝承は確認中。課金・広告配信はありません。',
-  select: '資料の中心と同じ場所にピンを置こう', answer: 'この地点を照合する', mapLoading: '最初の地図を準備中…',
+  prototype: '人物や伝承を入口に、実在する物語の舞台を探す体験版。答え合わせで航空写真と詳しい物語を読めます。道路地図にも切替可能。各問3回まで照合でき、最も近い地点で採点します。1km以内で現場特定・満点。100km以内と20km以内で資料が開きます。「目的地を見る」でいつでも終了できます。巻一・巻二の固定10問です。座標・翻訳・一部の伝承は確認中。課金・広告配信はありません。',
+  select: '物語の舞台にピンを置こう', answer: 'この地点を照合する', mapLoading: '最初の地図を準備中…',
   mapError: '地図を取得できません。通信を確認して再試行してください。資料と調査記録は残っています。',
   measuring: '目的地へ、照合中。', correct: '目的地', complete: '5件の調査を終えました。',
   evidence: '現場資料', evidenceNote: '中央の十字が調査対象。北は上。地名は非表示です。',
   area: '調査地域へ', pin: 'ピンへ戻る', allJapan: '日本全体', investigate: '照合', giveUp: '目的地を見る・調査終了',
   records: '調査記録', unlocked: '資料を開封', scan: '現場と照合しています…', noPin: 'タップでピンを置く',
   best: '最接近', remaining: '残り', close: '閉じる', how: '遊び方',
-  help: '①現場資料を開き、川・道・建物の形を覚える。②調査地域の地図を指で動かし、細部まで拡大して照合。③資料中央の十字と同じ地点へピンを置く。3回まで挑戦でき、最接近の距離で採点します。近づくと資料が開きます。目的地を見ると終了し、全解説が読めます。',
+  help: '①短いお題から、人物や伝承にゆかりのある場所を考える。②地図を指で動かし、物語の舞台にピンを置いて照合。周辺の写真資料も補助として開けます。3回まで挑戦でき、最接近の距離で採点します。近づくと資料が開きます。目的地を見ると終了し、全解説が読めます。',
   stages: ['未特定', '広域一致', '周辺一致', '現場特定'],
   directions: ['北', '北東', '東', '南東', '南', '南西', '西', '北西'],
   proximity: '現場の方向', locked1: '100km以内で地域メモが開く', locked2: '20km以内で曰くの断片が開く',
@@ -54,14 +55,14 @@ Object.assign(words.ja, {
   tileError: '一部の地図を取得できません。表示済みの地図で続けるか、再試行できます。'
 });
 Object.assign(words.en, {
-  prototype: 'Match a real aerial-image fragment to the map. Switch to the road map when needed. Up to three checks per place; the closest check determines your score. Full points within 1 km. Records open within 100 km and 20 km. Reveal destination to finish at any time. Two fixed five-place volumes. Some stories, coordinates and translations await review. No billing or live ads.',
-  select: 'Match the crosshair in the site map', answer: 'Check this location', mapLoading: 'Preparing the first map…',
+  prototype: 'Find real places through people and folklore. Discover aerial photos and detailed stories after answering. Switch to the road map when needed. Up to three checks per place; the closest check determines your score. Full points within 1 km. Records open within 100 km and 20 km. Reveal destination to finish at any time. Two fixed five-place volumes. Some stories, coordinates and translations await review. No billing or live ads.',
+  select: 'Place your pin at the story’s setting', answer: 'Check this location', mapLoading: 'Preparing the first map…',
   measuring: 'Tracing the destination…', correct: 'Destination', complete: 'Five investigations completed.',
   evidence: 'Site map', evidenceNote: 'Find the centre crosshair. North is up. Place names are hidden.',
   area: 'Search area', pin: 'Back to pin', allJapan: 'All Japan', investigate: 'Check', giveUp: 'Reveal destination · end search',
   records: 'Field records', unlocked: 'Record unlocked', scan: 'Checking the site…', noPin: 'Tap to place a pin',
   best: 'Closest', remaining: 'Left', close: 'Close', how: 'How to play',
-  help: '1. Open the site map and compare roads, rivers and buildings. 2. Drag and pinch the search map to find a match. 3. Place your pin at the site-map crosshair. You have three checks; your closest check determines the score. Records unlock as you approach. Reveal destination ends the search and opens the full story.',
+  help: '1. Read the clue about a person or a local story. 2. Drag and pinch the map to place a pin at its setting. Area photos are available as optional supporting material. You have three checks; your closest check determines the score. Records unlock as you approach. Reveal destination ends the search and opens the full story.',
   stages: ['Unlocated', 'Area matched', 'Nearby', 'Site located'], directions: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
   proximity: 'Site direction', locked1: 'Within 100 km: regional note', locked2: 'Within 20 km: story fragment',
   offscreen: 'Your pin is off screen', noAttempts: 'No checks made', goal: 'Show destination on map',
@@ -97,10 +98,10 @@ function notify(message) {
 function quality(q) { return q.answer.withinRadius ? 'perfect' : q.answer.points / q.maxPoints >= .8 ? 'near' : q.answer.points / q.maxPoints >= .35 ? 'region' : 'far'; }
 function evidenceUrl(q) { return `${basemap === 'map' ? q.mapEvidenceUrl : q.evidenceUrl}?round=${state.roundId}`; }
 function clueMarkup(q) {
-  return `<section class="question-bar"><div class="score-total"><span>SCORE</span><strong>${String(state.total).padStart(3, '0')}</strong></div><div class="question-main"><div class="clue-strip"><span>${locale === 'ja' ? `調査 ${uiIndex + 1} / 5` : `Case ${uiIndex + 1} / 5`}</span><small>${esc(localized(state.roundLabel))} · ${q.maxPoints} ${locale === 'ja' ? '点' : 'pts'}</small></div><h1 class="clue-text" id="question-text">${esc(localized(q.area))}${locale === 'ja' ? '。' : ' · '}${locale === 'ja' ? '現場資料と同じ場所を探してください。' : 'Find the place shown in the site map.'}</h1></div></section>`;
+  return `<section class="question-bar"><div class="score-total"><span>SCORE</span><strong>${String(state.total).padStart(3, '0')}</strong></div><div class="question-main"><div class="clue-strip"><span>${locale === 'ja' ? `調査 ${uiIndex + 1} / 5` : `Case ${uiIndex + 1} / 5`}</span><small>${esc(localized(state.roundLabel))} · ${q.maxPoints} ${locale === 'ja' ? '点' : 'pts'}</small></div><h1 class="clue-text" id="question-text">${esc(localized(q.prompt))}</h1></div></section>`;
 }
 function mapMarkup(q) {
-  return `<section class="atlas-stage" aria-label="${t('field')}"><div id="atlas"></div><div class="evidence-preview"><button id="open-evidence" aria-haspopup="dialog"><span>${t('evidence')} ↗</span><img src="${evidenceUrl(q)}" alt="${t('evidenceNote')}" width="640" height="400"><small>${locale === 'ja' ? 'タップで資料を拡大' : 'Tap to inspect'}</small></button></div><div class="map-shortcuts"><button id="area-map">⌖ ${t('area')}</button><button id="return-pin" ${selected || q.answer?.guess ? '' : 'disabled'}>● ${t('pin')}</button></div><div class="pin-offscreen" id="pin-offscreen" hidden>${t('offscreen')}</div><div class="map-status" id="map-status"><span class="spinner"></span>${t('mapLoading')}</div><div class="map-error" id="map-error" hidden><p>${t('mapError')}</p><button id="retry-map">${t('retry')}</button></div><div class="tile-warning" id="tile-warning" hidden><span>${t('tileError')}</span><button id="retry-tiles">${t('retry')}</button></div><div class="scan-sweep" aria-hidden="true"></div><div class="scan-label" role="status" hidden>${t('scan')}</div><div class="basemap-switch" role="group" aria-label="${locale === 'ja' ? '地図の表示' : 'Map appearance'}"><button id="basemap-satellite" aria-pressed="${basemap === 'satellite'}">${locale === 'ja' ? '航空写真' : 'Satellite'}</button><button id="basemap-map" aria-pressed="${basemap === 'map'}">${locale === 'ja' ? '道路地図' : 'Map'}</button></div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="reset-map" aria-label="${t('allJapan')}" title="${t('allJapan')}">◎</button></div></section>`;
+  return `<section class="atlas-stage" aria-label="${t('field')}"><div id="atlas"></div><div class="map-shortcuts"><button id="open-evidence" aria-haspopup="dialog">▧ ${locale === 'ja' ? '写真資料' : 'Area photo'}</button><button id="area-map">⌖ ${t('area')}</button><button id="return-pin" ${selected || q.answer?.guess ? '' : 'disabled'}>● ${t('pin')}</button></div><div class="pin-offscreen" id="pin-offscreen" hidden>${t('offscreen')}</div><div class="map-status" id="map-status"><span class="spinner"></span>${t('mapLoading')}</div><div class="map-error" id="map-error" hidden><p>${t('mapError')}</p><button id="retry-map">${t('retry')}</button></div><div class="tile-warning" id="tile-warning" hidden><span>${t('tileError')}</span><button id="retry-tiles">${t('retry')}</button></div><div class="scan-sweep" aria-hidden="true"></div><div class="scan-label" role="status" hidden>${t('scan')}</div><div class="basemap-switch" role="group" aria-label="${locale === 'ja' ? '地図の表示' : 'Map appearance'}"><button id="basemap-satellite" aria-pressed="${basemap === 'satellite'}">${locale === 'ja' ? '航空写真' : 'Satellite'}</button><button id="basemap-map" aria-pressed="${basemap === 'map'}">${locale === 'ja' ? '道路地図' : 'Map'}</button></div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="reset-map" aria-label="${t('allJapan')}" title="${t('allJapan')}">◎</button></div></section>`;
 }
 function records(q) {
   const last = q.attempts.at(-1);
@@ -111,7 +112,7 @@ function records(q) {
 }
 function resultMarkup(q, animate) {
   const r = q.answer;
-  return `<section class="compact-result"><div class="result-stats"><span class="earned-points"><i class="dot ${r.withinRadius ? 'mint' : 'amber'}"></i><strong>+<span id="points-number">${animate ? '—' : r.points}</span></strong><small> / ${q.maxPoints}</small></span><span class="result-distance"><strong id="distance-number">${animate ? '0' : number(r.distanceKm)}</strong> km</span></div><div class="route-actions"><span id="reveal-status">${animate ? t('measuring') : r.withinRadius ? t('stages')[3] : t(r.reason === 'revealed' ? 'endEarly' : 'attemptsEnd')}</span><button id="skip-reveal" ${animate ? '' : 'hidden'}>${t('skip')} ↠</button><button id="replay-reveal" ${animate || !r.guess ? 'hidden' : ''}>↻ ${t('replay')}</button></div><p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p><div class="result-details" ${animate ? 'hidden' : ''}><article class="answer-card"><span class="report-kicker">${locale === 'ja' ? '調査報告' : 'FIELD REPORT'}</span><h2 id="result-heading">${esc(localized(q.title))}</h2><p>${esc(localized(q.summary))}</p><div class="focus-controls"><button id="focus-answer"><i class="dot mint"></i>${t('goal')}</button>${r.guess ? `<button id="focus-guess"><i class="dot amber"></i>${t('yours')}</button>` : ''}</div><details class="sources"><summary>${locale === 'ja' ? '詳しい話・出典' : 'Full story & sources'}</summary><p>${esc(localized(q.fact))}</p><p class="review-note">${t('pending')}</p><ul>${q.sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a><small>${s.access === 'read' ? t('sourceRead') : t('sourcePending')}</small></li>`).join('')}</ul></details></article><p class="score-note">${t('finalNote')}</p>${state.plan === 'free' && uiIndex === 2 ? adSlot() : ''}</div><button class="primary" id="next" ${animate ? 'disabled' : ''}>${uiIndex === 4 ? t('finish') : t('next')} →</button></section>`;
+  return `<section class="story-result"><div class="result-stats"><span class="earned-points"><i class="dot ${r.withinRadius ? 'mint' : 'amber'}"></i><strong>+<span id="points-number">${animate ? '—' : r.points}</span></strong><small> / ${q.maxPoints}</small></span><span class="result-distance"><strong id="distance-number">${animate ? '0' : number(r.distanceKm)}</strong> km</span><button class="next-shortcut" id="next-top" ${animate ? 'disabled' : ''}>${locale === 'ja' ? '次へ' : 'Next'} →</button></div><div class="route-actions"><span id="reveal-status">${animate ? t('measuring') : r.withinRadius ? t('stages')[3] : t(r.reason === 'revealed' ? 'endEarly' : 'attemptsEnd')}</span><button id="skip-reveal" ${animate ? '' : 'hidden'}>${t('skip')} ↠</button><button id="replay-reveal" ${animate || !r.guess ? 'hidden' : ''}>↻ ${t('replay')}</button></div><p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p><div class="result-details" ${animate ? 'hidden' : ''}>${storyReport(q, locale, state.roundId)}${state.plan === 'free' && uiIndex === 2 ? adSlot() : ''}</div><button class="primary next-story" id="next" ${animate ? 'disabled' : ''}>${uiIndex === 4 ? t('finish') : t('next')} →</button></section>`;
 }
 function renderQuestion(q) {
   const animate = !!q.answer?.guess && freshReveal === q.id && !reduced();
@@ -121,7 +122,7 @@ function renderSummary() {
   return `<section class="summary"><div class="summary-symbol">${compass}</div><div class="eyebrow">EXPEDITION COMPLETE · ${state.day} · ${esc(localized(state.roundLabel))}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><section class="share-panel" aria-labelledby="share-title"><h2 id="share-title">${t('shareTitle')}</h2><img id="share-preview" alt="${t('shareAlt')}" width="1200" height="1200" hidden><button class="primary" id="share-result" disabled>${t('share')}</button><div class="share-actions"><button id="save-result" disabled>${t('save')}</button><button id="copy-result">${t('copy')}</button></div><p id="share-status" role="status" aria-live="polite"></p><details class="share-post"><summary>${t('post')}</summary><textarea id="share-text" aria-label="${t('post')}" readonly rows="7"></textarea></details></section><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span class="summary-number">0${i + 1}</span><span>${esc(localized(q.title))}${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</span><strong>${q.answer.points}<small> / ${q.maxPoints}</small></strong><span>↗</span></button>`).join('')}</div><button class="other-round" id="other-round">${t('other')} →</button>${state.plan === 'free' ? adSlot() : ''}</section>`;
 }
 function settingsMarkup() {
-  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''}>${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><span>JAPAN · FIELD DISCOVERY v0.7</span></div></details>`;
+  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''}>${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><span>JAPAN · STORY REPORT v0.8</span></div></details>`;
 }
 function render() {
   if (!state) return;
@@ -139,6 +140,7 @@ function goTo(index) {
   freshReveal = null; freshUnlock = []; uiIndex = index;
   selected = state.questions[index]?.attempts.at(-1)?.guess || null;
   render(); window.scrollTo({ top: 0 });
+  if (state.questions[index]?.answer) requestAnimationFrame(() => document.querySelector('.story-result')?.scrollIntoView({ block: 'start' }));
 }
 async function switchRound(id) {
   if (switching || submitting || state.roundId === id) return;
@@ -184,15 +186,18 @@ function updateReveal(q, progress, done) {
   const distance = document.querySelector('#distance-number'); if (!distance) return;
   distance.textContent = number(q.answer.distanceKm == null ? null : q.answer.distanceKm * progress);
   if (!done) return;
+  const newlyRevealed = freshReveal === q.id;
   freshReveal = null;
   document.querySelector('#points-number').textContent = q.answer.points;
   document.querySelector('#reveal-status').textContent = q.answer.withinRadius ? t('stages')[3] : t(q.answer.reason === 'revealed' ? 'endEarly' : 'attemptsEnd');
   document.querySelector('.result-details').hidden = false;
   document.querySelector('#next').disabled = false;
+  document.querySelector('#next-top').disabled = false;
   document.querySelector('#skip-reveal').hidden = true;
   document.querySelector('#replay-reveal').hidden = !q.answer.guess;
   document.querySelector('.game-board').dataset.phase = 'complete';
   document.querySelector('#result-announcement').textContent = `${localized(q.title)} · ${number(q.answer.distanceKm)} km · ${q.answer.points}`;
+  if (newlyRevealed) requestAnimationFrame(() => document.querySelector('.story-result')?.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }));
 }
 function bind() {
   document.querySelector('#locale').onclick = () => { if (submitting || switching) return; locale = locale === 'ja' ? 'en' : 'ja'; localStorage.setItem('fieldnotes-locale', locale); freshReveal = null; render(); };
@@ -208,6 +213,7 @@ function bind() {
     document.querySelector('#other-round').onclick = () => switchRound(state.roundId === 'first' ? 'second' : 'first');
     return;
   }
+  bindReportPhoto();
   const q = state.questions[uiIndex], key = `${state.roundId}:${q.id}`;
   const options = {
     container: document.querySelector('#atlas'), locale, basemap, questionKey: key,
@@ -241,7 +247,7 @@ function bind() {
     atlas?.setBasemap?.(mode);
     document.querySelector('#basemap-satellite').setAttribute('aria-pressed', String(mode === 'satellite'));
     document.querySelector('#basemap-map').setAttribute('aria-pressed', String(mode === 'map'));
-    document.querySelector('#open-evidence img').src = evidenceUrl(q);
+    const thumb = document.querySelector('#open-evidence img'); if (thumb) thumb.src = evidenceUrl(q);
     const full = document.querySelector('#evidence-full'); if (full.src) full.src = evidenceUrl(q);
   }
   document.querySelector('#basemap-satellite').onclick = () => changeBasemap('satellite');
@@ -269,8 +275,8 @@ function bind() {
   document.querySelector('#focus-answer')?.addEventListener('click', () => { atlas.focus(q.coordinate); document.querySelector('.atlas-stage').scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }); });
   document.querySelector('#focus-guess')?.addEventListener('click', () => { atlas.focus(q.answer.guess); document.querySelector('.atlas-stage').scrollIntoView({ block: 'start' }); });
   document.querySelector('#skip-reveal')?.addEventListener('click', () => { atlas.skipReveal(); updateReveal(q, 1, true); });
-  document.querySelector('#replay-reveal')?.addEventListener('click', () => { freshReveal = q.id; render(); });
-  document.querySelector('#next')?.addEventListener('click', () => goTo(uiIndex === 4 ? 5 : uiIndex + 1));
+  document.querySelector('#replay-reveal')?.addEventListener('click', () => { freshReveal = q.id; render(); document.querySelector('.atlas-stage').scrollIntoView({ block: 'start', behavior: 'auto' }); });
+  document.querySelectorAll('#next, #next-top').forEach(button => button.addEventListener('click', () => goTo(uiIndex === 4 ? 5 : uiIndex + 1)));
 }
 app.innerHTML = `<p class="loading">${t('loading')}</p>`;
 try {

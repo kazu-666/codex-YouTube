@@ -31,7 +31,9 @@ try {
   await page.locator('#atlas[data-ready="true"]').waitFor();
   assert.equal(await page.locator('#atlas').getAttribute('data-mode'), 'flat');
   assert.equal(await page.locator('#atlas').getAttribute('data-basemap'), 'satellite');
-  await page.waitForFunction(() => document.querySelector('#open-evidence img').complete);
+  assert.equal(await page.locator('.evidence-preview').count(), 0, 'the fixed reference image must not cover the map');
+  assert.ok((await page.locator('#question-text').textContent()).includes('玉藻前'));
+  assert.ok(await page.locator('#question-text').evaluate(el => parseFloat(getComputedStyle(el).fontSize)) >= 18);
   assert.ok(photoRequests > 0, 'satellite imagery is the default');
   assert.equal(await page.locator('.japan-globe-canvas').count(), 0);
   assert.equal(await page.locator('#lock-answer').isDisabled(), true);
@@ -45,9 +47,13 @@ try {
   await page.locator('#close-evidence').click();
   await page.locator('#basemap-map').click();
   assert.equal(await page.locator('#atlas').getAttribute('data-basemap'), 'map');
-  assert.ok((await page.locator('#open-evidence img').getAttribute('src')).includes('.svg'));
+  await page.locator('#open-evidence').click();
+  assert.ok((await page.locator('#evidence-full').getAttribute('src')).includes('.svg'));
+  await page.locator('#close-evidence').click();
   await page.locator('#basemap-satellite').click();
-  assert.ok((await page.locator('#open-evidence img').getAttribute('src')).includes('.jpg'));
+  await page.locator('#open-evidence').click();
+  assert.ok((await page.locator('#evidence-full').getAttribute('src')).includes('.jpg'));
+  await page.locator('#close-evidence').click();
   assert.equal(await page.evaluate(() => window.firstCanvas === document.querySelector('#atlas canvas')), true, 'basemap switch must preserve canvas');
   await page.locator('#how-to').click(); assert.equal(await page.locator('#help-dialog').evaluate(el => el.open), true); await page.locator('#close-help').click();
   const rect = await page.locator('#atlas').boundingBox(), cx = rect.x + rect.width / 2, cy = rect.y + rect.height / 2;
@@ -138,6 +144,16 @@ try {
   await page.locator('#next:enabled').waitFor();
   assert.equal(await page.locator('#points-number').textContent(), '100');
   assert.equal(await page.locator('#result-heading').textContent(), target.ja.title);
+  await page.locator('#report-photo').evaluate(image => image.decode());
+  assert.equal(await page.locator('.report-section').count(), target.ja.report.sections.length);
+  assert.equal(await page.locator('.report-trivia h4').textContent(), target.ja.report.trivia.title);
+  assert.equal(await page.locator('.report-section').first().isVisible(), true, 'full story must be readable without opening a details control');
+  assert.ok((await page.locator('.image-type').textContent()).includes('航空写真'));
+  assert.ok(await page.locator('.report-section p').first().evaluate(el => parseFloat(getComputedStyle(el).fontSize)) >= 16);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'story report must fit mobile width');
+  await page.locator('.story-result').evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  await page.screenshot({ path: '/tmp/georoots-story-result-mobile.png' });
+
   assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-zoom')) - beforeFinal) < .01, 'final reveal does not zoom out');
   assert.equal(await canvasBeforeFinal.evaluate(el => el === document.querySelector('#atlas canvas')), true);
   await page.locator('#replay-reveal').click(); await page.locator('#skip-reveal').click(); await page.locator('#next:enabled').waitFor();
@@ -148,6 +164,12 @@ try {
   await page.locator('#next').click();
   await page.locator('#reveal-destination').click();
   await page.locator('#next:enabled').waitFor();
+  assert.equal(await page.locator('#result-heading').textContent(), questions[1].ja.title);
+  assert.ok((await page.locator('#story-report').textContent()).includes('髪長姫'));
+  await page.locator('#report-photo').evaluate(image => image.decode());
+  await page.locator('.story-result').evaluate(el => el.scrollIntoView({ block: 'start', behavior: 'instant' }));
+  await page.screenshot({ path: '/tmp/georoots-dojoji-story-mobile.png' });
+
   assert.equal(await page.locator('#distance-number').textContent(), '—', 'no guess has no invented distance');
   assert.equal(await page.locator('#points-number').textContent(), '0');
   await page.locator('#next').click();
@@ -166,19 +188,24 @@ try {
   assert.match((await downloadEvent).suggestedFilename(), /first.*\.png$/);
   await page.reload(); await page.locator('.summary-list').waitFor();
   await page.locator('#other-round').click(); await page.locator('#atlas[data-ready="true"]').waitFor();
-  assert.ok((await page.locator('#question-text').textContent()).includes('京都'));
+  assert.ok((await page.locator('#question-text').textContent()).includes('源義経'));
   await page.locator('.settings > summary').click();
   await page.locator('#plan').selectOption('premium');
   await page.locator('#extra-hint').click(); await page.locator('.extra-clue').waitFor(); assert.equal(await page.locator('.extra-clue').count(), 1);
   await page.locator('.settings > summary').click(); await page.locator('#locale').click();
-  assert.ok((await page.locator('#question-text').textContent()).includes('Northern Kyoto'));
+  assert.ok((await page.locator('#question-text').textContent()).includes('Yoshitsune'));
   assert.equal(await page.locator('.ad-slot').count(), 0);
   await page.screenshot({ path: '/tmp/georoots-investigation-english.png', fullPage: true });
+  await page.locator('#reveal-destination').click();
+  await page.locator('#next:enabled').waitFor();
+  assert.equal(await page.locator('.report-lead').textContent(), questions[5].en.report.lead);
+  assert.equal(await page.locator('.report-trivia h4').textContent(), questions[5].en.report.trivia.title);
   assert.deepEqual(errors, []);
 
   // The destination remains accessible with reduced motion and an unavailable map.
   const fallbackContext = await browser.newContext({ viewport: { width: 320, height: 740 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
   await fallbackContext.route('https://tiles.openfreemap.org/**', route => route.abort('failed'));
+  await fallbackContext.route('**/api/report-image/**', route => route.abort('failed'));
   const fallback = await fallbackContext.newPage();
   await fallback.goto(base + '/?round=first'); await fallback.locator('#map-error:not([hidden])').waitFor();
   assert.equal(await fallback.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
@@ -193,6 +220,9 @@ try {
   await fallback.locator('#continue-search').click();
   await fallback.locator('#reveal-destination').click(); await fallback.locator('#next:enabled').waitFor();
   assert.equal(await fallback.locator('#result-heading').textContent(), target.ja.title);
+  await fallback.locator('.report-photo-failed:not([hidden])').waitFor();
+  assert.equal(await fallback.locator('.report-lead').textContent(), target.ja.report.lead);
+  assert.equal(await fallback.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await fallbackContext.close();
   const photoFailureContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   await photoFailureContext.route('https://tiles.openfreemap.org/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }));
