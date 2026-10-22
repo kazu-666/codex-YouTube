@@ -4,284 +4,172 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import questions from '../content/questions.json' with { type: 'json' };
 
-// This suite tests real browser gestures, not the external provider's map data.
-// Keep network-dependent checks separate from this deterministic fixture.
-const style = {
-  version: 8,
-  sources: { land: { type: 'geojson', data: { type: 'FeatureCollection', features: [
-    { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[75,8],[85,22],[120,22],[145,50],[80,60],[75,8]]] } },
-    { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[130,32],[134,33],[142,41],[140,42],[130,32]]] } },
-    { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[132.30,34.25],[132.35,34.25],[132.35,34.31],[132.30,34.31],[132.30,34.25]]] } }
-  ] } } },
-  layers: [{ id: 'ocean', type: 'background', paint: { 'background-color': '#295163' } }, { id: 'land', type: 'fill', source: 'land', paint: { 'fill-color': '#a9b8a1' } }, { id: 'shore', type: 'line', source: 'land', paint: { 'line-color': '#d0dcc1', 'line-width': 1 } }]
-};
-const transparentTile = fs.readFileSync(new URL('./fixtures/transparent-tile.png', import.meta.url));
-const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fieldnotes-browser-'));
-const port = 3107;
-const child = spawn(process.execPath, ['server/index.js'], { env: { ...process.env, NODE_ENV: 'production', PORT: String(port), FIELDNOTES_DATA_DIR: dataDir }, stdio: 'pipe' });
+// Deterministic browser fixtures verify interaction, not external map coverage.
+const style = { version: 8, sources: { land: { type: 'geojson', data: { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[[130,32],[134,33],[142,41],[140,42],[130,32]]] } }] } } }, layers: [{ id: 'ocean', type: 'background', paint: { 'background-color': '#94bdc8' } }, { id: 'land', type: 'fill', source: 'land', paint: { 'fill-color': '#ede8d6' } }] };
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'georoots-browser-'));
+const port = 3107, base = `http://127.0.0.1:${port}`;
+const child = spawn(process.execPath, ['server/index.js'], { env: { ...process.env, NODE_ENV: 'production', PORT: String(port), FIELDNOTES_DATA_DIR: dir }, stdio: 'pipe' });
 let browser;
 try {
-  const ready = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Server startup timed out')), 15000);
-    child.stdout.on('data', chunk => { if (String(chunk).includes('Game running')) { clearTimeout(timer); resolve(); } });
-    child.on('exit', code => { clearTimeout(timer); reject(new Error(`Server exited ${code}`)); });
-  });
-  await ready;
-  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader'], env: { ...process.env, XDG_CONFIG_HOME: '/tmp/fieldnotes-pw-config', XDG_CACHE_HOME: '/tmp/fieldnotes-pw-cache' } });
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
+  await new Promise((resolve, reject) => { const timer = setTimeout(() => reject(new Error('Server timeout')), 10000); child.stdout.on('data', d => { if (String(d).includes('Game running')) { clearTimeout(timer); resolve(); } }); child.on('exit', code => reject(new Error(`Server exit ${code}`))); });
+  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader'], env: { ...process.env, XDG_CONFIG_HOME: '/tmp/georoots-test-config', XDG_CACHE_HOME: '/tmp/georoots-test-cache' } });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const page = await context.newPage();
+  const errors = []; let styleRequests = 0;
+  page.on('pageerror', e => errors.push(e.message));
   await page.addInitScript(() => {
     window.sharedResults = [];
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
-    Object.defineProperty(navigator, 'share', { configurable: true, writable: true, value: async data => {
-      window.sharedResults.push({ text: data.text, files: data.files.map(file => ({ name: file.name, size: file.size, type: file.type })) });
-    } });
+    Object.defineProperty(navigator, 'share', { configurable: true, writable: true, value: async data => window.sharedResults.push({ text: data.text, files: data.files.map(f => ({ name: f.name, size: f.size, type: f.type })) }) });
   });
-  const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
-  page.on('console', msg => { if (['error', 'warning'].includes(msg.type())) console.log('Browser:', msg.text().slice(0,250)); });
-  let imageryRequests = 0;
-  await page.route('https://tiles.openfreemap.org/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }));
-  await page.route('https://server.arcgisonline.com/**', route => { imageryRequests++; return route.fulfill({ status: 200, contentType: 'image/png', body: transparentTile }); });
-  await page.goto(`http://127.0.0.1:${port}/?round=first`);
-  await page.locator('#atlas[data-ready="true"]').waitFor({ timeout: 30000 });
-  await page.waitForTimeout(500);
-  await page.screenshot({ path: '/tmp/fieldnotes-globe-initial.png' });
-  assert.ok(imageryRequests > 0, 'satellite imagery tiles should be requested');
-  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), 'globe', 'overview must be the Japan-sized sphere');
-  assert.equal(await page.locator('.japan-globe-canvas').count(),1);
-  assert.equal(await page.locator('#imagery-warning').isHidden(), true, 'working satellite tiles should not show a warning');
-  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'a location must be chosen before confirmation');
-  const rect = await page.locator('#atlas').boundingBox();
-  assert.ok(rect.width <= 390, 'map should fit mobile width');
-  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'no horizontal overflow');
+  await context.route('https://tiles.openfreemap.org/**', route => { styleRequests++; return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }); });
+  let photoRequests = 0;
+  await context.route('https://server.arcgisonline.com/**', route => { photoRequests++; return route.fulfill({ status: 200, contentType: 'image/png', body: fs.readFileSync(new URL('./fixtures/transparent-tile.png', import.meta.url)) }); });
+  await page.goto(base + '/?round=first');
+  await page.locator('#atlas[data-ready="true"]').waitFor();
+  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), 'flat');
+  assert.equal(await page.locator('#atlas').getAttribute('data-basemap'), 'satellite');
+  await page.waitForFunction(() => document.querySelector('#open-evidence img').complete);
+  assert.ok(photoRequests > 0, 'satellite imagery is the default');
+  assert.equal(await page.locator('.japan-globe-canvas').count(), 0);
+  assert.equal(await page.locator('#lock-answer').isDisabled(), true);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.evaluate(() => { window.firstCanvas = document.querySelector('#atlas canvas'); });
+  await page.locator('#open-evidence').click();
+  assert.equal(await page.locator('#evidence-dialog').evaluate(el => el.open), true);
+  await page.locator('#evidence-full').evaluate(img => img.decode());
+  assert.equal(await page.locator('#evidence-error').isHidden(), true);
+  await page.screenshot({ path: '/tmp/georoots-evidence-mobile.png' });
+  await page.locator('#close-evidence').click();
+  await page.locator('#basemap-map').click();
+  assert.equal(await page.locator('#atlas').getAttribute('data-basemap'), 'map');
+  assert.ok((await page.locator('#open-evidence img').getAttribute('src')).includes('.svg'));
+  await page.locator('#basemap-satellite').click();
+  assert.ok((await page.locator('#open-evidence img').getAttribute('src')).includes('.jpg'));
+  assert.equal(await page.evaluate(() => window.firstCanvas === document.querySelector('#atlas canvas')), true, 'basemap switch must preserve canvas');
+  await page.locator('#how-to').click(); assert.equal(await page.locator('#help-dialog').evaluate(el => el.open), true); await page.locator('#close-help').click();
+  const rect = await page.locator('#atlas').boundingBox(), cx = rect.x + rect.width / 2, cy = rect.y + rect.height / 2;
   const cdp = await context.newCDPSession(page);
-  const cx = rect.x + rect.width / 2, cy = rect.y + rect.height / 2;
-  const initialZoom = Number(await page.locator('#atlas').getAttribute('data-zoom') || .55);
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx - 35, y: cy, id: 0 }, { x: cx + 35, y: cy, id: 1 }] });
-  for (let n = 1; n <= 10; n++) {
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx - 35 - n * 7, y: cy, id: 0 }, { x: cx + 35 + n * 7, y: cy, id: 1 }] });
-    await page.waitForTimeout(25);
-  }
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await page.waitForTimeout(600);
-  const pinchZoom = Number(await page.locator('#atlas').getAttribute('data-zoom'));
-  assert.ok(pinchZoom > initialZoom + .7, `pinch should zoom: ${initialZoom} -> ${pinchZoom}`);
-  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'pinch must not place or confirm a pin');
+  const beforeZoom = Number(await page.locator('#atlas').getAttribute('data-zoom'));
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx - 30, y: cy, id: 0 }, { x: cx + 30, y: cy, id: 1 }] });
+  for (let n = 1; n <= 9; n++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx - 30 - n * 6, y: cy, id: 0 }, { x: cx + 30 + n * 6, y: cy, id: 1 }] }); await page.waitForTimeout(20); }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await page.waitForTimeout(400);
+  assert.ok(Number(await page.locator('#atlas').getAttribute('data-zoom')) > beforeZoom + .6);
+  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'pinch does not choose a pin');
   const lng = Number(await page.locator('#atlas').getAttribute('data-longitude'));
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx - 55, y: cy, id: 0 }] });
-  for (let n = 1; n <= 8; n++) {
-    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx - 55 + n * 12, y: cy, id: 0 }] });
-    await page.waitForTimeout(25);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx - 40, y: cy, id: 0 }] });
+  for (let n = 1; n <= 7; n++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx - 40 + n * 12, y: cy, id: 0 }] }); await page.waitForTimeout(20); }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await page.waitForTimeout(400);
+  assert.notEqual(Number(await page.locator('#atlas').getAttribute('data-longitude')), lng);
+  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'drag does not choose a pin');
+  async function tapCoordinate(coord) {
+    await page.locator('#area-map').click(); await page.waitForTimeout(750);
+    const point = await page.evaluate(([lat, lng]) => {
+      const el = document.querySelector('#atlas'), r = el.getBoundingClientRect(), z = +el.dataset.zoom, size = 512 * 2 ** z;
+      const y = lat => (1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2;
+      return { x: r.x + r.width / 2 + (lng - +el.dataset.longitude) / 360 * size, y: r.y + r.height / 2 + (y(lat) - y(+el.dataset.latitude)) * size };
+    }, coord);
+    assert.ok(point.x > rect.x && point.x < rect.x + rect.width && point.y > rect.y && point.y < rect.y + rect.height, 'test target is visible');
+    await page.touchscreen.tap(point.x, point.y);
+    assert.equal(await page.locator('#lock-answer').isEnabled(), true);
   }
+  const target = questions[0];
+  await tapCoordinate([target.coordinate[0] - .3, target.coordinate[1]]);
+  const firstView = await page.locator('#atlas').evaluate(el => ({ z: +el.dataset.zoom, lng: +el.dataset.longitude, lat: +el.dataset.latitude, height: el.clientHeight }));
+  await page.locator('#lock-answer').click();
+  await page.locator('.scan-label:not([hidden])').waitFor();
+  await page.locator('.last-check').waitFor();
+  assert.equal(await page.locator('.stage-badge').getAttribute('data-stage'), '1');
+  assert.equal(await page.locator('.record-card.open').count(), 1);
+  assert.equal(await page.locator('#result-heading').count(), 0, 'destination remains hidden during investigation');
+  assert.equal(await page.evaluate(() => window.firstCanvas === document.querySelector('#atlas canvas')), true, 'answer must retain the canvas');
+  assert.equal(styleRequests, 1, 'checks must not reload the map style');
+  const afterView = await page.locator('#atlas').evaluate(el => ({ z: +el.dataset.zoom, lng: +el.dataset.longitude, lat: +el.dataset.latitude, height: el.clientHeight }));
+  assert.deepEqual(afterView, firstView, 'check must preserve centre, zoom and map height');
+  await page.locator('#return-pin').click(); await page.waitForTimeout(600);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx + 80, y: cy, id: 0 }] });
+  for (let n = 1; n <= 10; n++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: cx + 80 - n * 26, y: cy, id: 0 }] }); await page.waitForTimeout(25); }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await page.waitForTimeout(600);
-  assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-longitude')) - lng) > .01, 'drag should move the map');
-  assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'drag must not place or confirm a pin');
-  await page.touchscreen.tap(cx, cy);
-  assert.equal(await page.locator('#lock-answer').isEnabled(), true, 'a tap places a provisional pin');
-  let provisional = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
-  assert.equal(provisional.questions[0].answer, undefined, 'placing a pin must not submit an answer');
-  const beforeAnswer = await page.evaluate(() => ({
-    height: document.querySelector('.atlas-stage').getBoundingClientRect().height,
-    mode: document.querySelector('#atlas').dataset.mode,
-    radius: Number(document.querySelector('#atlas').dataset.cameraDistance),
-    zoom: Number(document.querySelector('#atlas').dataset.zoom)
-  }));
+  await page.locator('#pin-offscreen:not([hidden])').waitFor();
+  await page.locator('#return-pin').click(); await page.locator('#pin-offscreen[hidden]').waitFor({ state: 'attached' });
+  await tapCoordinate([target.coordinate[0] + .08, target.coordinate[1]]);
+  await page.locator('#lock-answer').click();
+  await page.locator('.stage-badge[data-stage="2"]').waitFor();
+  assert.equal(await page.locator('.record-card.open').count(), 2);
+  assert.equal(await page.locator('.record-unlocked').count(), 1);
+  await page.screenshot({ path: '/tmp/georoots-investigation-mobile.png', fullPage: true });
+  await page.reload(); await page.locator('#atlas[data-ready="true"]').waitFor();
+  assert.equal(await page.locator('.record-card.open').count(), 2, 'records survive reload');
+  assert.equal(await page.locator('.attempt-dots .used').count(), 2);
+  await page.locator('#lock-answer').waitFor({ state: 'visible' });
+  const canvasBeforeFinal = await page.locator('#atlas canvas').elementHandle();
+  await tapCoordinate(target.coordinate);
+  const beforeFinal = Number(await page.locator('#atlas').getAttribute('data-zoom'));
   await page.locator('#lock-answer').click();
   await page.locator('#next').waitFor();
-  await page.waitForFunction(() => {
-    const p = Number(document.querySelector('#atlas')?.dataset.routeProgress);
-    return p > .05 && p < .9;
-  });
-  assert.equal(await page.locator('#next').isDisabled(), true, 'route is revealed before advancing');
-  assert.equal(await page.locator('.correct').evaluate(el => getComputedStyle(el).visibility), 'hidden', 'correct pin arrives at the end of the line');
-  await page.screenshot({ path: '/tmp/georoots-reveal-midway.png', fullPage: true });
-  await page.locator('#atlas[data-reveal="complete"]').waitFor();
-  await page.locator('#next:enabled').waitFor();
-  assert.equal(await page.locator('.result-stats').count(), 1, 'confirming records and animates the answer');
-  const afterAnswer = await page.evaluate(() => ({
-    height: document.querySelector('.atlas-stage').getBoundingClientRect().height,
-    mode: document.querySelector('#atlas').dataset.mode,
-    radius: Number(document.querySelector('#atlas').dataset.cameraDistance)
-  }));
-  assert.ok(Math.abs(afterAnswer.height-beforeAnswer.height)<1, 'answering must not shrink the map');
-  assert.equal(afterAnswer.mode,beforeAnswer.mode,'answering must retain the display mode');
-  if(beforeAnswer.mode==='globe') assert.ok(Math.abs(afterAnswer.radius-beforeAnswer.radius)<.005,'answering must not pull the camera back');
-
-  const answered = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
-  assert.equal(await page.locator('#points-number').textContent(), String(answered.questions[0].answer.points));
-  assert.ok(Math.abs(Number((await page.locator('#distance-number').textContent()).replace(/,/g, '')) - answered.questions[0].answer.distanceKm) <= .5);
-  assert.equal(await page.locator('.result-details').isVisible(), true);
-  assert.equal(await page.locator('#question-text').textContent(), provisional.questions[0].hint.ja, 'question must remain above the map after answering');
-  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), beforeAnswer.mode, 'answer reveal keeps the current map');
-  await page.locator('#replay-reveal').click();
+  await page.waitForFunction(() => { const p = +document.querySelector('#atlas').dataset.routeProgress; return p > .02 && p < .9; });
+  assert.equal(await page.locator('#next').isDisabled(), true);
   await page.locator('#skip-reveal').click();
   await page.locator('#next:enabled').waitFor();
-  assert.equal(await page.locator('#points-number').textContent(), String(answered.questions[0].answer.points), 'skipping must keep the server score');
-  await page.screenshot({ path: '/tmp/fieldnotes-globe-mobile.png', fullPage: true });
-  let checkedDetail = false;
-  for (let i = 0; i < 5; i++) {
-    if (i === 1) {
-      await page.locator('.settings > summary').click();
-      await page.locator('#plan').selectOption('premium');
-      await page.locator('#extra-hint').click();
-      await page.locator('.extra-clue').waitFor();
-      await page.locator('#atlas[data-ready="true"]').waitFor();
-    }
-    if (i > 0) { await page.locator('#center-pin').click(); await page.locator('#lock-answer').click(); }
-    await page.locator('#next:enabled').waitFor();
-    await page.locator('#focus-answer').waitFor({state:'attached'});
-    await page.locator('#atlas[data-ready="true"]').waitFor();
-    if ((await page.locator('#result-heading').textContent()) === '殺生石') {
-      await page.locator('.sources > summary').click();
-      await page.locator('#focus-answer').click();
-      await page.locator('#atlas[data-mode="detail"][data-ready="true"]').waitFor();
-      await page.waitForTimeout(1500);
-      const zoom = Number(await page.locator('#atlas').getAttribute('data-zoom'));
-      assert.ok(zoom >= 15.9, `detail zoom should reach street scale: ${zoom}`);
-      assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-latitude')) - 37.1001) < .001, 'detail view must center on Sessho-seki latitude');
-      assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-longitude')) - 139.9985) < .001, 'detail view must center on Sessho-seki longitude');
-      await page.waitForTimeout(1800);
-      const pin = await page.locator('.correct .pin-dot').boundingBox();
-      assert.ok(pin.width < 32 && pin.height < 32, 'pin stays small at high zoom');
-      const mapRect = await page.locator('#atlas').boundingBox();
-      assert.ok(Math.abs(pin.x + pin.width / 2 - (mapRect.x + mapRect.width / 2)) < 40, 'correct pin must be near the center after focus');
-      await page.evaluate(() => window.scrollTo(0, 0));
-      await page.waitForTimeout(400);
-      await page.screenshot({ path: '/tmp/fieldnotes-globe-detail-viewport.png' });
-      checkedDetail = true;
-    }
-    await page.locator('#next').click();
-    if (i < 4) await page.locator('#atlas[data-ready="true"]').waitFor();
-  }
-  assert.equal(checkedDetail, true, 'Sessho-seki detail scenario must execute');
-  await page.locator('#share-result:enabled').waitFor();
-  assert.equal(await page.locator('#share-preview').evaluate(img => img.naturalWidth), 1200);
-  assert.equal(await page.locator('#share-preview').evaluate(img => img.naturalHeight), 1200);
-  const resultState = await page.evaluate(async () => (await fetch('/api/state?round=first')).json());
-  const post = await page.locator('#share-text').inputValue();
-  assert.ok(post.includes(`${resultState.total.toLocaleString()} / 1,000点`), 'post must contain the actual total');
-  assert.ok(post.includes('追加ヒント 1/5問'), 'post must disclose extra hint use');
-  for (const q of resultState.questions) assert.ok(!post.includes(q.title.ja), 'post must not spoil answer names');
-  await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.copiedPost = text; } } }); });
-  await page.locator('#copy-result').click();
-  assert.equal(await page.evaluate(() => window.copiedPost), post, 'copy button must copy the complete post');
-  await page.locator('#share-result').click();
-  const shared = await page.evaluate(() => window.sharedResults[0]);
-  assert.equal(shared.text, post);
-  assert.equal(shared.files[0].type, 'image/png');
-  assert.ok(shared.files[0].size > 10000, 'native share must receive an actual image file');
-  const downloadEvent = page.waitForEvent('download');
-  await page.locator('#save-result').click();
-  const download = await downloadEvent;
-  await download.saveAs('/tmp/fieldnotes-result-card.png');
-  const png = fs.readFileSync('/tmp/fieldnotes-result-card.png');
-  assert.equal(png.subarray(1, 4).toString(), 'PNG');
-  assert.equal(png.readUInt32BE(16), 1200);
-  assert.equal(png.readUInt32BE(20), 1200);
-  let unexpectedDownloads = 0;
-  page.on('download', () => unexpectedDownloads++);
-  await page.evaluate(() => { navigator.share = async () => { throw new DOMException('Cancelled', 'AbortError'); }; });
-  await page.locator('#share-result').click();
-  await page.waitForTimeout(100);
-  assert.equal(unexpectedDownloads, 0, 'cancelling native sharing must not download a file');
-  await page.locator('.settings > summary').click();
-  await page.locator('#locale').click();
-  await page.locator('#share-result:enabled').waitFor();
-  assert.ok((await page.locator('#share-text').inputValue()).includes('Extra hints: 1/5 places'));
-  const downloadPage = await context.newPage();
-  await downloadPage.addInitScript(() => { Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => false }); });
-  await downloadPage.goto(`http://127.0.0.1:${port}/?round=first`);
-  await downloadPage.locator('#share-result:enabled').waitFor();
-  assert.equal(await downloadPage.locator('#share-result').textContent(), 'Save image', 'unsupported native sharing must offer image saving');
-  const fallbackDownload = downloadPage.waitForEvent('download');
-  await downloadPage.locator('#share-result').click();
-  assert.match((await fallbackDownload).suggestedFilename(), /^georoots-\d{4}-\d{2}-\d{2}-first\.png$/);
-  await downloadPage.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined }); });
-  await downloadPage.locator('#copy-result').click();
-  assert.equal(await downloadPage.locator('.share-post').getAttribute('open'), '', 'unavailable clipboard must reveal selectable post text');
-  assert.equal(await downloadPage.locator('#share-text').evaluate(el => el.selectionEnd - el.selectionStart), (await downloadPage.locator('#share-text').inputValue()).length);
-  await downloadPage.close();
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.locator('#other-round').click();
-  await page.locator('#atlas[data-ready="true"]').waitFor();
-  assert.equal(await page.locator('[data-round="second"]').getAttribute('aria-pressed'), 'true');
-  for (let i = 0; i < 5; i++) {
-    await page.locator('#atlas[data-ready="true"]').waitFor();
-    await page.locator('#center-pin').click();
-    await page.locator('#lock-answer').click();
-    await page.locator('#next:enabled').waitFor();
-    await page.locator('#atlas[data-reveal="complete"]').waitFor();
-    assert.equal(await page.locator('#skip-reveal').isHidden(), true, 'reduced motion must show final results without animation');
+  assert.equal(await page.locator('#points-number').textContent(), '100');
+  assert.equal(await page.locator('#result-heading').textContent(), target.ja.title);
+  assert.ok(Math.abs(Number(await page.locator('#atlas').getAttribute('data-zoom')) - beforeFinal) < .01, 'final reveal does not zoom out');
+  assert.equal(await canvasBeforeFinal.evaluate(el => el === document.querySelector('#atlas canvas')), true);
+  await page.locator('#replay-reveal').click(); await page.locator('#skip-reveal').click(); await page.locator('#next:enabled').waitFor();
+  await page.locator('#focus-answer').click();
+  await page.waitForFunction(() => +document.querySelector('#atlas').dataset.zoom > 15.9);
+  const pinSize = await page.locator('.atlas-pin.correct').boundingBox(); assert.ok(pinSize.width < 30);
+  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), 'flat');
+  await page.locator('#next').click();
+  await page.locator('#reveal-destination').click();
+  await page.locator('#next:enabled').waitFor();
+  assert.equal(await page.locator('#distance-number').textContent(), '—', 'no guess has no invented distance');
+  assert.equal(await page.locator('#points-number').textContent(), '0');
+  await page.locator('#next').click();
+  for (let i = 2; i < 5; i++) {
+    await page.locator('#reveal-destination').click(); await page.locator('#next:enabled').waitFor();
+    if (i === 2) assert.equal(await page.locator('.ad-slot').count(), 1);
     await page.locator('#next').click();
   }
   await page.locator('#share-result:enabled').waitFor();
-  assert.ok((await page.locator('#share-text').inputValue()).includes('Volume II'));
+  assert.equal(await page.locator('.summary-row').count(), 5);
+  await page.locator('#share-result').click();
+  const shares = await page.evaluate(() => window.sharedResults);
+  assert.equal(shares.length, 1); assert.ok(shares[0].files[0].size > 10000);
+  assert.ok(shares[0].text.includes('round=first')); assert.ok(!shares[0].text.includes(target.ja.title));
+  const downloadEvent = page.waitForEvent('download'); await page.locator('#save-result').click();
+  assert.match((await downloadEvent).suggestedFilename(), /first.*\.png$/);
+  await page.reload(); await page.locator('.summary-list').waitFor();
+  await page.locator('#other-round').click(); await page.locator('#atlas[data-ready="true"]').waitFor();
+  assert.ok((await page.locator('#question-text').textContent()).includes('京都'));
   await page.locator('.settings > summary').click();
-  await page.locator('[data-round="first"]').click();
-  await page.locator('#share-result:enabled').waitFor();
-  assert.ok((await page.locator('#share-text').inputValue()).includes('Volume I'), 'switching must preserve first volume results');
-  assert.deepEqual(errors, [], 'no browser JavaScript exceptions');
-  const fallbackContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-  const fallbackPage = await fallbackContext.newPage();
-  await fallbackPage.route('https://tiles.openfreemap.org/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }));
-  await fallbackPage.route('https://server.arcgisonline.com/**', route => route.abort('failed'));
-  await fallbackPage.goto(`http://127.0.0.1:${port}/`);
-  await fallbackPage.locator('#atlas[data-ready="true"]').waitFor({ timeout: 30000 });
-  await fallbackPage.locator('#imagery-warning:visible').waitFor({ timeout: 30000 });
-  await fallbackPage.locator('#center-pin').click();
-  await fallbackPage.locator('#lock-answer').click();
-  await fallbackPage.locator('#next:enabled').waitFor();
-  await fallbackContext.close();
-  const layoutContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
-  const layoutPage = await layoutContext.newPage();
-  await layoutPage.route('https://tiles.openfreemap.org/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }));
-  await layoutPage.route('https://server.arcgisonline.com/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: transparentTile }));
-  await layoutPage.goto(`http://127.0.0.1:${port}/?round=first`);
-  await layoutPage.locator('#atlas[data-mode="globe"][data-ready="true"]').waitFor();
-  const authoredQuestions = JSON.parse(fs.readFileSync(new URL('../content/questions.json', import.meta.url)));
-  for (const width of [320, 390, 1280]) {
-    await layoutPage.setViewportSize({ width, height: 900 });
-    for (const locale of ['ja', 'en']) for (const q of authoredQuestions) {
-      const lines = await layoutPage.evaluate(({ text, locale }) => {
-        document.documentElement.lang = locale;
-        const element = document.querySelector('#question-text'); element.textContent = text;
-        return element.getBoundingClientRect().height / parseFloat(getComputedStyle(element).lineHeight);
-      }, { text: q[locale].hint, locale });
-      assert.ok(lines <= 2.01, `${q.id} ${locale} at ${width}px must fit in two lines; got ${lines}`);
-    }
-    assert.equal(await layoutPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-  }
-  for (let n = 0; n < 7 && await layoutPage.locator('#atlas').getAttribute('data-mode') === 'globe'; n++) {
-    await layoutPage.locator('#zoom-in').click(); await layoutPage.waitForTimeout(100);
-  }
-  await layoutPage.locator('#atlas[data-mode="detail"][data-ready="true"]').waitFor();
-  assert.equal(await layoutPage.locator('#lock-answer').isDisabled(), true, 'zooming into detail must not answer');
-  for (let n = 0; n < 5 && await layoutPage.locator('#atlas').getAttribute('data-mode') === 'detail'; n++) {
-    await layoutPage.locator('#zoom-out').click(); await layoutPage.waitForTimeout(400);
-  }
-  await layoutPage.locator('#atlas[data-mode="globe"][data-ready="true"]').waitFor();
-  await layoutPage.screenshot({ path: '/tmp/georoots-mini-japan-desktop.png' });
-  for(let n=0;n<7 && await layoutPage.locator('#atlas').getAttribute('data-mode')==='globe';n++) {
-    await layoutPage.locator('#zoom-in').click(); await layoutPage.waitForTimeout(100);
-  }
-  await layoutPage.locator('#atlas[data-mode="detail"][data-ready="true"]').waitFor();
-  const detailView = await layoutPage.locator('#atlas').evaluate(el=>({zoom:Number(el.dataset.zoom),lat:Number(el.dataset.latitude),lng:Number(el.dataset.longitude)}));
-  await layoutPage.locator('#center-pin').click();
-  await layoutPage.locator('#lock-answer').click();
-  await layoutPage.locator('#next:enabled').waitFor();
-  assert.equal(await layoutPage.locator('#atlas').getAttribute('data-mode'),'detail','street-scale answers must stay in the detailed map');
-  const detailResult = await layoutPage.locator('#atlas').evaluate(el=>({zoom:Number(el.dataset.zoom),lat:Number(el.dataset.latitude),lng:Number(el.dataset.longitude)}));
-  assert.ok(Math.abs(detailResult.zoom-detailView.zoom)<.001,'street-scale answers must retain their zoom');
-  assert.ok(Math.abs(detailResult.lat-detailView.lat)<.001 && Math.abs(detailResult.lng-detailView.lng)<.001,'street-scale answers must retain their centre');
+  await page.locator('#plan').selectOption('premium');
+  await page.locator('#extra-hint').click(); await page.locator('.extra-clue').waitFor(); assert.equal(await page.locator('.extra-clue').count(), 1);
+  await page.locator('.settings > summary').click(); await page.locator('#locale').click();
+  assert.ok((await page.locator('#question-text').textContent()).includes('Northern Kyoto'));
+  assert.equal(await page.locator('.ad-slot').count(), 0);
+  await page.screenshot({ path: '/tmp/georoots-investigation-english.png', fullPage: true });
+  assert.deepEqual(errors, []);
 
-  await layoutContext.close();
-  console.log('PASS: Japan-sized 3D globe, rotation/pinch, accurate detail transition, compact question/result, two-line clues in both languages at 320/390/1280px, ten answers, animation and sharing. External imagery and native sharing are mocked.');
-  console.log('PASS: mobile gestures, provisional pins, animated route growth, arrival, skip/replay, detailed pins, all 10 answers, independent volume saves, reduced motion, image sharing, no spoilers, English and map fallback. Map data and native sharing are mocked.');
-} finally {
-  await browser?.close();
-  child.kill();
-  fs.rmSync(dataDir, { recursive: true, force: true });
-}
+  // The destination remains accessible with reduced motion and an unavailable map.
+  const fallbackContext = await browser.newContext({ viewport: { width: 320, height: 740 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
+  await fallbackContext.route('https://tiles.openfreemap.org/**', route => route.abort('failed'));
+  const fallback = await fallbackContext.newPage();
+  await fallback.goto(base + '/?round=first'); await fallback.locator('#map-error:not([hidden])').waitFor();
+  assert.equal(await fallback.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await fallback.locator('#reveal-destination').click(); await fallback.locator('#next:enabled').waitFor();
+  assert.equal(await fallback.locator('#result-heading').textContent(), target.ja.title);
+  await fallbackContext.close();
+  const photoFailureContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  await photoFailureContext.route('https://tiles.openfreemap.org/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }));
+  await photoFailureContext.route('https://server.arcgisonline.com/**', route => route.abort('failed'));
+  const photoFailure = await photoFailureContext.newPage();
+  await photoFailure.goto(base + '/?round=first');
+  await photoFailure.locator('#atlas[data-basemap="map"]').waitFor();
+  assert.equal(await photoFailure.locator('#tile-warning').isVisible(), true);
+  assert.equal(await photoFailure.locator('#basemap-map').getAttribute('aria-pressed'), 'true');
+  await photoFailureContext.close();
+  console.log('Browser passed: flat-map gestures, persistent canvas, evidence, distance unlocks, saved attempts, final reveal, score sharing, pack isolation, English and map-failure access. External map data and native share UI are mocked.');
+} finally { await browser?.close(); child.kill(); fs.rmSync(dir, { recursive: true, force: true }); }

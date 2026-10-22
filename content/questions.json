@@ -44,6 +44,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "栃木県北部",
+        "en": "Northern Tochigi"
+      },
+      "bounds": [
+        139.3,
+        36.65,
+        140.35,
+        37.25
+      ]
     }
   },
   {
@@ -91,6 +103,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "和歌山県中部",
+        "en": "Central Wakayama"
+      },
+      "bounds": [
+        135.0,
+        33.65,
+        135.6,
+        34.2
+      ]
     }
   },
   {
@@ -138,6 +162,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "岩手県遠野周辺",
+        "en": "Tono area, Iwate"
+      },
+      "bounds": [
+        141.2,
+        39.05,
+        141.9,
+        39.65
+      ]
     }
   },
   {
@@ -185,6 +221,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "鳥取県東部",
+        "en": "Eastern Tottori"
+      },
+      "bounds": [
+        133.85,
+        35.25,
+        134.5,
+        35.65
+      ]
     }
   },
   {
@@ -238,6 +286,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "宮崎県北部",
+        "en": "Northern Miyazaki"
+      },
+      "bounds": [
+        131.05,
+        32.4,
+        131.8,
+        32.95
+      ]
     }
   },
   {
@@ -285,6 +345,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "京都市北部",
+        "en": "Northern Kyoto"
+      },
+      "bounds": [
+        135.55,
+        35.0,
+        135.95,
+        35.3
+      ]
     }
   },
   {
@@ -332,6 +404,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "福岡県中部",
+        "en": "Central Fukuoka"
+      },
+      "bounds": [
+        130.3,
+        33.35,
+        130.85,
+        33.8
+      ]
     }
   },
   {
@@ -385,6 +469,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "長野県北部",
+        "en": "Northern Nagano"
+      },
+      "bounds": [
+        137.85,
+        36.45,
+        138.45,
+        37.05
+      ]
     }
   },
   {
@@ -432,6 +528,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "青森県下北半島",
+        "en": "Shimokita Peninsula, Aomori"
+      },
+      "bounds": [
+        140.7,
+        40.95,
+        141.65,
+        41.6
+      ]
     }
   },
   {
@@ -479,6 +587,18 @@
       "translation": "pending",
       "photo": "not_licensed",
       "playability": "pending"
+    },
+    "investigation": {
+      "area": {
+        "ja": "島根県東部",
+        "en": "Eastern Shimane"
+      },
+      "bounds": [
+        132.45,
+        35.1,
+        133.1,
+        35.6
+      ]
     }
   }
 ]

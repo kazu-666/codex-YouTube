@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-10-22T12:50:00.744Z",
+  "source": "https://tiles.openfreemap.org/planet",
+  "tileTemplate": "https://tiles.openfreemap.org/planet/20261018_080001_pt/{z}/{x}/{y}.pbf",
+  "zoom": 14,
+  "license": "OSM database: ODbL; rendered maps: attribution required",
+  "maps": [
+    {
+      "id": "a7c2e1",
+      "features": 172,
+      "bytes": 145233,
+      "tiles": 3
+    },
+    {
+      "id": "f4b8d3",
+      "features": 397,
+      "bytes": 185770,
+      "tiles": 4
+    },
+    {
+      "id": "c9e1a6",
+      "features": 113,
+      "bytes": 106582,
+      "tiles": 2
+    },
+    {
+      "id": "d2a5f8",
+      "features": 497,
+      "bytes": 447295,
+      "tiles": 4
+    },
+    {
+      "id": "e6b3c9",
+      "features": 113,
+      "bytes": 75476,
+      "tiles": 4
+    },
+    {
+      "id": "b1d7e4",
+      "features": 160,
+      "bytes": 139679,
+      "tiles": 4
+    },
+    {
+      "id": "a8f2b5",
+      "features": 569,
+      "bytes": 529422,
+      "tiles": 4
+    },
+    {
+      "id": "c3a9e7",
+      "features": 141,
+      "bytes": 83846,
+      "tiles": 4
+    },
+    {
+      "id": "f7e5a2",
+      "features": 137,
+      "bytes": 71546,
+      "tiles": 4
+    },
+    {
+      "id": "d8c4b1",
+      "features": 192,
+      "bytes": 114890,
+      "tiles": 4
+    }
+  ]
+}

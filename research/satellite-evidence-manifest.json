@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-10-22T13:09:45.414020+00:00",
+  "service": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
+  "copyrightText": "Source: Esri, Vantor, Earthstar Geographics, and the GIS User Community",
+  "imageryDate": "varies by location; not verified",
+  "zoom": 15,
+  "maps": [
+    {
+      "id": "a7c2e1",
+      "bytes": 65956,
+      "tiles": 8
+    },
+    {
+      "id": "f4b8d3",
+      "bytes": 93622,
+      "tiles": 12
+    },
+    {
+      "id": "c9e1a6",
+      "bytes": 66364,
+      "tiles": 6
+    },
+    {
+      "id": "d2a5f8",
+      "bytes": 53030,
+      "tiles": 12
+    },
+    {
+      "id": "e6b3c9",
+      "bytes": 87001,
+      "tiles": 12
+    },
+    {
+      "id": "b1d7e4",
+      "bytes": 68677,
+      "tiles": 12
+    },
+    {
+      "id": "a8f2b5",
+      "bytes": 98477,
+      "tiles": 6
+    },
+    {
+      "id": "c3a9e7",
+      "bytes": 65882,
+      "tiles": 9
+    },
+    {
+      "id": "f7e5a2",
+      "bytes": 68802,
+      "tiles": 6
+    },
+    {
+      "id": "d8c4b1",
+      "bytes": 82321,
+      "tiles": 9
+    }
+  ]
+}

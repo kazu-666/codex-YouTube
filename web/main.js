@@ -34,14 +34,50 @@ const words = {
     other: 'Explore the other volume', photoNote: 'Location photos will be added after licensing checks.', shareTitle: 'Pass the discovery on.', share: 'Share with image', save: 'Save image', copy: 'Copy post text', post: 'View post text', shareAlt: 'Share image with date, volume, total, five scores and hint use',
   }
 };
+Object.assign(words.ja, {
+  prototype: '実際の航空写真から現場を探す体験版。道路地図にも切替可能。各問3回まで照合でき、最も近い地点で採点します。1km以内で現場特定・満点。100km以内と20km以内で資料が開きます。「目的地を見る」でいつでも終了できます。巻一・巻二の固定10問です。座標・翻訳・一部の伝承は確認中。課金・広告配信はありません。',
+  select: '資料の中心と同じ場所にピンを置こう', answer: 'この地点を照合する', mapLoading: '最初の地図を準備中…',
+  mapError: '地図を取得できません。通信を確認して再試行してください。資料と調査記録は残っています。',
+  measuring: '目的地へ、照合中。', correct: '目的地', complete: '5件の調査を終えました。',
+  evidence: '現場資料', evidenceNote: '中央の十字が調査対象。北は上。地名は非表示です。',
+  area: '調査地域へ', pin: 'ピンへ戻る', allJapan: '日本全体', investigate: '照合', giveUp: '目的地を見る・調査終了',
+  records: '調査記録', unlocked: '資料を開封', scan: '現場と照合しています…', noPin: 'タップでピンを置く',
+  best: '最接近', remaining: '残り', close: '閉じる', how: '遊び方',
+  help: '①現場資料を開き、川・道・建物の形を覚える。②調査地域の地図を指で動かし、細部まで拡大して照合。③資料中央の十字と同じ地点へピンを置く。3回まで挑戦でき、最接近の距離で採点します。近づくと資料が開きます。目的地を見ると終了し、全解説が読めます。',
+  stages: ['未特定', '広域一致', '周辺一致', '現場特定'],
+  directions: ['北', '北東', '東', '南東', '南', '南西', '西', '北西'],
+  proximity: '現場の方向', locked1: '100km以内で地域メモが開く', locked2: '20km以内で曰くの断片が開く',
+  offscreen: '選択ピンが画面外です', noAttempts: '照合なし', goal: '目的地を地図で見る',
+  finalNote: '最も近かった照合地点で採点。全員が場所の物語を読めます。',
+  endEarly: '途中で目的地を確認しました', attemptsEnd: '3回の照合が完了しました',
+  tileError: '一部の地図を取得できません。表示済みの地図で続けるか、再試行できます。'
+});
+Object.assign(words.en, {
+  prototype: 'Match a real aerial-image fragment to the map. Switch to the road map when needed. Up to three checks per place; the closest check determines your score. Full points within 1 km. Records open within 100 km and 20 km. Reveal destination to finish at any time. Two fixed five-place volumes. Some stories, coordinates and translations await review. No billing or live ads.',
+  select: 'Match the crosshair in the site map', answer: 'Check this location', mapLoading: 'Preparing the first map…',
+  measuring: 'Tracing the destination…', correct: 'Destination', complete: 'Five investigations completed.',
+  evidence: 'Site map', evidenceNote: 'Find the centre crosshair. North is up. Place names are hidden.',
+  area: 'Search area', pin: 'Back to pin', allJapan: 'All Japan', investigate: 'Check', giveUp: 'Reveal destination · end search',
+  records: 'Field records', unlocked: 'Record unlocked', scan: 'Checking the site…', noPin: 'Tap to place a pin',
+  best: 'Closest', remaining: 'Left', close: 'Close', how: 'How to play',
+  help: '1. Open the site map and compare roads, rivers and buildings. 2. Drag and pinch the search map to find a match. 3. Place your pin at the site-map crosshair. You have three checks; your closest check determines the score. Records unlock as you approach. Reveal destination ends the search and opens the full story.',
+  stages: ['Unlocated', 'Area matched', 'Nearby', 'Site located'], directions: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+  proximity: 'Site direction', locked1: 'Within 100 km: regional note', locked2: 'Within 20 km: story fragment',
+  offscreen: 'Your pin is off screen', noAttempts: 'No checks made', goal: 'Show destination on map',
+  finalNote: 'Your closest checked location determines the score. Everyone can read the full story.',
+  endEarly: 'Destination revealed early', attemptsEnd: 'All three checks completed',
+  tileError: 'Some map tiles could not load. Continue with the visible map or retry.'
+});
 let locale = localStorage.getItem('fieldnotes-locale') === 'en' ? 'en' : 'ja';
-let state, uiIndex, selected, atlas, view, toastTimer, revealFallback, freshReveal;
+let basemap = localStorage.getItem('georoots-basemap') === 'map' ? 'map' : 'satellite';
+let state, uiIndex, selected, atlas, activeMapKey, disposeShare, freshReveal, freshUnlock, toastTimer, revealFallback;
 let submitting = false, switching = false;
-let disposeShare;
 const t = key => words[locale][key];
 const localized = value => value?.[locale] || '';
-const esc = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-const compass = '<svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="17"/><path d="m26 11-3 12-9 6 3-12 9-6Z"/><path d="m17 17 6 6M20 1v5m0 28v5M1 20h5m28 0h5"/></svg>';
+const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+const compass = '<svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="17"/><path d="m26 11-3 12-9 6 3-12 9-6Z"/></svg>';
+const number = n => n == null ? '—' : n.toLocaleString(locale === 'ja' ? 'ja-JP' : 'en-US', { maximumFractionDigits: n < 10 ? 1 : 0 });
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const api = async (route, body) => {
   const response = await fetch(route, { method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify({ ...body, roundId: state?.roundId }) : undefined });
   const data = await response.json();
@@ -49,160 +85,190 @@ const api = async (route, body) => {
   return data;
 };
 const stateRoute = id => `/api/state${id ? `?round=${encodeURIComponent(id)}` : ''}`;
-const number = n => n.toLocaleString(locale === 'ja' ? 'ja-JP' : 'en-US', { maximumFractionDigits: n < 10 ? 1 : 0 });
-function currentIndex() { const first = state.questions.findIndex(q => !q.answer); return first < 0 ? 4 : first; }
+function currentIndex() { const i = state.questions.findIndex(q => !q.answer); return i < 0 ? 4 : i; }
 function adSlot() { return `<div class="ad-slot"><span>${t('ad')}</span><small>${t('adNote')}</small></div>`; }
 function notify(message) {
-  const toast = document.querySelector('#toast');
-  if (!toast) return;
+  const toast = document.querySelector('#toast'); if (!toast) return;
   toast.textContent = message; toast.hidden = false;
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 5000);
 }
 function quality(q) { return q.answer.withinRadius ? 'perfect' : q.answer.points / q.maxPoints >= .8 ? 'near' : q.answer.points / q.maxPoints >= .35 ? 'region' : 'far'; }
+function evidenceUrl(q) { return `${basemap === 'map' ? q.mapEvidenceUrl : q.evidenceUrl}?round=${state.roundId}`; }
 function clueMarkup(q) {
-  const extra = q.extraHint ? `<p class="extra-clue"><span>✦ ${t('used')}</span>${esc(localized(q.extraHint))}</p>` : state.plan === 'premium' && !q.answer ? `<button class="hint-button" id="extra-hint">+ ${t('extra')}</button>` : '';
-  return `<section class="question-bar" aria-label="${t('clue')}"><div class="score-total"><span>SCORE</span><strong>${String(state.total).padStart(3, '0')}</strong></div><div class="question-main"><div class="clue-strip"><span>${locale === 'ja' ? `第${uiIndex + 1}問 / 全5問` : `Question ${uiIndex + 1} of 5`}</span><small>${esc(localized(state.roundLabel))} · ${q.maxPoints} ${locale === 'ja' ? '点' : 'pts'}</small></div><h1 class="clue-text" id="question-text">${esc(localized(q.hint))}</h1>${extra}</div></section>`;
+  return `<section class="question-bar"><div class="score-total"><span>SCORE</span><strong>${String(state.total).padStart(3, '0')}</strong></div><div class="question-main"><div class="clue-strip"><span>${locale === 'ja' ? `調査 ${uiIndex + 1} / 5` : `Case ${uiIndex + 1} / 5`}</span><small>${esc(localized(state.roundLabel))} · ${q.maxPoints} ${locale === 'ja' ? '点' : 'pts'}</small></div><h1 class="clue-text" id="question-text">${esc(localized(q.area))}${locale === 'ja' ? '。' : ' · '}${locale === 'ja' ? '現場資料と同じ場所を探してください。' : 'Find the place shown in the site map.'}</h1></div></section>`;
+}
+function mapMarkup(q) {
+  return `<section class="atlas-stage" aria-label="${t('field')}"><div id="atlas"></div><div class="evidence-preview"><button id="open-evidence" aria-haspopup="dialog"><span>${t('evidence')} ↗</span><img src="${evidenceUrl(q)}" alt="${t('evidenceNote')}" width="640" height="400"><small>${locale === 'ja' ? 'タップで資料を拡大' : 'Tap to inspect'}</small></button></div><div class="map-shortcuts"><button id="area-map">⌖ ${t('area')}</button><button id="return-pin" ${selected || q.answer?.guess ? '' : 'disabled'}>● ${t('pin')}</button></div><div class="pin-offscreen" id="pin-offscreen" hidden>${t('offscreen')}</div><div class="map-status" id="map-status"><span class="spinner"></span>${t('mapLoading')}</div><div class="map-error" id="map-error" hidden><p>${t('mapError')}</p><button id="retry-map">${t('retry')}</button></div><div class="tile-warning" id="tile-warning" hidden><span>${t('tileError')}</span><button id="retry-tiles">${t('retry')}</button></div><div class="scan-sweep" aria-hidden="true"></div><div class="scan-label" role="status" hidden>${t('scan')}</div><div class="basemap-switch" role="group" aria-label="${locale === 'ja' ? '地図の表示' : 'Map appearance'}"><button id="basemap-satellite" aria-pressed="${basemap === 'satellite'}">${locale === 'ja' ? '航空写真' : 'Satellite'}</button><button id="basemap-map" aria-pressed="${basemap === 'map'}">${locale === 'ja' ? '道路地図' : 'Map'}</button></div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="reset-map" aria-label="${t('allJapan')}" title="${t('allJapan')}">◎</button></div></section>`;
+}
+function records(q) {
+  const last = q.attempts.at(-1);
+  return `<section class="investigation-records ${freshUnlock ? 'record-unlocked' : ''}" aria-label="${t('records')}"><div class="record-heading"><span class="stage-badge" data-stage="${q.stage}">${t('stages')[q.stage]}</span><span class="attempt-dots" aria-label="${q.attempts.length} / ${q.maxAttempts}">${Array.from({ length: q.maxAttempts }, (_, i) => `<i class="${i < q.attempts.length ? 'used' : ''}"></i>`).join('')} ${t('remaining')} ${q.maxAttempts - q.attempts.length}</span></div>${last ? `<p class="last-check" role="status">${t('investigate')} ${q.attempts.length}：<strong>${number(last.distanceKm)} km</strong> · ${t('proximity')} ${t('directions')[last.direction]}</p>` : ''}<div class="record-cards">${[1, 2].map(level => {
+    const item = q.unlocked.find(r => r.level === level);
+    return `<div class="record-card ${item ? 'open' : 'locked'}"><span>${item ? '✦' : '◇'} ${level === 1 ? (locale === 'ja' ? '地域メモ' : 'Regional note') : (locale === 'ja' ? '曰くの断片' : 'Story fragment')}</span><p>${item ? esc(localized(item.text)) : t(level === 1 ? 'locked1' : 'locked2')}</p></div>`;
+  }).join('')}</div>${q.extraHint ? `<p class="extra-clue"><span>✦ ${t('used')}</span>${esc(localized(q.extraHint))}</p>` : state.plan === 'premium' ? `<button class="hint-button" id="extra-hint">+ ${t('extra')}</button>` : ''}${q.attempts.length ? `<details class="attempt-history"><summary>${t('records')} · ${t('best')} ${number(Math.min(...q.attempts.map(a => a.distanceKm)))} km</summary>${q.attempts.map((a, i) => `<button data-attempt="${i}">${i + 1} · ${number(a.distanceKm)} km · ${t('pin')} ↗</button>`).join('')}</details>` : ''}</section>`;
 }
 function resultMarkup(q, animate) {
   const r = q.answer;
-  return `<section class="compact-result" aria-label="${t('result')}"><div class="result-stats"><span class="earned-points"><i class="dot ${['perfect', 'near'].includes(quality(q)) ? 'mint' : 'amber'}"></i><strong>+<span id="points-number">${animate ? '—' : r.points}</span></strong><small> / ${q.maxPoints} ${locale === 'ja' ? '点' : 'pts'}</small></span><span class="result-distance"><strong id="distance-number">${animate ? '0' : number(r.distanceKm)}</strong> km</span></div><div class="route-actions"><span id="reveal-status">${animate ? t('measuring') : t(quality(q))}</span><button id="skip-reveal" ${animate ? '' : 'hidden'}>${t('skip')} ↠</button><button id="replay-reveal" ${animate ? 'hidden' : ''}>↻ ${t('replay')}</button></div><p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p><div class="result-details" ${animate ? 'hidden' : ''}><article class="answer-card"><h2 id="result-heading">${esc(localized(q.title))}</h2><p>${esc(localized(q.summary) || localized(q.fact))}</p><details class="sources"><summary>${locale === 'ja' ? '詳しい話・出典' : 'Full story & sources'}</summary><p>${esc(localized(q.fact))}</p><div class="focus-controls"><button id="focus-guess"><i class="dot amber"></i>${t('yours')}</button><button id="focus-answer"><i class="dot mint"></i>${t('correct')}</button></div><p class="review-note">${t('pending')}</p><ul>${q.sources.map(source => `<li><a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.label)} ↗</a><small>${source.access === 'read' ? `${t('sourceRead')} · ${source.checkedAt}` : t('sourcePending')}</small></li>`).join('')}</ul></details></article>${state.plan === 'free' && uiIndex === 2 ? adSlot() : ''}</div><button class="primary" id="next" ${animate ? 'disabled' : ''}><span>${uiIndex === 4 ? t('finish') : t('next')}</span><span>→</span></button></section>`;
-}
-function mapMarkup() {
-  return `<section class="atlas-stage" aria-label="${t('field')}"><div id="atlas"></div><div class="map-status" id="map-status"><span class="spinner"></span>${t('mapLoading')}</div><div class="map-error" id="map-error" hidden><p>${t('mapError')}</p><button id="retry-map">${t('retry')}</button></div><div class="imagery-warning" id="imagery-warning" hidden>${t('imageryError')}</div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="reset-map" aria-label="${t('reset')}" title="${t('reset')}">◎</button></div></section>`;
+  return `<section class="compact-result"><div class="result-stats"><span class="earned-points"><i class="dot ${r.withinRadius ? 'mint' : 'amber'}"></i><strong>+<span id="points-number">${animate ? '—' : r.points}</span></strong><small> / ${q.maxPoints}</small></span><span class="result-distance"><strong id="distance-number">${animate ? '0' : number(r.distanceKm)}</strong> km</span></div><div class="route-actions"><span id="reveal-status">${animate ? t('measuring') : r.withinRadius ? t('stages')[3] : t(r.reason === 'revealed' ? 'endEarly' : 'attemptsEnd')}</span><button id="skip-reveal" ${animate ? '' : 'hidden'}>${t('skip')} ↠</button><button id="replay-reveal" ${animate || !r.guess ? 'hidden' : ''}>↻ ${t('replay')}</button></div><p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p><div class="result-details" ${animate ? 'hidden' : ''}><article class="answer-card"><span class="report-kicker">${locale === 'ja' ? '調査報告' : 'FIELD REPORT'}</span><h2 id="result-heading">${esc(localized(q.title))}</h2><p>${esc(localized(q.summary))}</p><div class="focus-controls"><button id="focus-answer"><i class="dot mint"></i>${t('goal')}</button>${r.guess ? `<button id="focus-guess"><i class="dot amber"></i>${t('yours')}</button>` : ''}</div><details class="sources"><summary>${locale === 'ja' ? '詳しい話・出典' : 'Full story & sources'}</summary><p>${esc(localized(q.fact))}</p><p class="review-note">${t('pending')}</p><ul>${q.sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a><small>${s.access === 'read' ? t('sourceRead') : t('sourcePending')}</small></li>`).join('')}</ul></details></article><p class="score-note">${t('finalNote')}</p>${state.plan === 'free' && uiIndex === 2 ? adSlot() : ''}</div><button class="primary" id="next" ${animate ? 'disabled' : ''}>${uiIndex === 4 ? t('finish') : t('next')} →</button></section>`;
 }
 function renderQuestion(q) {
-  const animate = !!q.answer && freshReveal === q.id && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  return `${clueMarkup(q)}<div class="game-board ${q.answer ? 'revealed' : ''}" data-phase="${animate ? 'travelling' : 'ready'}" data-quality="${q.answer ? quality(q) : ''}">${mapMarkup()}<div class="answer-dock">${q.answer ? resultMarkup(q, animate) : `<div class="pin-instructions"><span id="pin-instruction">${selected ? t('selected') : t('select')}</span><button id="center-pin" class="center-pin">⌖ ${t('center')}</button></div><button class="primary" id="lock-answer" ${selected ? '' : 'disabled'}><span>${t('answer')}</span><span>→</span></button>`}</div></div>`;
+  const animate = !!q.answer?.guess && freshReveal === q.id && !reduced();
+  return `${clueMarkup(q)}<div class="game-board ${q.answer ? 'revealed' : ''}" data-phase="${animate ? 'travelling' : 'ready'}">${mapMarkup(q)}<div class="answer-dock">${q.answer ? resultMarkup(q, animate) : `<div class="pin-instructions"><span id="pin-instruction">${selected ? t('selected') : t('noPin')}</span><button id="center-pin" class="center-pin">⌖ ${t('center')}</button></div><button class="primary" id="lock-answer" ${selected ? '' : 'disabled'}>${t('answer')} →</button><button class="reveal-destination" id="reveal-destination">${t('giveUp')}</button>${records(q)}`}</div></div>`;
 }
 function renderSummary() {
   return `<section class="summary"><div class="summary-symbol">${compass}</div><div class="eyebrow">EXPEDITION COMPLETE · ${state.day} · ${esc(localized(state.roundLabel))}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><section class="share-panel" aria-labelledby="share-title"><h2 id="share-title">${t('shareTitle')}</h2><img id="share-preview" alt="${t('shareAlt')}" width="1200" height="1200" hidden><button class="primary" id="share-result" disabled>${t('share')}</button><div class="share-actions"><button id="save-result" disabled>${t('save')}</button><button id="copy-result">${t('copy')}</button></div><p id="share-status" role="status" aria-live="polite"></p><details class="share-post"><summary>${t('post')}</summary><textarea id="share-text" aria-label="${t('post')}" readonly rows="7"></textarea></details></section><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span class="summary-number">0${i + 1}</span><span>${esc(localized(q.title))}${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</span><strong>${q.answer.points}<small> / ${q.maxPoints}</small></strong><span>↗</span></button>`).join('')}</div><button class="other-round" id="other-round">${t('other')} →</button>${state.plan === 'free' ? adSlot() : ''}</section>`;
 }
-function cleanup() {
-  clearTimeout(revealFallback);
-  disposeShare?.(); disposeShare = null;
-  if (atlas) { view = atlas.getView(); atlas.destroy(); atlas = null; }
-}
 function settingsMarkup() {
-  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker" aria-label="${locale === 'ja' ? '体験する巻' : 'Choose a volume'}">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress" aria-label="Round progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''} aria-label="Question ${i + 1}">${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><p>${t('radius')}</p><span>JAPAN · GLOBE MOTION v0.5</span></div></details>`;
+  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''}>${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><span>JAPAN · FIELD INVESTIGATION v0.6</span></div></details>`;
 }
 function render() {
-  if (!state) { app.innerHTML = `<p class="loading">${t('loading')}</p>`; return; }
-  cleanup(); submitting = false;
+  if (!state) return;
+  clearTimeout(revealFallback); disposeShare?.(); disposeShare = null;
+  const mapNode = atlas && document.querySelector('#atlas');
+  if (uiIndex === 5) { atlas?.destroy(); atlas = null; activeMapKey = null; }
   document.documentElement.lang = locale;
-  document.title = locale === 'ja' ? 'ジオルーツ｜日本の怪異と伝説を探す' : 'GeoRoots · Find Japan’s stories';
-  app.innerHTML = `<div class="game-app"><header class="app-header"><a class="brand" href="/" aria-label="${t('brand')}">${t('brand')}</a><div class="header-actions"><time datetime="${state.day}">${state.day.replaceAll('-', '.')}</time>${settingsMarkup()}</div></header><main class="play-area">${uiIndex === 5 ? renderSummary() : renderQuestion(state.questions[uiIndex])}</main><div id="toast" role="alert" hidden></div></div>`;
+  document.title = locale === 'ja' ? 'ジオルーツ｜現場を探して、物語をひらく' : 'GeoRoots · Locate the site, uncover its story';
+  app.innerHTML = `<div class="game-app"><header class="app-header"><a class="brand" href="/">${t('brand')}</a><div class="header-actions"><button class="help-button" id="how-to">? ${t('how')}</button><time>${state.day.replaceAll('-', '.')}</time>${settingsMarkup()}</div></header><main class="play-area">${uiIndex === 5 ? renderSummary() : renderQuestion(state.questions[uiIndex])}</main><dialog id="evidence-dialog"><div class="dialog-bar"><strong>${t('evidence')}</strong><button id="close-evidence">${t('close')} ×</button></div><img id="evidence-full" alt="${t('evidenceNote')}"><p>${t('evidenceNote')}</p><p class="evidence-credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a> · OpenMapTiles · OpenFreeMap</p><p id="evidence-error" hidden>${locale === 'ja' ? '資料を取得できませんでした。開き直して再試行してください。' : 'Could not load the site map. Close and reopen to retry.'}</p></dialog><dialog id="help-dialog"><div class="dialog-bar"><strong>${t('how')}</strong><button id="close-help">${t('close')} ×</button></div><p>${t('help')}</p></dialog><div id="toast" role="alert" hidden></div><div class="sr-only" id="live-status" role="status" aria-live="polite"></div></div>`;
+  if (mapNode && atlas) document.querySelector('#atlas').replaceWith(mapNode);
   bind();
 }
 function goTo(index) {
-  cleanup(); view = null; freshReveal = null; uiIndex = index; selected = null; render();
-  window.scrollTo({ top: 0 });
+  if (submitting || switching) return;
+  freshReveal = null; freshUnlock = false; uiIndex = index;
+  selected = state.questions[index]?.attempts.at(-1)?.guess || null;
+  render(); window.scrollTo({ top: 0 });
 }
 async function switchRound(id) {
   if (switching || submitting || state.roundId === id) return;
-  switching = true;
-  document.querySelectorAll('[data-round], #other-round, #lock-answer, #plan').forEach(el => { el.disabled = true; });
+  switching = true; disableInputs();
   try {
-    const next = await api(stateRoute(id));
-    cleanup(); view = null; selected = null; freshReveal = null; state = next; uiIndex = state.completed ? 5 : currentIndex();
-    history.replaceState(null, '', `?round=${id}`);
-    render(); window.scrollTo({ top: 0 });
+    state = await api(stateRoute(id)); freshReveal = null; freshUnlock = false;
+    uiIndex = state.completed ? 5 : currentIndex(); selected = state.questions[uiIndex]?.attempts.at(-1)?.guess || null;
+    history.replaceState(null, '', `?round=${id}`); render(); window.scrollTo({ top: 0 });
   } catch (error) { render(); notify(error.message); }
   finally { switching = false; }
 }
-async function lockAnswer(q) {
-  if (!selected || submitting || switching) return;
-  submitting = true;
-  const answerScroll = window.scrollY;
-  document.querySelector('#lock-answer').disabled = true;
-  document.querySelectorAll('[data-round], [data-step], #locale, #plan, #extra-hint').forEach(el => { el.disabled = true; });
+function disableInputs() { document.querySelectorAll('button, select').forEach(b => { if (!['close-evidence', 'close-help'].includes(b.id)) b.disabled = true; }); }
+async function investigate(q, reveal = false) {
+  if (submitting || switching || (!reveal && !selected)) return;
+  submitting = true; disableInputs();
+  const scroll = window.scrollY;
+  document.querySelector('.game-board').classList.add('scanning');
+  document.querySelector('.scan-label').hidden = false;
   try {
-    state = await api('/api/answer', { questionId: q.id, lat: selected[0], lng: selected[1] });
-    freshReveal = q.id; render();
-    window.scrollTo({ top: answerScroll, behavior: 'auto' });
+    const body = reveal ? { questionId: q.id } : { questionId: q.id, lat: selected[0], lng: selected[1], expectedAttempt: q.attempts.length, requestId: crypto.randomUUID() };
+    const [next] = await Promise.all([api(reveal ? '/api/reveal' : '/api/answer', body), new Promise(resolve => setTimeout(resolve, reduced() ? 0 : 650))]);
+    state = next; const updated = state.questions[uiIndex];
+    freshReveal = updated.answer ? q.id : null; freshUnlock = !updated.answer && updated.stage > q.stage;
+    render(); window.scrollTo({ top: scroll, behavior: 'auto' });
+    if (freshUnlock) notify(t('unlocked'));
+    document.querySelector('#live-status').textContent = updated.answer ? t('result') : `${t('stages')[updated.stage]} · ${number(updated.attempts.at(-1).distanceKm)} km`;
   } catch (error) {
     try { state = await api(stateRoute(state.roundId)); } catch {}
-    render(); notify(error.message);
-  }
+    freshReveal = null; render(); notify(error.message);
+  } finally { submitting = false; }
 }
 async function updateDemo(route, body) {
   if (submitting || switching) return;
-  submitting = true;
-  document.querySelectorAll('[data-round], [data-step], #locale, #plan, #extra-hint, #lock-answer').forEach(el => { el.disabled = true; });
-  let failure;
-  try { state = await api(route, body); freshReveal = null; }
-  catch (error) { failure = error.message; }
-  render();
-  if (failure) notify(failure);
+  submitting = true; disableInputs();
+  try { state = await api(route, body); freshReveal = null; render(); }
+  catch (error) { render(); notify(error.message); }
+  finally { submitting = false; }
+}
+function updateReveal(q, progress, done) {
+  const distance = document.querySelector('#distance-number'); if (!distance) return;
+  distance.textContent = number(q.answer.distanceKm == null ? null : q.answer.distanceKm * progress);
+  if (!done) return;
+  freshReveal = null;
+  document.querySelector('#points-number').textContent = q.answer.points;
+  document.querySelector('#reveal-status').textContent = q.answer.withinRadius ? t('stages')[3] : t(q.answer.reason === 'revealed' ? 'endEarly' : 'attemptsEnd');
+  document.querySelector('.result-details').hidden = false;
+  document.querySelector('#next').disabled = false;
+  document.querySelector('#skip-reveal').hidden = true;
+  document.querySelector('#replay-reveal').hidden = !q.answer.guess;
+  document.querySelector('.game-board').dataset.phase = 'complete';
+  document.querySelector('#result-announcement').textContent = `${localized(q.title)} · ${number(q.answer.distanceKm)} km · ${q.answer.points}`;
 }
 function bind() {
-  document.querySelector('#locale').onclick = () => { locale = locale === 'ja' ? 'en' : 'ja'; localStorage.setItem('fieldnotes-locale', locale); freshReveal = null; render(); };
-  document.querySelector('#plan').onchange = event => updateDemo('/api/demo-plan', { plan: event.target.value });
-  document.querySelectorAll('[data-round]').forEach(button => button.onclick = () => switchRound(button.dataset.round));
-  document.querySelectorAll('[data-step], [data-index]').forEach(button => button.onclick = () => { if (!submitting && !switching) goTo(Number(button.dataset.step ?? button.dataset.index)); });
+  document.querySelector('#locale').onclick = () => { if (submitting || switching) return; locale = locale === 'ja' ? 'en' : 'ja'; localStorage.setItem('fieldnotes-locale', locale); freshReveal = null; render(); };
+  document.querySelector('#plan').onchange = e => updateDemo('/api/demo-plan', { plan: e.target.value });
+  document.querySelector('#how-to').onclick = () => document.querySelector('#help-dialog').showModal();
+  document.querySelector('#close-help').onclick = () => document.querySelector('#help-dialog').close();
+  document.querySelector('#close-evidence').onclick = () => document.querySelector('#evidence-dialog').close();
+  document.querySelectorAll('[data-round]').forEach(b => b.onclick = () => switchRound(b.dataset.round));
+  document.querySelectorAll('[data-step], [data-index]').forEach(b => b.onclick = () => goTo(Number(b.dataset.step ?? b.dataset.index)));
   if (uiIndex === 5) {
     const shareUrl = new URL('/', location.href); shareUrl.searchParams.set('round', state.roundId);
     disposeShare = mountResultShare({ state, locale, url: shareUrl.href });
     document.querySelector('#other-round').onclick = () => switchRound(state.roundId === 'first' ? 'second' : 'first');
     return;
   }
-  const q = state.questions[uiIndex];
-  const animate = !!q.answer && freshReveal === q.id && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function reveal(progress, done) {
-    if (!q.answer) return;
-    const distance = number(q.answer.distanceKm * progress);
-    document.querySelector('#distance-number').textContent = distance;
-
-    document.querySelector('#points-number').textContent = done ? q.answer.points : '—';
-
-    if (done) {
-      clearTimeout(revealFallback); freshReveal = null;
-      document.querySelector('.game-board').dataset.phase = 'ready';
-      document.querySelector('#result-heading').textContent = localized(q.title);
-      document.querySelector('#reveal-status').textContent = t(quality(q));
-      document.querySelector('.result-details').hidden = false;
-      document.querySelector('#skip-reveal').hidden = true;
-      document.querySelector('#replay-reveal').hidden = false;
-
-      document.querySelector('#next').disabled = false;
-      document.querySelector('#result-announcement').textContent = `${localized(q.title)} · ${distance} km · ${q.answer.points} / ${q.maxPoints}`;
-    }
-  }
-  atlas = createAtlas({
-    container: document.querySelector('#atlas'), locale, view,
-    guess: q.answer?.guess || selected, correct: q.answer && q.coordinate, readOnly: !!q.answer, animate,
-    routeColor: q.answer && ['perfect', 'near'].includes(quality(q)) ? '#a1d8b9' : q.answer && quality(q) === 'far' ? '#d38b78' : '#e4b974',
-    onReveal: reveal,
+  const q = state.questions[uiIndex], key = `${state.roundId}:${q.id}`;
+  const options = {
+    container: document.querySelector('#atlas'), locale, basemap, questionKey: key,
+    view: activeMapKey === key && atlas ? atlas.getView() : undefined,
+    searchBounds: q.searchBounds, attempts: q.attempts, guess: q.answer ? q.answer.guess : selected,
+    correct: q.answer && q.coordinate, readOnly: !!q.answer,
+    animate: !!q.answer?.guess && freshReveal === q.id && !reduced(),
+    onReveal: (p, done) => updateReveal(q, p, done),
     onSelect(coord) {
-      if (submitting || switching) return;
-      selected = coord;
-
-      document.querySelector('#pin-instruction').textContent = t('selected');
-      document.querySelector('#lock-answer').disabled = false;
+      if (submitting || switching || q.answer) return;
+      selected = coord; document.querySelector('#pin-instruction').textContent = t('selected');
+      document.querySelector('#lock-answer').disabled = false; document.querySelector('#return-pin').disabled = false;
     },
+    onBasemapFallback() { changeBasemap('map', false); },
+    onPinVisibility(visible) { const el = document.querySelector('#pin-offscreen'); if (el) el.hidden = visible || !!q.answer; },
     onStatus(status) {
       document.querySelector('#map-status').hidden = status !== 'loading';
       document.querySelector('#map-error').hidden = status !== 'error';
-      if (status === 'imagery-error') document.querySelector('#imagery-warning').hidden = false;
+      if (status === 'tile-error' || status === 'imagery-error') {
+        const warning = document.querySelector('#tile-warning'); warning.hidden = false;
+        warning.querySelector('span').textContent = status === 'imagery-error' ? t('imageryError') : t('tileError');
+      }
     }
-  });
-  // A failed map must never keep a saved answer or the next button inaccessible.
-  if (animate) revealFallback = setTimeout(() => { atlas?.skipReveal?.(); reveal(1, true); }, 7000);
-  document.querySelector('#zoom-in').onclick = () => atlas?.zoomIn?.();
-  document.querySelector('#zoom-out').onclick = () => atlas?.zoomOut?.();
-  document.querySelector('#reset-map').onclick = () => atlas?.reset?.();
-  document.querySelector('#retry-map').onclick = () => { freshReveal = null; render(); };
-  document.querySelector('#center-pin')?.addEventListener('click', () => atlas?.centerPin?.());
-  document.querySelector('#lock-answer')?.addEventListener('click', () => lockAnswer(q));
-  document.querySelector('#focus-guess')?.addEventListener('click', () => { atlas?.focus?.(q.answer.guess); document.querySelector('#atlas').scrollIntoView({ block: 'center' }); });
-  document.querySelector('#focus-answer')?.addEventListener('click', () => { atlas?.focus?.(q.coordinate); document.querySelector('#atlas').scrollIntoView({ block: 'center' }); });
-  document.querySelector('#skip-reveal')?.addEventListener('click', () => { atlas?.skipReveal?.(); reveal(1, true); });
-  document.querySelector('#replay-reveal')?.addEventListener('click', () => { freshReveal = q.id; render(); });
+  };
+  if (atlas) atlas.update(options);
+  else atlas = createAtlas(options);
+  activeMapKey = key;
+  if (options.animate) revealFallback = setTimeout(() => { atlas?.skipReveal(); updateReveal(q, 1, true); }, 6500);
+  function changeBasemap(mode, persist = true) {
+    basemap = mode; if (persist) localStorage.setItem('georoots-basemap', mode);
+    atlas?.setBasemap?.(mode);
+    document.querySelector('#basemap-satellite').setAttribute('aria-pressed', String(mode === 'satellite'));
+    document.querySelector('#basemap-map').setAttribute('aria-pressed', String(mode === 'map'));
+    document.querySelector('#open-evidence img').src = evidenceUrl(q);
+    const full = document.querySelector('#evidence-full'); if (full.src) full.src = evidenceUrl(q);
+  }
+  document.querySelector('#basemap-satellite').onclick = () => changeBasemap('satellite');
+  document.querySelector('#basemap-map').onclick = () => changeBasemap('map');
+  document.querySelector('#zoom-in').onclick = () => atlas.zoomIn();
+  document.querySelector('#zoom-out').onclick = () => atlas.zoomOut();
+  document.querySelector('#reset-map').onclick = () => atlas.reset();
+  document.querySelector('#area-map').onclick = () => atlas.area();
+  document.querySelector('#return-pin').onclick = () => atlas.focusPin();
+  function retryMap() { atlas.destroy(); atlas = null; activeMapKey = null; freshReveal = null; render(); }
+  document.querySelector('#retry-map').onclick = retryMap;
+  document.querySelector('#retry-tiles').onclick = retryMap;
+  document.querySelector('#open-evidence').onclick = () => {
+    const img = document.querySelector('#evidence-full'); img.src = evidenceUrl(q);
+    img.onerror = () => { document.querySelector('#evidence-error').hidden = false; };
+    img.onload = () => { document.querySelector('#evidence-error').hidden = true; };
+    document.querySelector('#evidence-dialog').showModal();
+  };
+  document.querySelector('#center-pin')?.addEventListener('click', () => atlas.centerPin());
+  document.querySelector('#lock-answer')?.addEventListener('click', () => investigate(q));
+  document.querySelector('#reveal-destination')?.addEventListener('click', () => investigate(q, true));
   document.querySelector('#extra-hint')?.addEventListener('click', () => updateDemo('/api/hint', { questionId: q.id }));
+  document.querySelectorAll('[data-attempt]').forEach(b => b.onclick = () => atlas.focus(q.attempts[Number(b.dataset.attempt)].guess, atlas.getView().zoom));
+  document.querySelector('#focus-answer')?.addEventListener('click', () => { atlas.focus(q.coordinate); document.querySelector('.atlas-stage').scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' }); });
+  document.querySelector('#focus-guess')?.addEventListener('click', () => { atlas.focus(q.answer.guess); document.querySelector('.atlas-stage').scrollIntoView({ block: 'start' }); });
+  document.querySelector('#skip-reveal')?.addEventListener('click', () => { atlas.skipReveal(); updateReveal(q, 1, true); });
+  document.querySelector('#replay-reveal')?.addEventListener('click', () => { freshReveal = q.id; render(); });
   document.querySelector('#next')?.addEventListener('click', () => goTo(uiIndex === 4 ? 5 : uiIndex + 1));
 }
 app.innerHTML = `<p class="loading">${t('loading')}</p>`;
 try {
   const requested = new URL(location.href).searchParams.get('round');
   state = await api(stateRoute(['first', 'second'].includes(requested) ? requested : null));
-  uiIndex = state.completed ? 5 : currentIndex(); render();
+  uiIndex = state.completed ? 5 : currentIndex(); selected = state.questions[uiIndex]?.attempts.at(-1)?.guess || null; render();
 } catch (error) { app.innerHTML = `<p class="loading">${t('error')}</p>`; console.error(error); }
