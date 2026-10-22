@@ -6,7 +6,7 @@ const app = document.querySelector('#app');
 const words = {
   ja: {
     brand: 'ジオルーツ', sub: '土着信仰調査室', daily: '今日の探索', japan: '日本の怪異と伝説', preview: '体験版 · 全10問',
-    prototype: '日本の怪異・伝説を探す体験版です。巻一・巻二の各5問を試せます。毎日新問を追加する版ではありません。伝承の一部、座標・翻訳は確認中です。有料切替と広告枠はデモで、決済や広告配信はありません。',
+    prototype: '日本列島を拡大した球体で怪異・伝説を探す体験版です。詳細表示は実座標の地図へ切り替わり、距離も実座標で採点します。巻一・巻二の各5問を試せます。毎日新問を追加する版ではありません。伝承の一部、座標・翻訳は確認中です。有料切替と広告枠はデモで、決済や広告配信はありません。',
     free: '無料モード', premium: '有料デモ', plan: '体験するプラン', clue: '手がかり', extra: '追加の手がかり', used: '追加ヒント使用', map: 'この物語は、どこにある？',
     answer: 'この場所で回答する', select: '地図をタップしてピンを置く', selected: '選択中の地点', selectNote: 'ピンは動かせます。確定できるのは1回だけ。',
     result: '見つけた物語', correct: '正解の地点', yours: 'あなたの地点', distance: '正解までの距離', pts: '獲得点', story: 'この場所に、伝わること',
@@ -21,7 +21,7 @@ const words = {
   },
   en: {
     brand: 'GeoRoots', sub: 'FOLKLORE FIELDNOTES', daily: 'Today’s expedition', japan: 'Myths & mysteries of Japan', preview: 'Preview · 10 places',
-    prototype: 'Explore two five-question volumes about Japan. This preview does not add new questions daily. Some stories, coordinates and translations await review. Plans and ad spaces are demos, with no billing or live ads.',
+    prototype: 'A Japan-sized game globe with a detailed real-world map when you zoom in. Distances use real coordinates. Explore two five-question volumes about Japan. This preview does not add new questions daily. Some stories, coordinates and translations await review. Plans and ad spaces are demos, with no billing or live ads.',
     free: 'Free mode', premium: 'Premium demo', plan: 'Try a plan', clue: 'The clue', extra: 'Reveal another clue', used: 'Extra clue used', map: 'Where does this story live?',
     answer: 'Lock in this location', select: 'Tap the map to place a pin', selected: 'Your provisional pin', selectNote: 'Move your pin freely. Lock in only once.',
     result: 'A story uncovered', correct: 'The answer', yours: 'Your pin', distance: 'Distance from the answer', pts: 'Points earned', story: 'What is told of this place',
@@ -60,18 +60,19 @@ function notify(message) {
 }
 function quality(q) { return q.answer.withinRadius ? 'perfect' : q.answer.points / q.maxPoints >= .8 ? 'near' : q.answer.points / q.maxPoints >= .35 ? 'region' : 'far'; }
 function clueMarkup(q) {
-  return `<div class="clue-title"><span>${esc(localized(q.category))}</span><span>CLUE / 0${uiIndex + 1}</span></div><h1>${esc(localized(q.hook))}</h1><p class="clue-text">${esc(localized(q.hint))}</p>${q.extraHint ? `<p class="extra-clue"><span>✦ ${t('used')}</span>${esc(localized(q.extraHint))}</p>` : state.plan === 'premium' ? `<button class="hint-button" id="extra-hint">✦ ${t('extra')}</button>` : ''}`;
+  const extra = q.extraHint ? `<p class="extra-clue"><span>✦ ${t('used')}</span>${esc(localized(q.extraHint))}</p>` : state.plan === 'premium' && !q.answer ? `<button class="hint-button" id="extra-hint">+ ${t('extra')}</button>` : '';
+  return `<section class="question-bar" aria-label="${t('clue')}"><div class="score-total"><span>SCORE</span><strong>${String(state.total).padStart(3, '0')}</strong></div><div class="question-main"><div class="clue-strip"><span>${locale === 'ja' ? `第${uiIndex + 1}問 / 全5問` : `Question ${uiIndex + 1} of 5`}</span><small>${esc(localized(state.roundLabel))} · ${q.maxPoints} ${locale === 'ja' ? '点' : 'pts'}</small></div><h1 class="clue-text" id="question-text">${esc(localized(q.hint))}</h1>${extra}</div></section>`;
 }
 function resultMarkup(q, animate) {
   const r = q.answer;
-  return `<div class="clue-title"><span>${t('result')}</span><span>${esc(localized(q.region))}</span></div><h1 id="result-heading">${animate ? t('measuring') : esc(localized(q.title))}</h1><p class="result-reaction" id="result-reaction" ${animate ? 'hidden' : ''}>${t(quality(q))}</p><div class="result-stats" aria-live="off"><div><strong><span id="distance-number">${animate ? '0' : number(r.distanceKm)}</span><small> km</small></strong><span>${t('distance')}</span></div><div><strong><span id="points-number">${animate ? '0' : r.points}</span><small> / ${q.maxPoints}</small></strong><span>${t('pts')}</span></div></div><p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p><div class="result-details" ${animate ? 'hidden' : ''}><div class="focus-controls"><button id="focus-guess"><span class="dot amber"></span>${t('yours')}</button><button id="focus-answer"><span class="dot mint"></span>${t('correct')}</button></div><section class="story"><span class="story-kicker">THE STORY BEHIND THE PLACE</span><h2>${esc(localized(q.hook))}</h2><p>${esc(localized(q.fact))}</p><details class="sources"><summary>${t('sources')} ↗</summary><p>${t('pending')}</p><ul>${q.sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a><small>${s.access === 'read' ? `${t('sourceRead')} · ${s.checkedAt}` : t('sourcePending')}</small></li>`).join('')}</ul></details><p class="photo-note">${t('photoNote')}</p></section>${state.plan === 'free' && uiIndex === 2 ? adSlot() : ''}</div>`;
+  return `<section class="compact-result" aria-label="${t('result')}"><div class="result-stats"><span class="earned-points"><i class="dot ${['perfect', 'near'].includes(quality(q)) ? 'mint' : 'amber'}"></i><strong>+<span id="points-number">${animate ? '—' : r.points}</span></strong><small> / ${q.maxPoints} ${locale === 'ja' ? '点' : 'pts'}</small></span><span class="result-distance"><strong id="distance-number">${animate ? '0' : number(r.distanceKm)}</strong> km</span></div><div class="route-actions"><span id="reveal-status">${animate ? t('measuring') : t(quality(q))}</span><button id="skip-reveal" ${animate ? '' : 'hidden'}>${t('skip')} ↠</button><button id="replay-reveal" ${animate ? 'hidden' : ''}>↻ ${t('replay')}</button></div><p id="result-announcement" class="sr-only" role="status" aria-live="polite"></p><div class="result-details" ${animate ? 'hidden' : ''}><article class="answer-card"><h2 id="result-heading">${esc(localized(q.title))}</h2><p>${esc(localized(q.summary) || localized(q.fact))}</p><details class="sources"><summary>${locale === 'ja' ? '詳しい話・出典' : 'Full story & sources'}</summary><p>${esc(localized(q.fact))}</p><div class="focus-controls"><button id="focus-guess"><i class="dot amber"></i>${t('yours')}</button><button id="focus-answer"><i class="dot mint"></i>${t('correct')}</button></div><p class="review-note">${t('pending')}</p><ul>${q.sources.map(source => `<li><a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">${esc(source.label)} ↗</a><small>${source.access === 'read' ? `${t('sourceRead')} · ${source.checkedAt}` : t('sourcePending')}</small></li>`).join('')}</ul></details></article>${state.plan === 'free' && uiIndex === 2 ? adSlot() : ''}</div><button class="primary" id="next" ${animate ? 'disabled' : ''}><span>${uiIndex === 4 ? t('finish') : t('next')}</span><span>→</span></button></section>`;
 }
-function mapMarkup(q, animate) {
-  return `<section class="atlas-stage" aria-label="${t('field')}"><div id="atlas"></div><div class="map-heading"><span class="live-dot"></span><span id="map-level">JAPAN EXPLORATION</span><small>${t('detail')}</small></div><div class="map-status" id="map-status"><span class="spinner"></span>${t('mapLoading')}</div><div class="map-error" id="map-error" hidden><p>${t('mapError')}</p><button id="retry-map">${t('retry')}</button></div><div class="imagery-warning" id="imagery-warning" hidden>${t('imageryError')}</div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="reset-map" aria-label="${t('reset')}" title="${t('reset')}">◎</button></div>${q.answer ? `<div class="route-readout" id="route-readout"><span class="route-kicker">${animate ? 'TRACING THE DISTANCE' : 'STORY LOCATED'}</span><strong><span id="route-distance">${animate ? '0' : number(q.answer.distanceKm)}</span><small> km</small></strong><span class="route-meter"><i id="route-meter" style="transform:scaleX(${animate ? 0 : 1})"></i></span><button id="skip-reveal" ${animate ? '' : 'hidden'}>${t('skip')} ↠</button><button id="replay-reveal" ${animate ? 'hidden' : ''}>↻ ${t('replay')}</button></div>` : `<div class="gesture-guide">${t('tap')}</div><button class="center-pin" id="center-pin">⌖ ${t('center')}</button>`}</section>`;
+function mapMarkup() {
+  return `<section class="atlas-stage" aria-label="${t('field')}"><div id="atlas"></div><div class="map-status" id="map-status"><span class="spinner"></span>${t('mapLoading')}</div><div class="map-error" id="map-error" hidden><p>${t('mapError')}</p><button id="retry-map">${t('retry')}</button></div><div class="imagery-warning" id="imagery-warning" hidden>${t('imageryError')}</div><div class="map-controls"><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="reset-map" aria-label="${t('reset')}" title="${t('reset')}">◎</button></div></section>`;
 }
 function renderQuestion(q) {
   const animate = !!q.answer && freshReveal === q.id && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  return `<div class="game-board ${q.answer ? 'revealed' : ''}" data-phase="${animate ? 'travelling' : 'ready'}" data-quality="${q.answer ? quality(q) : ''}">${mapMarkup(q, animate)}<aside class="field-panel"><div class="panel-content">${q.answer ? resultMarkup(q, animate) : clueMarkup(q)}</div></aside><div class="answer-dock">${q.answer ? `<button class="primary" id="next" ${animate ? 'disabled' : ''}><span>${uiIndex === 4 ? t('finish') : t('next')}</span><span>→</span></button>` : `<div class="coordinate-readout"><span>${selected ? t('selected') : t('select')}</span><strong id="selected-coordinate">${selected ? `${selected[0].toFixed(4)}°, ${selected[1].toFixed(4)}°` : ''}</strong></div><button class="primary" id="lock-answer" ${selected ? '' : 'disabled'}><span>${t('answer')}</span><span>→</span></button><p class="answer-note">${t('selectNote')} ${t('radius')}</p>`}</div></div>`;
+  return `${clueMarkup(q)}<div class="game-board ${q.answer ? 'revealed' : ''}" data-phase="${animate ? 'travelling' : 'ready'}" data-quality="${q.answer ? quality(q) : ''}">${mapMarkup()}<div class="answer-dock">${q.answer ? resultMarkup(q, animate) : `<div class="pin-instructions"><span id="pin-instruction">${selected ? t('selected') : t('select')}</span><button id="center-pin" class="center-pin">⌖ ${t('center')}</button></div><button class="primary" id="lock-answer" ${selected ? '' : 'disabled'}><span>${t('answer')}</span><span>→</span></button>`}</div></div>`;
 }
 function renderSummary() {
   return `<section class="summary"><div class="summary-symbol">${compass}</div><div class="eyebrow">EXPEDITION COMPLETE · ${state.day} · ${esc(localized(state.roundLabel))}</div><h1>${t('complete')}</h1><div class="big-score">${state.total}<span> / 1,000</span></div><p>${t('note')}</p><section class="share-panel" aria-labelledby="share-title"><h2 id="share-title">${t('shareTitle')}</h2><img id="share-preview" alt="${t('shareAlt')}" width="1200" height="1200" hidden><button class="primary" id="share-result" disabled>${t('share')}</button><div class="share-actions"><button id="save-result" disabled>${t('save')}</button><button id="copy-result">${t('copy')}</button></div><p id="share-status" role="status" aria-live="polite"></p><details class="share-post"><summary>${t('post')}</summary><textarea id="share-text" aria-label="${t('post')}" readonly rows="7"></textarea></details></section><div class="summary-list">${state.questions.map((q, i) => `<button class="summary-row" data-index="${i}"><span class="summary-number">0${i + 1}</span><span>${esc(localized(q.title))}${q.answer.usedHint ? `<small>✦ ${t('used')}</small>` : ''}</span><strong>${q.answer.points}<small> / ${q.maxPoints}</small></strong><span>↗</span></button>`).join('')}</div><button class="other-round" id="other-round">${t('other')} →</button>${state.plan === 'free' ? adSlot() : ''}</section>`;
@@ -81,13 +82,15 @@ function cleanup() {
   disposeShare?.(); disposeShare = null;
   if (atlas) { view = atlas.getView(); atlas.destroy(); atlas = null; }
 }
+function settingsMarkup() {
+  return `<details class="settings"><summary aria-label="${t('settings')}">☰</summary><div class="settings-panel"><nav class="round-picker" aria-label="${locale === 'ja' ? '体験する巻' : 'Choose a volume'}">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav><nav class="progress" aria-label="Round progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''} aria-label="Question ${i + 1}">${q.answer ? '✓' : i + 1}</button>`).join('')}</nav><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><button id="locale" class="text-button">${locale === 'ja' ? 'English' : '日本語'}</button><p>${t('prototype')}</p><p>${t('radius')}</p><span>JAPAN · COMPACT PREVIEW v0.4</span></div></details>`;
+}
 function render() {
   if (!state) { app.innerHTML = `<p class="loading">${t('loading')}</p>`; return; }
-  cleanup();
-  submitting = false;
+  cleanup(); submitting = false;
   document.documentElement.lang = locale;
   document.title = locale === 'ja' ? 'ジオルーツ｜日本の怪異と伝説を探す' : 'GeoRoots · Find Japan’s stories';
-  app.innerHTML = `<div class="game-app"><header class="app-header"><div class="brand"><span class="brand-mark">${compass}</span><div><strong>${t('brand')}</strong><small>${t('sub')}</small></div></div><div class="header-actions"><button id="locale" class="text-button">${locale === 'ja' ? 'EN' : '日本語'}</button><details class="settings"><summary aria-label="${t('settings')}">☷</summary><div class="settings-panel"><label>${t('plan')}<select id="plan"><option value="free" ${state.plan === 'free' ? 'selected' : ''}>${t('free')}</option><option value="premium" ${state.plan === 'premium' ? 'selected' : ''}>${t('premium')}</option></select></label><p>${t('prototype')}</p><span>JAPAN STORIES · v0.3</span></div></details></div></header><main class="play-area"><div class="edition-bar"><div><span>${t('japan')}</span><small>${t('preview')}</small></div><nav class="round-picker" aria-label="${locale === 'ja' ? '体験する巻' : 'Choose a volume'}">${state.rounds.map(r => `<button data-round="${r.id}" aria-pressed="${state.roundId === r.id}">${esc(localized(r.label))}</button>`).join('')}</nav></div><div class="round-bar"><div class="round-heading"><span>${t('daily')}</span><small>${state.day} · JST</small></div><nav class="progress" aria-label="Round progress">${state.questions.map((q, i) => `<button class="step ${i === uiIndex ? 'current' : ''} ${q.answer ? 'done' : ''}" data-step="${i}" ${!q.answer && i !== currentIndex() ? 'disabled' : ''} aria-label="Question ${i + 1}"><span>${q.answer ? '✓' : `0${i + 1}`}</span><small>${q.maxPoints}</small></button>`).join('')}</nav><div class="score-total"><span>SCORE</span><strong>${state.total}<small> / 1000</small></strong></div></div>${uiIndex === 5 ? renderSummary() : renderQuestion(state.questions[uiIndex])}</main><div id="toast" role="alert" hidden></div></div>`;
+  app.innerHTML = `<div class="game-app"><header class="app-header"><a class="brand" href="/" aria-label="${t('brand')}">${t('brand')}</a><div class="header-actions"><time datetime="${state.day}">${state.day.replaceAll('-', '.')}</time>${settingsMarkup()}</div></header><main class="play-area">${uiIndex === 5 ? renderSummary() : renderQuestion(state.questions[uiIndex])}</main><div id="toast" role="alert" hidden></div></div>`;
   bind();
 }
 function goTo(index) {
@@ -146,18 +149,18 @@ function bind() {
     if (!q.answer) return;
     const distance = number(q.answer.distanceKm * progress);
     document.querySelector('#distance-number').textContent = distance;
-    document.querySelector('#route-distance').textContent = distance;
+
     document.querySelector('#points-number').textContent = done ? q.answer.points : '—';
-    document.querySelector('#route-meter').style.transform = `scaleX(${progress})`;
+
     if (done) {
       clearTimeout(revealFallback); freshReveal = null;
       document.querySelector('.game-board').dataset.phase = 'ready';
       document.querySelector('#result-heading').textContent = localized(q.title);
-      document.querySelector('#result-reaction').hidden = false;
+      document.querySelector('#reveal-status').textContent = t(quality(q));
       document.querySelector('.result-details').hidden = false;
       document.querySelector('#skip-reveal').hidden = true;
       document.querySelector('#replay-reveal').hidden = false;
-      document.querySelector('.route-kicker').textContent = 'STORY LOCATED';
+
       document.querySelector('#next').disabled = false;
       document.querySelector('#result-announcement').textContent = `${localized(q.title)} · ${distance} km · ${q.answer.points} / ${q.maxPoints}`;
     }
@@ -170,16 +173,15 @@ function bind() {
     onSelect(coord) {
       if (submitting || switching) return;
       selected = coord;
-      document.querySelector('#selected-coordinate').textContent = `${coord[0].toFixed(4)}°, ${coord[1].toFixed(4)}°`;
-      document.querySelector('.coordinate-readout > span').textContent = t('selected');
+
+      document.querySelector('#pin-instruction').textContent = t('selected');
       document.querySelector('#lock-answer').disabled = false;
     },
     onStatus(status) {
       document.querySelector('#map-status').hidden = status !== 'loading';
       document.querySelector('#map-error').hidden = status !== 'error';
       if (status === 'imagery-error') document.querySelector('#imagery-warning').hidden = false;
-    },
-    onView(zoom) { document.querySelector('#map-level').textContent = zoom < 3 ? 'WORLD EXPLORATION' : zoom < 9 ? 'JAPAN EXPLORATION' : 'LOCAL EXPLORATION'; }
+    }
   });
   // A failed map must never keep a saved answer or the next button inaccessible.
   if (animate) revealFallback = setTimeout(() => { atlas?.skipReveal?.(); reveal(1, true); }, 7000);
@@ -189,8 +191,8 @@ function bind() {
   document.querySelector('#retry-map').onclick = () => { freshReveal = null; render(); };
   document.querySelector('#center-pin')?.addEventListener('click', () => atlas?.centerPin?.());
   document.querySelector('#lock-answer')?.addEventListener('click', () => lockAnswer(q));
-  document.querySelector('#focus-guess')?.addEventListener('click', () => atlas?.focus?.(q.answer.guess));
-  document.querySelector('#focus-answer')?.addEventListener('click', () => atlas?.focus?.(q.coordinate));
+  document.querySelector('#focus-guess')?.addEventListener('click', () => { atlas?.focus?.(q.answer.guess); document.querySelector('#atlas').scrollIntoView({ block: 'center' }); });
+  document.querySelector('#focus-answer')?.addEventListener('click', () => { atlas?.focus?.(q.coordinate); document.querySelector('#atlas').scrollIntoView({ block: 'center' }); });
   document.querySelector('#skip-reveal')?.addEventListener('click', () => { atlas?.skipReveal?.(); reveal(1, true); });
   document.querySelector('#replay-reveal')?.addEventListener('click', () => { freshReveal = q.id; render(); });
   document.querySelector('#extra-hint')?.addEventListener('click', () => updateDemo('/api/hint', { questionId: q.id }));

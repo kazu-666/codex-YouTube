@@ -16,16 +16,18 @@
     "ja": {
       "title": "殺生石",
       "hook": "九尾の狐は、石になった。",
-      "hint": "都を惑わせた狐が、退治されて石になったという伝説。探すのは、関東の北端に近い火山のふもと。湯けむりが上がる、山あいの温泉地です。",
+      "hint": "九尾の狐が石になったという伝説。関東北部、火山のふもとの温泉地。",
       "extraHint": "栃木県北部。那須岳の南東側に広がる温泉地を探してください。",
-      "fact": "那須に残る殺生石は、玉藻前と九尾の狐の伝説に結びつく場所です。命を落とした狐が石となり、近づく生き物に害を及ぼしたと語られてきました。周辺の火山ガスという自然現象と、狐の伝説は区別して捉えましょう。採点地点は公開遊歩道から望む岩の付近で、立入を促すものではありません。"
+      "fact": "那須に残る殺生石は、玉藻前と九尾の狐の伝説に結びつく場所です。命を落とした狐が石となり、近づく生き物に害を及ぼしたと語られてきました。周辺の火山ガスという自然現象と、狐の伝説は区別して捉えましょう。採点地点は公開遊歩道から望む岩の付近で、立入を促すものではありません。",
+      "summary": "玉藻前と九尾の狐の伝説に結びつく石。生き物に害を与えたと語られますが、火山ガスという自然現象とは区別します。"
     },
     "en": {
       "title": "Sessho-seki",
       "hook": "A nine-tailed fox became a stone.",
-      "hint": "Legend says a fox that deceived the imperial court became a stone after its defeat. Look near the northern edge of Kanto, at the foot of a volcano, in a mountain hot-spring area.",
+      "hint": "Legend: a fox became a stone. Volcanic hot springs in northern Kanto.",
       "extraHint": "Look in northern Tochigi, in the hot-spring area southeast of Mount Nasu.",
-      "fact": "Sessho-seki in Nasu is associated with Tamamo-no-Mae and the nine-tailed fox. The defeated fox was said to become a stone harmful to living creatures nearby. This is folklore, distinct from the volcanic gases in the area. The target is near the rock seen from the public walkway; this game does not invite entry into restricted ground."
+      "fact": "Sessho-seki in Nasu is associated with Tamamo-no-Mae and the nine-tailed fox. The defeated fox was said to become a stone harmful to living creatures nearby. This is folklore, distinct from the volcanic gases in the area. The target is near the rock seen from the public walkway; this game does not invite entry into restricted ground.",
+      "summary": "A stone tied to Tamamo-no-Mae and the nine-tailed fox. Its legend is distinct from the area’s volcanic gases."
     },
     "sources": [
       {
@@ -61,16 +63,18 @@
     "ja": {
       "title": "道成寺",
       "hook": "鐘の中まで、追いかけて。",
-      "hint": "僧を追った女性が大蛇となり、隠れた鐘ごと焼いたという物語。舞台は紀伊半島の西側。熊野へ向かう道に近く、大きな川の河口から少し内陸にある寺です。",
+      "hint": "大蛇になった女性が僧を鐘ごと焼いたという伝説。紀伊半島西側の寺。",
       "extraHint": "和歌山県の日高川流域。御坊の市街地から北東にある寺を探してください。",
-      "fact": "道成寺が紹介する「安珍と清姫」の伝説では、清姫は安珍に裏切られたと思い、大蛇となって追いかけます。安珍が逃げ込んだのは寺の鐘の中。寺の公式解説は、この物語が11世紀の『法華験記』に記され、後に能や歌舞伎などの「道成寺物」にもなったと説明しています。現在も寺では絵巻を使った絵ときが行われています。伝説の出来事を史実として断定するものではありません。"
+      "fact": "道成寺が紹介する「安珍と清姫」の伝説では、清姫は安珍に裏切られたと思い、大蛇となって追いかけます。安珍が逃げ込んだのは寺の鐘の中。寺の公式解説は、この物語が11世紀の『法華験記』に記され、後に能や歌舞伎などの「道成寺物」にもなったと説明しています。現在も寺では絵巻を使った絵ときが行われています。伝説の出来事を史実として断定するものではありません。",
+      "summary": "清姫が大蛇となって安珍を追い、鐘の中に隠れた僧を焼いたという伝説。能や歌舞伎の「道成寺物」にもなりました。"
     },
     "en": {
       "title": "Dojoji Temple",
       "hook": "Even a temple bell could not hide him.",
-      "hint": "A woman became a great serpent and burned the bell hiding a monk. The temple lies on the western side of the Kii Peninsula, near a route to Kumano, a little inland from a large river mouth.",
+      "hint": "Legend: a woman became a serpent. A temple in western Kii.",
       "extraHint": "Search the Hidaka River area of Wakayama, northeast of central Gobo.",
-      "fact": "In the Anchin and Kiyohime legend presented by Dojoji, Kiyohime believes the monk has betrayed her and pursues him as a serpent. He hides beneath a temple bell. The temple explains that the tale appears in the eleventh-century Hokke Genki and later inspired Noh and Kabuki works. Storytelling with illustrated scrolls continues at the temple today. The legendary events are not asserted as historical fact."
+      "fact": "In the Anchin and Kiyohime legend presented by Dojoji, Kiyohime believes the monk has betrayed her and pursues him as a serpent. He hides beneath a temple bell. The temple explains that the tale appears in the eleventh-century Hokke Genki and later inspired Noh and Kabuki works. Storytelling with illustrated scrolls continues at the temple today. The legendary events are not asserted as historical fact.",
+      "summary": "Kiyohime pursued Anchin as a serpent and burned the bell hiding him. The legend inspired Noh and Kabuki works."
     },
     "sources": [
       {
@@ -106,16 +110,18 @@
     "ja": {
       "title": "カッパ淵",
       "hook": "水辺にいるのは、誰だろう。",
-      "hint": "川の淵に河童がすみ、人を驚かせたと語られる場所。東北の太平洋側ですが、海辺ではなく山々に囲まれた内陸の盆地。昔話を集めた本で知られるまちの、寺の裏手にあります。",
+      "hint": "河童がすむという川の淵。東北の太平洋側、山に囲まれた盆地の寺裏。",
       "extraHint": "岩手県の遠野盆地。常堅寺の裏を流れる小川を探してください。",
-      "fact": "遠野のカッパ淵は、常堅寺の裏にある小川の淵です。観光協会は、ここに多くの河童がすみ、人々を驚かせたという伝承を紹介しています。河童は創作したゲームの登場人物ではなく、この土地で語り継がれてきた存在として扱います。ただし、実際に生き物として存在するという意味ではありません。訪問時は現地の公開状況や工事・野生動物の案内を確認してください。"
+      "fact": "遠野のカッパ淵は、常堅寺の裏にある小川の淵です。観光協会は、ここに多くの河童がすみ、人々を驚かせたという伝承を紹介しています。河童は創作したゲームの登場人物ではなく、この土地で語り継がれてきた存在として扱います。ただし、実際に生き物として存在するという意味ではありません。訪問時は現地の公開状況や工事・野生動物の案内を確認してください。",
+      "summary": "常堅寺の裏手にある小川の淵。遠野市観光協会は、河童がすんで人々を驚かせたという土地の伝承を紹介しています。"
     },
     "en": {
       "title": "Kappa-buchi",
       "hook": "Who is hiding by the water?",
-      "hint": "Kappa were said to live in this river pool and startle people. Look inland on the Pacific side of Tohoku, in a basin surrounded by mountains. It is behind a temple in a town known for a collection of folk tales.",
+      "hint": "A river pool linked to kappa tales. A mountain basin in Tohoku.",
       "extraHint": "Look for the stream behind Jokenji Temple in the Tono basin of Iwate.",
-      "fact": "Kappa-buchi is a stream pool behind Jokenji Temple in Tono. The local tourism association describes a tradition of kappa living here and startling people. The game presents a documented local tradition, not an assertion that kappa exist as animals. Anyone visiting should check current access notices, construction and wildlife information."
+      "fact": "Kappa-buchi is a stream pool behind Jokenji Temple in Tono. The local tourism association describes a tradition of kappa living here and startling people. The game presents a documented local tradition, not an assertion that kappa exist as animals. Anyone visiting should check current access notices, construction and wildlife information.",
+      "summary": "A stream pool behind Jokenji Temple, associated with local traditions of kappa startling people."
     },
     "sources": [
       {
@@ -151,16 +157,18 @@
     "ja": {
       "title": "白兎神社",
       "hook": "海を渡った兎の、その後。",
-      "hint": "海を渡ろうとして傷ついた兎が、神に救われる神話にゆかりのある神社。本州西部、日本海に面した砂浜のすぐそばです。東には大きな砂丘が広がります。",
+      "hint": "傷ついた兎を神が救う神話。本州西部、日本海の砂浜のそばの神社。",
       "extraHint": "鳥取砂丘より西側。鳥取市西部の、日本海に面した白兎海岸のそばです。",
-      "fact": "「因幡の白兎」では、兎が海を渡ろうとし、皮をはがれて苦しんでいたところを大国主神に助けられます。白兎神社は、この神話に登場する白兎神を祀る場所として知られています。物語の動物「ワニ」を何と解釈するかには議論があるため、ここでは特定の現生動物と断定しません。採点地点は海岸全体ではなく、神社の参拝区域です。"
+      "fact": "「因幡の白兎」では、兎が海を渡ろうとし、皮をはがれて苦しんでいたところを大国主神に助けられます。白兎神社は、この神話に登場する白兎神を祀る場所として知られています。物語の動物「ワニ」を何と解釈するかには議論があるため、ここでは特定の現生動物と断定しません。採点地点は海岸全体ではなく、神社の参拝区域です。",
+      "summary": "「因幡の白兎」の白兎神を祀る神社。傷ついた兎を大国主神が救ったと語られます。神話として伝えられる話です。"
     },
     "en": {
       "title": "Hakuto Shrine",
       "hook": "What happened after the hare crossed the sea?",
-      "hint": "A shrine linked to the myth of a hare injured while trying to cross the sea, then helped by a deity. Look beside a sandy beach on the Sea of Japan in western Honshu, west of a famous large dune area.",
+      "hint": "Myth: a deity saved a hare. A shrine on Honshu’s Sea of Japan coast.",
       "extraHint": "West of the Tottori Sand Dunes, beside Hakuto Beach in western Tottori City.",
-      "fact": "In the Hare of Inaba myth, an injured hare is helped by Okuninushi after attempting to cross the sea. Hakuto Shrine is associated with the hare deity. The identity of the animals called wani in the story has been debated, so the game does not equate them with a particular modern species. The target is the public shrine precinct, not the whole beach."
+      "fact": "In the Hare of Inaba myth, an injured hare is helped by Okuninushi after attempting to cross the sea. Hakuto Shrine is associated with the hare deity. The identity of the animals called wani in the story has been debated, so the game does not equate them with a particular modern species. The target is the public shrine precinct, not the whole beach.",
+      "summary": "A shrine of the Hare of Inaba, whom Okuninushi helped after its injury. The account is presented as myth."
     },
     "sources": [
       {
@@ -196,16 +204,18 @@
     "ja": {
       "title": "天岩戸神社・西本宮",
       "hook": "太陽が隠れて、世界は暗くなった。",
-      "hint": "太陽の神が岩戸に隠れ、神々が外へ誘い出す策を考えたという神話。その舞台とされる神社を探します。九州の東側、海から離れた山間部。深い峡谷で知られる町にあります。",
+      "hint": "太陽の神が岩戸に隠れた神話。九州東部、深い峡谷で知られる山の町。",
       "extraHint": "宮崎県の北西部、高千穂町。町の中心から北東、岩戸川沿いです。",
-      "fact": "天岩戸神社は、天照大御神が隠れたという天岩戸を御神体として祀っています。公式の神話紹介では、神々が舞や鏡を使って外へ誘い出し、世界に明るさが戻ったと語られます。採点地点は西本宮の参拝区域で、御神体の洞窟そのものではありません。神話の舞台として伝えられていることと、出来事が歴史的に実証されたことは区別します。"
+      "fact": "天岩戸神社は、天照大御神が隠れたという天岩戸を御神体として祀っています。公式の神話紹介では、神々が舞や鏡を使って外へ誘い出し、世界に明るさが戻ったと語られます。採点地点は西本宮の参拝区域で、御神体の洞窟そのものではありません。神話の舞台として伝えられていることと、出来事が歴史的に実証されたことは区別します。",
+      "summary": "天照大御神が隠れたという岩戸を祀る神社。神々が舞や鏡で外へ誘い出したと伝えます。正解は西本宮の参拝区域です。"
     },
     "en": {
       "title": "Amanoiwato Shrine · West precinct",
       "hook": "The sun hid away. The world went dark.",
-      "hint": "The sun deity hid behind a rock door, and the gods devised a way to bring her out. Find a shrine associated with this myth, in the mountains of eastern Kyushu, in a town famous for deep gorges.",
+      "hint": "Myth: the sun deity hid in a cave. A gorge town in eastern Kyushu.",
       "extraHint": "Takachiho in northwestern Miyazaki, northeast of the town centre along the Iwato River.",
-      "fact": "Amanoiwato Shrine venerates the cave associated with Amaterasu hiding from the world. Its official account tells how dance and a mirror helped draw her outside, restoring light. The target is the public west precinct, not the sacred cave itself. Association with a myth is distinct from historical proof of its events."
+      "fact": "Amanoiwato Shrine venerates the cave associated with Amaterasu hiding from the world. Its official account tells how dance and a mirror helped draw her outside, restoring light. The target is the public west precinct, not the sacred cave itself. Association with a myth is distinct from historical proof of its events.",
+      "summary": "A shrine associated with Amaterasu’s hiding place and the gods drawing her out. The target is the public west precinct."
     },
     "sources": [
       {
@@ -247,16 +257,18 @@
     "ja": {
       "title": "鞍馬寺",
       "hook": "あの武将の師は、天狗だった？",
-      "hint": "若き日の義経が、天狗に武術を教わったと伝わる山の寺。千年の都の北側にあり、川沿いの鉄道をたどると山里へ。近くには水の神を祀る別の神社もあります。",
+      "hint": "若い義経が天狗に武術を学んだという山。千年の都の北、鉄道の終点。",
       "extraHint": "京都市の北部。出町柳から山へ向かう叡山電車の終点の一つが最寄りです。",
-      "fact": "鞍馬山には、牛若丸と呼ばれた若い源義経が天狗に武術を学んだという伝説があります。義経は実在の人物ですが、天狗との修行はそのまま史実と扱える話ではありません。寺にまつわる信仰と、後世に広まった英雄の物語を分けて楽しむ題材です。採点は山全体や秘所ではなく、公開されている鞍馬寺の本殿付近を基準にします。"
+      "fact": "鞍馬山には、牛若丸と呼ばれた若い源義経が天狗に武術を学んだという伝説があります。義経は実在の人物ですが、天狗との修行はそのまま史実と扱える話ではありません。寺にまつわる信仰と、後世に広まった英雄の物語を分けて楽しむ題材です。採点は山全体や秘所ではなく、公開されている鞍馬寺の本殿付近を基準にします。",
+      "summary": "牛若丸が天狗に武術を教わったという山の寺。義経は実在の人物ですが、天狗との修行は史実と区別して楽しむ伝説です。"
     },
     "en": {
       "title": "Kurama Temple",
       "hook": "Was a tengu the warrior’s teacher?",
-      "hint": "Young Yoshitsune was said to learn martial arts from tengu near this mountain temple. It lies north of Japan’s former imperial capital, reached by a railway following a river into the hills. Another nearby shrine honours a water deity.",
+      "hint": "Yoshitsune and tengu legends. A mountain temple north of Kyoto.",
       "extraHint": "Northern Kyoto: one terminus of the Eizan Railway from Demachiyanagi is the nearest station.",
-      "fact": "Mount Kurama is linked with the legend of the young Minamoto no Yoshitsune, known as Ushiwakamaru, learning martial arts from tengu. Yoshitsune was historical; training with tengu is a legendary motif. The target is near the publicly accessible main hall of Kurama Temple, rather than a secret site or the entire mountain."
+      "fact": "Mount Kurama is linked with the legend of the young Minamoto no Yoshitsune, known as Ushiwakamaru, learning martial arts from tengu. Yoshitsune was historical; training with tengu is a legendary motif. The target is near the publicly accessible main hall of Kurama Temple, rather than a secret site or the entire mountain.",
+      "summary": "A mountain temple linked to young Yoshitsune training with tengu. A legend about a historical figure, rather than established history."
     },
     "sources": [
       {
@@ -292,16 +304,18 @@
     "ja": {
       "title": "太宰府天満宮",
       "hook": "主を追って、梅が空を飛んだ。",
-      "hint": "都を離れた主人を慕い、梅の木が一夜で飛んできたという伝説。その木が伝わる神社は九州北部。大都市の中心から南東に進み、古代の役所が置かれた町にあります。",
+      "hint": "都から主人を追って梅が飛んだという神社。九州北部、古代の役所の町。",
       "extraHint": "福岡市の南東、太宰府市。学問の神として祀られる菅原道真にゆかりのある神社です。",
-      "fact": "太宰府天満宮の「飛梅」は、菅原道真を慕って都から飛来したと伝わる梅です。都から九州へ下った実在の人物の記憶と、植物が海を越えるという不思議な伝説が結びついています。木の飛来は伝承として紹介し、自然史上の出来事とは断定しません。採点地点は天満宮の参拝区域を基準とします。"
+      "fact": "太宰府天満宮の「飛梅」は、菅原道真を慕って都から飛来したと伝わる梅です。都から九州へ下った実在の人物の記憶と、植物が海を越えるという不思議な伝説が結びついています。木の飛来は伝承として紹介し、自然史上の出来事とは断定しません。採点地点は天満宮の参拝区域を基準とします。",
+      "summary": "菅原道真を慕い、都から飛んできたという「飛梅」の伝説。実在の人物の記憶と、木の不思議な旅が結びついています。"
     },
     "en": {
       "title": "Dazaifu Tenmangu",
       "hook": "A plum tree flew to follow its master.",
-      "hint": "Legend says a plum tree flew overnight to join its master after he left the capital. Find the shrine in northern Kyushu, southeast of a major city, in a town that once housed an ancient administrative centre.",
+      "hint": "Legend: a flying plum tree. A shrine town in northern Kyushu.",
       "extraHint": "Dazaifu, southeast of Fukuoka City: a shrine associated with Sugawara no Michizane, revered as a deity of learning.",
-      "fact": "The Tobiume plum at Dazaifu Tenmangu is said to have flown from the capital to follow Sugawara no Michizane. The story joins the memory of a historical figure sent to Kyushu with a tree’s extraordinary journey. Its flight is presented as legend, not natural history. The target is the shrine’s public worship area."
+      "fact": "The Tobiume plum at Dazaifu Tenmangu is said to have flown from the capital to follow Sugawara no Michizane. The story joins the memory of a historical figure sent to Kyushu with a tree’s extraordinary journey. Its flight is presented as legend, not natural history. The target is the shrine’s public worship area.",
+      "summary": "The Tobiume plum was said to fly from the capital to follow Michizane: a miraculous journey linked to a historical figure."
     },
     "sources": [
       {
@@ -337,16 +351,18 @@
     "ja": {
       "title": "戸隠神社・奥社参道入口",
       "hook": "投げ飛ばされた扉は、この山へ。",
-      "hint": "太陽の神を外へ出すために開けた岩の扉が、遠い山まで投げられたという伝承。舞台は海のない中部地方、高原のそばの険しい山。長野の県庁所在地から北西に進みます。",
+      "hint": "投げた岩戸の扉が届いたという山。長野市北西、奥社への杉並木の入口。",
       "extraHint": "長野市の戸隠地区。奥社そのものではなく、長い杉並木へ続く参道の入口を選んでください。",
-      "fact": "天岩戸神社の公式解説は、岩戸神楽の歌を挙げ、手力男命が岩戸の扉を信濃国の戸隠山へ投げたと伝えています。九州の岩戸隠れの神話と、長野の山が一つの物語で結ばれるのが面白いところです。今回の採点地点は戸隠神社奥社の参道入口。山頂や立ち入れない場所を選ぶ問題ではありません。神話の扉が実際の山の成因だとは説明しません。"
+      "fact": "天岩戸神社の公式解説は、岩戸神楽の歌を挙げ、手力男命が岩戸の扉を信濃国の戸隠山へ投げたと伝えています。九州の岩戸隠れの神話と、長野の山が一つの物語で結ばれるのが面白いところです。今回の採点地点は戸隠神社奥社の参道入口。山頂や立ち入れない場所を選ぶ問題ではありません。神話の扉が実際の山の成因だとは説明しません。",
+      "summary": "神が投げた岩戸の扉が戸隠山へ届いたという伝承。九州と長野が一つの物語で結ばれます。正解は奥社参道の入口です。"
     },
     "en": {
       "title": "Togakushi Shrine · Okusha approach entrance",
       "hook": "A flying rock door became a mountain.",
-      "hint": "A rock door opened to release the sun deity was said to be thrown to a distant mountain. Look in landlocked central Japan, northwest of Nagano’s prefectural capital, beside a high plateau and steep mountain range.",
+      "hint": "Legend: a thrown rock door. Northwest of Nagano: the shrine approach.",
       "extraHint": "The Togakushi area of Nagano City. Choose the entrance to the long cedar-lined approach, rather than the inner shrine itself.",
-      "fact": "Amanoiwato Shrine’s official explanation cites an Iwato Kagura verse in which Tajikarao throws the rock door to Mount Togakushi in Shinano. The tale connects Kyushu with a mountain in Nagano. This question targets the entrance to the Okusha approach, not a summit or restricted sacred site. The myth is not an explanation of the mountain’s geological formation."
+      "fact": "Amanoiwato Shrine’s official explanation cites an Iwato Kagura verse in which Tajikarao throws the rock door to Mount Togakushi in Shinano. The tale connects Kyushu with a mountain in Nagano. This question targets the entrance to the Okusha approach, not a summit or restricted sacred site. The myth is not an explanation of the mountain’s geological formation.",
+      "summary": "A thrown rock door linked Kyushu’s myth with Mount Togakushi. The target is the entrance to the Okusha approach."
     },
     "sources": [
       {
@@ -388,16 +404,18 @@
     "ja": {
       "title": "恐山菩提寺",
       "hook": "この世と、あの世の境目に。",
-      "hint": "死者を思う祈りと、あの世を連想させる白い荒地で知られる霊場。本州の最北部、斧の形にも見える半島の内側です。周囲は火山地形で、山の湖のそばにあります。",
+      "hint": "あの世を思う白い火山の霊場。本州最北部、斧形の半島にある湖のほとり。",
       "extraHint": "青森県の下北半島。むつ市の西側にある、宇曽利山湖の北岸付近です。",
-      "fact": "恐山は、火山由来の荒地と湖が広がる霊場です。その景観は、地獄や極楽、この世とあの世を思う信仰と結びつけられてきました。ここで扱うのは実際に続く信仰と場所の関係であり、死者に必ず会えるという主張ではありません。採点地点は菩提寺の公開参拝区域の入口付近。参拝者の祈りや供養そのものを見世物にしない方針です。"
+      "fact": "恐山は、火山由来の荒地と湖が広がる霊場です。その景観は、地獄や極楽、この世とあの世を思う信仰と結びつけられてきました。ここで扱うのは実際に続く信仰と場所の関係であり、死者に必ず会えるという主張ではありません。採点地点は菩提寺の公開参拝区域の入口付近。参拝者の祈りや供養そのものを見世物にしない方針です。",
+      "summary": "白い火山の荒地と湖が、地獄や極楽を思う信仰と結びつく霊場。ここでは、死者を思う祈りと場所の関係を扱います。"
     },
     "en": {
       "title": "Osorezan Bodaiji",
       "hook": "At the boundary between worlds.",
-      "hint": "A sacred place associated with remembrance of the dead and a pale volcanic landscape evoking the other world. Look in northernmost Honshu, inside an axe-shaped peninsula, beside a mountain lake.",
+      "hint": "The other world’s volcanic landscape. A lake in northernmost Honshu.",
       "extraHint": "The Shimokita Peninsula in Aomori, west of Mutsu, near the northern shore of Lake Usori.",
-      "fact": "Osorezan is a sacred volcanic landscape beside a lake, associated with images of hell, paradise and the boundary between life and death. The question concerns a place and its religious traditions, not a claim that visitors can meet the dead. The target is near the public entrance to Bodaiji. Worshippers and acts of mourning are not treated as spectacles."
+      "fact": "Osorezan is a sacred volcanic landscape beside a lake, associated with images of hell, paradise and the boundary between life and death. The question concerns a place and its religious traditions, not a claim that visitors can meet the dead. The target is near the public entrance to Bodaiji. Worshippers and acts of mourning are not treated as spectacles.",
+      "summary": "A pale volcanic landscape and lake associated with visions of hell and paradise, and remembrance of the dead."
     },
     "sources": [
       {
@@ -433,16 +451,18 @@
     "ja": {
       "title": "出雲大社",
       "hook": "国を譲った神は、どこへ。",
-      "hint": "国を譲った神のために、大きな宮が建てられたという神話にゆかりのある神社。本州西部の日本海側。西へ伸びる半島の付け根に近く、夕日で知られる海岸もそばにあります。",
+      "hint": "国を譲った神のための宮という神話。本州西部、日本海側の半島の付け根。",
       "extraHint": "島根県の東部。宍道湖より西、稲佐の浜から東へ少し内陸に入った場所です。",
-      "fact": "出雲大社は大国主大神を祀り、国譲りの神話と結びつく神社です。神話に語られる宮と、現在見ることのできる社殿の歴史は区別して扱います。有名な「縁結び」だけで終わらせず、国を譲った後の神の居場所という視点から訪ねる問題にしました。採点地点は公開参拝区域で、非公開の本殿内部へ立ち入ることを求めません。"
+      "fact": "出雲大社は大国主大神を祀り、国譲りの神話と結びつく神社です。神話に語られる宮と、現在見ることのできる社殿の歴史は区別して扱います。有名な「縁結び」だけで終わらせず、国を譲った後の神の居場所という視点から訪ねる問題にしました。採点地点は公開参拝区域で、非公開の本殿内部へ立ち入ることを求めません。",
+      "summary": "大国主大神を祀り、国譲りの神話と結びつく神社。神話の宮と、現在の社殿の歴史は区別して紹介します。"
     },
     "en": {
       "title": "Izumo Taisha",
       "hook": "Where did the deity go after giving up the land?",
-      "hint": "A shrine associated with the myth of a great palace built for a deity who yielded the land. Look on the Sea of Japan side of western Honshu, near the base of a westward-pointing peninsula and a beach famous for sunsets.",
+      "hint": "Myth: a god gave up the land. A shrine on Honshu’s Sea of Japan coast.",
       "extraHint": "Eastern Shimane, west of Lake Shinji, a short distance inland east of Inasa Beach.",
-      "fact": "Izumo Taisha venerates Okuninushi and is associated with the myth of yielding the land. A palace described in myth must be distinguished from the history of the buildings visible today. This question asks where the deity belongs after that surrender, beyond the shrine’s familiar association with relationships. The target is in the public precinct; no entry to the closed main sanctuary is required."
+      "fact": "Izumo Taisha venerates Okuninushi and is associated with the myth of yielding the land. A palace described in myth must be distinguished from the history of the buildings visible today. This question asks where the deity belongs after that surrender, beyond the shrine’s familiar association with relationships. The target is in the public precinct; no entry to the closed main sanctuary is required.",
+      "summary": "A shrine of Okuninushi associated with yielding the land. Its mythical palace is distinguished from the history of today’s buildings."
     },
     "sources": [
       {

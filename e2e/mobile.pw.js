@@ -49,6 +49,8 @@ try {
   await page.waitForTimeout(500);
   await page.screenshot({ path: '/tmp/fieldnotes-globe-initial.png' });
   assert.ok(imageryRequests > 0, 'satellite imagery tiles should be requested');
+  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), 'globe', 'overview must be the Japan-sized sphere');
+  assert.equal(await page.locator('.japan-globe-canvas').count(),1);
   assert.equal(await page.locator('#imagery-warning').isHidden(), true, 'working satellite tiles should not show a warning');
   assert.equal(await page.locator('#lock-answer').isDisabled(), true, 'a location must be chosen before confirmation');
   const rect = await page.locator('#atlas').boundingBox();
@@ -97,6 +99,8 @@ try {
   assert.equal(await page.locator('#points-number').textContent(), String(answered.questions[0].answer.points));
   assert.ok(Math.abs(Number((await page.locator('#distance-number').textContent()).replace(/,/g, '')) - answered.questions[0].answer.distanceKm) <= .5);
   assert.equal(await page.locator('.result-details').isVisible(), true);
+  assert.equal(await page.locator('#question-text').textContent(), provisional.questions[0].hint.ja, 'question must remain above the map after answering');
+  assert.equal(await page.locator('#atlas').getAttribute('data-mode'), 'globe', 'answer reveal returns to the Japan-sized sphere');
   await page.locator('#replay-reveal').click();
   await page.locator('#skip-reveal').click();
   await page.locator('#next:enabled').waitFor();
@@ -113,10 +117,12 @@ try {
     }
     if (i > 0) { await page.locator('#center-pin').click(); await page.locator('#lock-answer').click(); }
     await page.locator('#next:enabled').waitFor();
-    await page.locator('#focus-answer').waitFor();
+    await page.locator('#focus-answer').waitFor({state:'attached'});
     await page.locator('#atlas[data-ready="true"]').waitFor();
-    if ((await page.locator('h1').textContent()) === '殺生石') {
+    if ((await page.locator('#result-heading').textContent()) === '殺生石') {
+      await page.locator('.sources > summary').click();
       await page.locator('#focus-answer').click();
+      await page.locator('#atlas[data-mode="detail"][data-ready="true"]').waitFor();
       await page.waitForTimeout(1500);
       const zoom = Number(await page.locator('#atlas').getAttribute('data-zoom'));
       assert.ok(zoom >= 15.9, `detail zoom should reach street scale: ${zoom}`);
@@ -166,6 +172,7 @@ try {
   await page.locator('#share-result').click();
   await page.waitForTimeout(100);
   assert.equal(unexpectedDownloads, 0, 'cancelling native sharing must not download a file');
+  await page.locator('.settings > summary').click();
   await page.locator('#locale').click();
   await page.locator('#share-result:enabled').waitFor();
   assert.ok((await page.locator('#share-text').inputValue()).includes('Extra hints: 1/5 places'));
@@ -197,6 +204,7 @@ try {
   }
   await page.locator('#share-result:enabled').waitFor();
   assert.ok((await page.locator('#share-text').inputValue()).includes('Volume II'));
+  await page.locator('.settings > summary').click();
   await page.locator('[data-round="first"]').click();
   await page.locator('#share-result:enabled').waitFor();
   assert.ok((await page.locator('#share-text').inputValue()).includes('Volume I'), 'switching must preserve first volume results');
@@ -212,6 +220,37 @@ try {
   await fallbackPage.locator('#lock-answer').click();
   await fallbackPage.locator('#next:enabled').waitFor();
   await fallbackContext.close();
+  const layoutContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const layoutPage = await layoutContext.newPage();
+  await layoutPage.route('https://tiles.openfreemap.org/**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(style) }));
+  await layoutPage.route('https://server.arcgisonline.com/**', route => route.fulfill({ status: 200, contentType: 'image/png', body: transparentTile }));
+  await layoutPage.goto(`http://127.0.0.1:${port}/?round=first`);
+  await layoutPage.locator('#atlas[data-mode="globe"][data-ready="true"]').waitFor();
+  const authoredQuestions = JSON.parse(fs.readFileSync(new URL('../content/questions.json', import.meta.url)));
+  for (const width of [320, 390, 1280]) {
+    await layoutPage.setViewportSize({ width, height: 900 });
+    for (const locale of ['ja', 'en']) for (const q of authoredQuestions) {
+      const lines = await layoutPage.evaluate(({ text, locale }) => {
+        document.documentElement.lang = locale;
+        const element = document.querySelector('#question-text'); element.textContent = text;
+        return element.getBoundingClientRect().height / parseFloat(getComputedStyle(element).lineHeight);
+      }, { text: q[locale].hint, locale });
+      assert.ok(lines <= 2.01, `${q.id} ${locale} at ${width}px must fit in two lines; got ${lines}`);
+    }
+    assert.equal(await layoutPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  }
+  for (let n = 0; n < 7 && await layoutPage.locator('#atlas').getAttribute('data-mode') === 'globe'; n++) {
+    await layoutPage.locator('#zoom-in').click(); await layoutPage.waitForTimeout(100);
+  }
+  await layoutPage.locator('#atlas[data-mode="detail"][data-ready="true"]').waitFor();
+  assert.equal(await layoutPage.locator('#lock-answer').isDisabled(), true, 'zooming into detail must not answer');
+  for (let n = 0; n < 5 && await layoutPage.locator('#atlas').getAttribute('data-mode') === 'detail'; n++) {
+    await layoutPage.locator('#zoom-out').click(); await layoutPage.waitForTimeout(400);
+  }
+  await layoutPage.locator('#atlas[data-mode="globe"][data-ready="true"]').waitFor();
+  await layoutPage.screenshot({ path: '/tmp/georoots-mini-japan-desktop.png' });
+  await layoutContext.close();
+  console.log('PASS: Japan-sized 3D globe, rotation/pinch, accurate detail transition, compact question/result, two-line clues in both languages at 320/390/1280px, ten answers, animation and sharing. External imagery and native sharing are mocked.');
   console.log('PASS: mobile gestures, provisional pins, animated route growth, arrival, skip/replay, detailed pins, all 10 answers, independent volume saves, reduced motion, image sharing, no spoilers, English and map fallback. Map data and native sharing are mocked.');
 } finally {
   await browser?.close();

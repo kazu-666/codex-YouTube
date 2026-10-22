@@ -2,7 +2,7 @@ import questions from '../content/questions.json' with { type: 'json' };
 
 export const POINTS = [100, 150, 200, 250, 300];
 export const MAX_DISTANCE_KM = 20015;
-export const CONTENT_VERSION = 'japan-stories-v1';
+export const CONTENT_VERSION = 'japan-compact-v2';
 export const ROUND_IDS = ['first', 'second'];
 export const ROUND_LABELS = { first: { ja: '巻一', en: 'Volume I' }, second: { ja: '巻二', en: 'Volume II' } };
 
@@ -39,5 +39,5 @@ export function publicQuestion(q, index, usedHint) {
 }
 
 export function revealedQuestion(q, index, answer) {
-  return { ...publicQuestion(q, index, answer.usedHint), answer, coordinate: q.coordinate, title: { ja: q.ja.title, en: q.en.title }, fact: { ja: q.ja.fact, en: q.en.fact }, region: q.region, sources: q.sources, status: q.status };
+  return { ...publicQuestion(q, index, answer.usedHint), answer, coordinate: q.coordinate, title: { ja: q.ja.title, en: q.en.title }, fact: { ja: q.ja.fact, en: q.en.fact }, summary: { ja: q.ja.summary, en: q.en.summary }, region: q.region, sources: q.sources, status: q.status };
 }

@@ -44,6 +44,7 @@ test('five answers, saved progress, one-answer rule, hints and results', { timeo
     assert.equal(result.data.questions.length, 5);
     assert.equal(result.data.questions[0].coordinate, undefined);
     assert.equal(result.data.questions[0].fact, undefined);
+    assert.equal(result.data.questions[0].summary, undefined);
     assert.equal(result.data.questions[0].title, undefined);
     assert.equal(result.data.questions[0].sources, undefined);
     assert.match(result.data.questions[0].id, /^[a-f0-9]{6}$/);
