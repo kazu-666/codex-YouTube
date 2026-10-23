@@ -1,0 +1,18 @@
+{
+  "contentVersion": "house-inheritance-v1",
+  "imageRevision": "house-relics-v1",
+  "generated": true,
+  "tool": "image_gen.imagegen",
+  "firstPassOriginal": "/workspace/generated_images/exec-97332966-ff7d-409c-a53c-7343e38e289e.png",
+  "originalPath": "/workspace/generated_images/exec-963041a4-499d-4163-a25d-9a9e6f0854a7.png",
+  "originalSha256": "27b0beb764d15c03fe3b2a74ebb3262d6bf0210e6cee14ef2682c2b958cfd2d2",
+  "assetPath": "web/public/connections/house-inheritance-photos.webp",
+  "assetSha256": "bb5b778405f7fd1984f7fae9b5aa16fa1c557fd2dfe5b246b4694d3ace7d61e9",
+  "assetBytes": 375772,
+  "columns": 4,
+  "rows": 3,
+  "processing": "WebP format conversion quality 88 only; generated originals preserved.",
+  "corrections": "Reference-image edit removes physically attached teeth from bitten gag and changes tooth-like shapes to thin fingernail clippings in lid/shutter panels.",
+  "fictionBoundary": "All relics, bodies represented by props, the village, criminal events and ritual are fictional. No authentic police records or actual human remains are photographed.",
+  "qualityLimits": "No claim of anatomical forensic accuracy or of exhaustively unique free-association grouping; judge clue recognizability and alternative groupings through playtesting."
+}

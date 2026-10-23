@@ -5,11 +5,11 @@ Render の無料 Web Service で、ブラウザ画面と採点 API を一緒に�
 
 ## 既存の確認サイトを更新する
 
-現在の対象は、固定１問・12枚の写真・４枚×３組の「残された十二枚」です。確認URLは <https://fieldnotes-atlas-preview.onrender.com/?mode=connections&v=16>。最新版は黒・灰白色・鈍い赤のUIです。問題の内容や画像版は前回のままなので、APIの版番号だけではUI更新の配信を確認できません。HTMLの `theme-color` が `#0c0b0d`、配信されたconnectionsのCSSに `--file-action:#823234` が含まれることと、生成ビルドのファイルが一致することも確認します。
+現在の対象は、固定一話・12枚の遺留品写真・４枚×３組の「家を継ぐ」、FILE 003です。確認URLは <https://fieldnotes-atlas-preview.onrender.com/?mode=connections&v=17>。黒・灰白色・鈍い赤のUI、身体・閉鎖された家を題材にした創作の問題です。
 
-`main` へ反映すると、Render側の自動デプロイ設定が有効なら更新が始まります。GitHubへのpushの成功だけで、Renderへの反映を完了扱いにしないでください。`/api/connections/state` の `version` が `kojiki-photos-v1`、`imageRevision` が `ritual-atlas-v1`、`imageUrl` が `/connections/kojiki-ritual-photos.webp` であることを確認します。`displayMode` は `photos`、`tiles` は12件、`totalGroups` は3、`maxPoints` は300、トップの題名は「残された十二枚」。実際のWebP画像も取得して照合します。
+`main` へのpush成功だけで公開反映を完了扱いにしないでください。`/api/connections/state` の `version` が `house-inheritance-v1`、`title` が `家を継ぐ`、`fileNumber` が `003`、`imageRevision` が `house-relics-v1`、`imageUrl` が `/connections/house-inheritance-photos.webp` であることを確認します。`displayMode` は `photos`、`tiles` は12件、`totalGroups` は3、`maxPoints` は300。実際のWebP画像と、HTMLから参照される最新JS/CSSも取得してローカルのビルドと照合します。
 
-旧 `kojiki-words-v1`／文字カード、`borrowed-body-v1`／16枚／400点、または画像版が旧のままなら、まだ新しい版は配信されていません。Renderのサービス `fieldnotes-atlas-preview` で、接続ブランチが `main` であることと、最新デプロイの対象コミット・進行・ログを確認してください。自動更新が始まらない場合は **Manual Deploy → Deploy latest commit** を使います。失敗した場合はログの原因を修正して再デプロイします。クエリの `v=16` は確認リンクの識別用で、旧サーバーを新コードへ切り替える操作ではありません。
+旧 `kojiki-photos-v1`／古事記の写真版、`kojiki-words-v1`／文字カード、`borrowed-body-v1`／16枚が返るなら、まだ内容の差し替えは配信されていません。Renderのサービス `fieldnotes-atlas-preview` の接続ブランチと最新対象コミットを確認します。自動更新が始まらない場合は **Manual Deploy → Deploy latest commit**。クエリ `v=17` は確認リンクの識別用で、旧サーバーを新コードに切り替える操作ではありません。
 
 このクラウドからはGitHubの反映と、公開サイトへのHTTP確認を実行できます。現在Renderを操作する接続やAPI認証はなく、Render管理画面の実際のデプロイ状態までは直接確認できません。
 
@@ -27,7 +27,7 @@ Render の無料 Web Service で、ブラウザ画面と採点 API を一緒に�
 2. https://render.com/deploy?repo=https://github.com/kazu-666/codex-YouTube を開き、Render に GitHub でログインして対象リポジトリの読み取りを許可します。非公開リポジトリはログイン後に Blueprint から選択してください。
 3. プランが **Free** であることを確認して Blueprint をデプロイします。完了すると Render のサービス画面に `https://...onrender.com` のURLが表示されます。そのURLをスマホで開けます。
 
-これは公開前の体験確認用です。『古事記』の神話の要約と生成写真を使い、オンライン参照先の本文照合は未完了と表示します。黒御鬘の写真は正確な復元ではなく創作イメージです。毎日の新問・課金・広告は未導入です。HTTPヘッダーで検索エンジンへの登録を抑制します（閲覧制限ではありません）。
+これは公開前の体験確認用です。集落・事件・因習は創作で、写真は生成画像と明示します。実在の民俗や警察記録の再現とは扱いません。毎日の新問・課金・広告は未導入です。HTTPヘッダーで検索エンジンへの登録を抑制します（閲覧制限ではありません）。
 
 無料サービスは停止後の最初のアクセスで起動を待つ場合があります。回答記録は無料インスタンスの一時ファイルなので、再起動や再デプロイで失われます。継続運営には永続 DB が必要です。
 

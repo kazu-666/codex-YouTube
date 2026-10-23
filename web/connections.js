@@ -5,7 +5,6 @@ const app = document.querySelector('#app');
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 let state, selected = new Set(), order, busy = false, notice = '', noticeKind = '', intent, imageReady = false, imageFailed = false;
 const tileById = id => state.tiles.find(t => t.id === id);
-const tileByLabel = label => state.tiles.find(t => t.label === label);
 const solvedIds = () => new Set(state.groups.flatMap(g => g.tileIds));
 const remaining = () => (order || state.tiles.map(t => t.id)).filter(id => !solvedIds().has(id));
 const photoNumber = tile => String(tile.panel + 1).padStart(2, '0');
@@ -63,9 +62,13 @@ function groupView(group, detailed = false) {
     <details class="c-group-more"><summary>背景を読む</summary><p>${esc(group.detail)}</p></details></article>`;
 }
 function visualView(group) {
-  if (group.visual === 'escape') return `<div class="c-photo-links" aria-label="黄泉の逃走での対応">${group.facts.map(f => `<div class="c-link-row">${mini(tileByLabel(f.from === '櫛の歯' ? '櫛' : f.from))}<span class="c-link-arrow" aria-hidden="true">⟶</span>${f.from === '桃' ? '<div class="c-flight"><span aria-hidden="true">↗ ↗ ↗</span><strong>追手を退ける</strong></div>' : mini(tileByLabel(f.from === '黒御鬘' ? '葡萄' : '筍'))}</div>`).join('')}</div>`;
-  if (group.visual === 'body') return `<div class="c-body-map" aria-label="神話で語られる、身体と生まれたものの対応"><svg class="c-body-lines" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><path d="M85 65 L200 40 M315 65 L200 56 M85 235 L200 208 M315 235 L210 192"/></svg><div class="c-anatomy" aria-hidden="true"><svg viewBox="0 0 80 250"><circle cx="40" cy="28" r="19"/><path d="M25 50 Q8 55 10 74 L1 137 Q0 147 9 146 L24 100 L24 158 L19 232 Q20 245 30 239 L40 170 L50 239 Q61 245 61 232 L56 158 L56 100 L71 146 Q80 147 79 137 L70 74 Q72 55 55 50 Z"/><circle class="c-body-dot" cx="40" cy="20" r="4"/><circle class="c-body-dot" cx="32" cy="29" r="3"/><circle class="c-body-dot" cx="40" cy="157" r="4"/><circle class="c-body-dot" cx="52" cy="149" r="4"/></svg></div>${group.facts.map((f,i) => `<div class="c-body-item c-body-item-${i}"><span>${esc(f.from)}から</span>${mini(tileByLabel(f.to))}</div>`).join('')}</div>`;
-  return `<div class="c-quartet">${group.tileIds.map(id => mini(tileById(id))).join('')}</div><div class="c-converge" aria-label="４つとも歯がある"><svg viewBox="0 0 400 65" preserveAspectRatio="none" aria-hidden="true"><path d="M50 0 V15 L200 45 M150 0 V25 L200 45 M250 0 V25 L200 45 M350 0 V15 L200 45"/></svg><span>歯</span></div>`;
+  const icons = {
+    effigy: '<circle cx="40" cy="13" r="9"/><path d="M29 25 L18 42 L26 48 L31 39 L29 61 L20 78 L31 82 L40 66 L49 82 L60 78 L51 61 L49 39 L54 48 L62 42 L51 25 Z"/><path d="M40 27 V61 M35 34 L45 39 M35 45 L45 50"/>',
+    confinement: '<path d="M25 4 H55 L64 24 L58 82 H22 L16 24 Z"/><path d="M40 23 V8 M34 14 L40 8 L46 14 M34 43 L19 38 M25 34 L19 38 L23 44 M46 57 L60 52 M54 48 L60 52 L56 58"/>',
+    seal: '<path d="M6 30 L40 5 L74 30 M14 27 V80 H66 V27 M31 80 V44 H50 V80 M20 36 H27 V51 H20 Z M54 36 H61 V51 H54 Z"/><path d="M25 60 H56 M27 55 V65 M53 55 V65"/>'
+  };
+  return `<div class="c-quartet c-case-photos">${group.facts.map(f => mini(tileById(f.tileId), f.from)).join('')}</div>
+    <div class="c-case-relation" aria-label="${esc(group.relation)}"><svg class="c-case-links" viewBox="0 0 400 35" preserveAspectRatio="none" aria-hidden="true"><path d="M50 0 L200 32 M150 0 L200 32 M250 0 L200 32 M350 0 L200 32"/></svg><svg class="c-case-symbol" viewBox="0 0 80 88" aria-hidden="true">${icons[group.visual] || icons.effigy}</svg><strong>${esc(group.relation)}</strong></div>`;
 }
 function attachViews(root) {
   root.querySelectorAll('[data-preview]').forEach(button => button.onclick = () => openPreview(button.dataset.preview));
@@ -76,7 +79,7 @@ function resultView() {
   return `<section class="c-result" tabindex="-1"><p class="c-eyebrow">${heading}</p><div class="c-score"><strong>${state.points}</strong><span>/ ${state.maxPoints} 点</span></div>
     ${state.remainingGroups.length ? `<div class="c-remaining">${state.remainingGroups.map(g => groupView(g, true)).join('')}</div>` : ''}
     <h2>${esc(state.reveal.title)}</h2><p>${esc(state.reveal.story)}</p>
-    <details class="c-sources"><summary>典拠・神話について <span>＋</span></summary><div><p>${esc(state.reveal.fiction)}</p><p>${esc(state.reveal.sourceNote)}</p>${state.reveal.sources.map(s => `<article><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a><p>${esc(s.scope)}</p><small>${esc(s.status)}</small></article>`).join('')}</div></details>
+    <details class="c-sources"><summary>${esc(state.reveal.sourceHeading || '背景・出典について')} <span>＋</span></summary><div><p>${esc(state.reveal.fiction)}</p><p>${esc(state.reveal.sourceNote)}</p>${state.reveal.sources.map(s => `<article><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a><p>${esc(s.scope)}</p><small>${esc(s.status)}</small></article>`).join('')}</div></details>
     <div class="c-share"><button id="c-copy">結果をコピー</button><button id="c-save">結果画像を保存</button></div><p class="c-share-note">共有する結果に、写真と答えは載せません。</p><button id="c-reset" class="c-reset" ${busy ? 'disabled' : ''}>もう一度遊ぶ</button></section>`;
 }
 function toggle(id) {
@@ -143,6 +146,7 @@ function showDiscovery(group, fresh) {
   dialog.classList.add('c-discovery'); attachViews(dialog);
   dialog.querySelector('#c-discovery-close').onclick = () => dialog.close();
   dialog.querySelector('#c-discovery-close').focus({ preventScroll: true });
+  dialog.scrollTop = 0;
 }
 function openPreview(id) {
   let index = state.tiles.findIndex(t => t.id === id);
@@ -185,7 +189,7 @@ async function saveResult() {
   ctx.fillStyle = '#b6aaa8'; ctx.font = '25px sans-serif'; ctx.fillText(`${location.origin}/?mode=connections`, 80, 740);
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   if (!blob) { notice = '画像を作れませんでした。結果のコピーを利用できます。'; render(); return; }
-  const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = 'ibun-photos-002.png'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 3000);
+  const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = `ibun-photos-${state.fileNumber}.png`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
 function loadImage() {
   imageReady = false; imageFailed = false; render(); const img = new Image();

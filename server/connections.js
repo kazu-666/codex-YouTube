@@ -16,7 +16,7 @@ function savedFor(session) {
   return session.connections[CONNECTIONS_VERSION] ||= newGame();
 }
 function publicGroup(group, found) {
-  return { title: group.title, lead: group.lead, detail: group.detail, facts: group.facts, visual: group.visual, difficulty: group.difficulty, color: group.color, tileIds: group.tileIds, found };
+  return { title: group.title, lead: group.lead, detail: group.detail, facts: group.facts, visual: group.visual, relation: group.relation, difficulty: group.difficulty, color: group.color, tileIds: group.tileIds, found };
 }
 export function connectionsState(session) {
   const saved = savedFor(session), ended = saved.status !== 'playing';

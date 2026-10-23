@@ -149,6 +149,23 @@ button:focus-visible, a:focus-visible, summary:focus-visible {
 .c-discovery .c-visual-group { background: transparent; }
 .c-discovery .c-continue { margin-top: 22px; }
 
+/* Evidence first, then a short visual connection; no mythology-specific diagrams. */
+.c-case-photos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+.c-case-photos .c-mini { width: 100%; max-width: 120px; justify-self: center; }
+.c-case-photos .c-mini button { aspect-ratio: 1; }
+.c-case-photos .c-mini figcaption { font-size: 13px; line-height: 1.6; margin-top: 5px; }
+.c-case-relation { position: relative; padding-top: 20px; text-align: center; margin-top: 8px; }
+.c-case-links { position: absolute; inset: 0 0 auto; width: 100%; height: 20px; }
+.c-case-links path { fill: none; stroke: var(--group-color); stroke-width: 1.3; stroke-linecap: round; stroke-dasharray: 500; animation: c-draw-link .85s ease-out; opacity: .8; }
+.c-case-symbol { display: block; width: 34px; height: 38px; margin: 0 auto 4px; fill: none; stroke: var(--group-color); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.c-case-relation strong { display: block; font-size: 13px; font-weight: 500; color: var(--group-color); line-height: 1.6; }
+.c-preview-caption strong { overflow-wrap: anywhere; line-height: 1.6; }
+.c-preview-caption > span { overflow-wrap: anywhere; line-height: 1.7; }
+.c-result > p { white-space: pre-line; }
+@media (min-width: 600px) {
+  .c-case-photos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+}
+
 @keyframes c-discovery-in {
   from { opacity: .65; transform: translateY(6px); }
   to { opacity: 1; transform: none; }

@@ -48,7 +48,7 @@ test('correct sets reveal only their own interpretation, score once, and complet
   assert.equal(h.state().reveal, undefined); assert.equal(h.state().groups.length, 1);
   for (const g of content.groups.slice(1)) assert.equal(h.guess(g.tileIds).status, 200);
   const s = h.state(); assert.equal(s.status, 'completed'); assert.equal(s.points, 300); assert.equal(s.groups.length, 3);
-  assert.ok(s.reveal.sources.length); assert.deepEqual(s.remainingGroups, []);
+  assert.deepEqual(s.reveal, content.reveal); assert.deepEqual(s.remainingGroups, []);
   assert.equal(h.guess(first).status, 409); assert.equal(h.state().points, 300);
 });
 test('four distinct misses end the puzzle and reveal all remaining groups', () => {
@@ -75,18 +75,31 @@ test('reveal preserves earned points; reset isolates stale guesses and handles r
   assert.equal(h.state().points, 0); assert.equal(h.state().mistakes, 0); assert.equal(h.state().status, 'playing');
 });
 
-test('overlapping comb membership produces exactly one complete partition under the three authored definitions', () => {
-  function combinations(items, count) {
-    if (!count) return [[]];
-    return items.flatMap((item, i) => combinations(items.slice(i + 1), count - 1).map(rest => [item, ...rest]));
+test('body materials cross the authored use groups; visual evidence stays consistent', () => {
+  for (const material of ['髪', '歯', '爪', '骨']) {
+    const groups = content.groups.filter(g => g.tileIds.some(id => content.editor.materialTags[id].includes(material)));
+    assert.ok(groups.length >= 2, `${material} must cross functional groups`);
   }
-  const memberships = content.groups.map(g => content.editor.membership[g.id]);
-  const comb = content.tiles.find(t => t.label === '櫛').id;
-  assert.ok(memberships[0].includes(comb) && memberships[1].includes(comb), 'the trap must be a real overlap');
-  const partitions = [];
-  for (const first of combinations(memberships[0], 4)) for (const second of combinations(memberships[1], 4)) for (const third of combinations(memberships[2], 4)) {
-    if (new Set([...first, ...second, ...third]).size === 12) partitions.push([first, second, third]);
+  for (const g of content.groups) {
+    assert.deepEqual(g.facts.map(f => f.tileId), g.tileIds);
+    assert.ok(g.facts.every(f => f.from && f.to));
+    assert.ok(['effigy', 'confinement', 'seal'].includes(g.visual));
+    assert.ok(g.relation);
   }
-  assert.equal(partitions.length, 1);
-  for (let i = 0; i < 3; i++) assert.deepEqual(partitions[0][i].toSorted(), content.groups[i].tileIds.toSorted());
+  const publicState = JSON.stringify(harness().state());
+  assert.ok(!publicState.includes('materialTags'));
+  assert.ok(!publicState.includes('membership'));
+  assert.equal(content.reveal.sources.length, 0, 'fiction has no fabricated historical citations');
+  assert.ok(content.reveal.fiction.includes('フィクション'));
+});
+
+test('the new case does not inherit completion from the mythology puzzle', () => {
+  const h = harness();
+  h.session.connections = { 'kojiki-photos-v1': { status: 'completed', solved: ['toothed-tools', 'escape-from-yomi', 'born-from-body'] } };
+  const current = h.state();
+  assert.equal(current.version, 'house-inheritance-v1');
+  assert.equal(current.status, 'playing');
+  assert.equal(current.points, 0);
+  assert.equal(current.tiles.length, 12);
+  assert.equal(h.session.connections['kojiki-photos-v1'].status, 'completed');
 });

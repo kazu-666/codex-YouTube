@@ -42,7 +42,7 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   }
   await page.locator('#c-clear').click();
-  assert.ok(requests.some(u => /kojiki-ritual-photos\.webp/.test(u)), 'the actual local generated atlas is loaded');
+  assert.ok(requests.some(u => u.includes(content.imageUrl)), 'the actual local generated atlas is loaded');
   assert.equal(await page.locator('.c-word,.c-word-label').count(), 0, 'the board is photographs rather than word buttons');
   const select = async ids => { for (const id of ids) await page.locator(`[data-tile="${id}"]`).click(); };
   const near = [...content.groups[0].tileIds.slice(0, 3), content.groups[1].tileIds[0]];
@@ -58,8 +58,8 @@ try {
   await page.unroute('**/api/connections/guess');
   await page.locator('.c-discovery').waitFor();
   assert.equal(await page.locator('.c-discovery .c-quartet .c-mini').count(), 4);
-  await page.waitForFunction(() => parseFloat(getComputedStyle(document.querySelector('.c-converge path')).strokeDashoffset) === 0 && getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
-  await page.screenshot({ path: '/tmp/ibun-photo-teeth-discovery.png' });
+  await page.waitForFunction(() => parseFloat(getComputedStyle(document.querySelector('.c-case-links path')).strokeDashoffset) === 0 && getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
+  await page.screenshot({ path: '/tmp/ibun-case-effigy-discovery.png' });
   await page.locator('#c-discovery-close').click();
   assert.equal(await page.locator('[data-tile]').count(), 8);
   assert.equal(await page.locator('#c-submit').isDisabled(), true);
@@ -71,17 +71,13 @@ try {
     await select(group.tileIds); await page.locator('#c-submit').click();
     await page.waitForFunction(count => document.querySelectorAll('.c-found .c-solved-strip').length === count, content.groups.indexOf(group) + 1);
     await page.locator('.c-discovery').waitFor();
-    if (group.visual === 'escape') {
-      assert.equal(await page.locator('.c-discovery .c-link-row').count(), 3);
-      await page.waitForFunction(() => getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
-      await page.screenshot({ path: '/tmp/ibun-photo-escape-discovery.png' });
-    }
-    if (group.visual === 'body') {
-      assert.equal(await page.locator('.c-discovery .c-body-item').count(), 4);
-      assert.equal(await page.locator('.c-discovery .c-anatomy svg').isVisible(), true);
-      await page.waitForFunction(() => parseFloat(getComputedStyle(document.querySelector('.c-body-lines path')).strokeDashoffset) === 0 && getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
-      await page.screenshot({ path: '/tmp/ibun-photo-body-discovery.png' });
-      // A photo can be inspected inside the discovery without losing the discovery dialog.
+    assert.equal(await page.locator('.c-discovery .c-case-photos .c-mini').count(), 4);
+    assert.equal(await page.locator('.c-discovery .c-case-symbol').isVisible(), true);
+    assert.equal(await page.locator('.c-discovery').evaluate(el => el.scrollTop), 0, 'discovery opens at its heading');
+    assert.equal(await page.locator('.c-discovery .c-case-relation strong').textContent(), group.relation);
+    await page.waitForFunction(() => parseFloat(getComputedStyle(document.querySelector('.c-case-links path')).strokeDashoffset) === 0 && getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
+    await page.screenshot({ path: `/tmp/ibun-case-${group.visual}-discovery.png` });
+    if (group === content.groups.at(-1)) {
       await page.locator('.c-discovery [data-preview]').first().click();
       await page.locator('#c-preview-close').click();
       assert.equal(await page.locator('.c-discovery').isVisible(), true);
@@ -94,7 +90,9 @@ try {
   assert.equal(await page.locator('[data-tile]').count(), 0);
   assert.equal(await page.locator('.c-sources').getAttribute('open'), null);
   await page.locator('.c-sources summary').click();
-  assert.equal(await page.locator('.c-sources a').count(), 2);
+  assert.equal(await page.locator('.c-sources a').count(), 0);
+  assert.ok((await page.locator('.c-sources').textContent()).includes('フィクション'));
+  assert.ok(!(await page.locator('.c-result').textContent()).includes('古事記'));
   await page.screenshot({ path: '/tmp/ibun-connections-result.png', fullPage: true });
   await page.locator('#c-copy').click();
   const shared = await page.evaluate(() => window.sharedResult);
@@ -128,10 +126,10 @@ try {
   }
   const failedContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const failedPage = await failedContext.newPage();
-  await failedPage.route('**/kojiki-ritual-photos.webp', route => route.abort());
+  await failedPage.route('**' + content.imageUrl, route => route.abort());
   await failedPage.goto(base + '/?mode=connections'); await failedPage.locator('#c-image-retry').waitFor();
   assert.equal(await failedPage.locator('[data-tile]').first().isDisabled(), true);
-  await failedPage.unroute('**/kojiki-ritual-photos.webp'); await failedPage.locator('#c-image-retry').click();
+  await failedPage.unroute('**' + content.imageUrl); await failedPage.locator('#c-image-retry').click();
   await failedPage.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
   assert.equal(await failedPage.locator('[data-tile]').first().isDisabled(), false);
   // Deployment and network failures must show a way back instead of a blank page.
@@ -155,5 +153,5 @@ try {
     assert.ok(!response.headers()['content-type'].includes('text/html'));
   }
   assert.deepEqual(errors, []);
-  console.log('Photo connections passed: actual generated twelve-photo atlas, photo-only board, preview names, foldable selection, 280/320/390/720/desktop, photo discoveries and body map, nested dialogs, near/repeat feedback, lost response recovery, saved progress, all-correct/all-miss, image retry, sources and spoiler-free text/PNG. Clipboard only is mocked.');
+  console.log('Photo connections passed: actual generated twelve-photo atlas, photo-only board, preview names, foldable selection, 280/320/390/720/desktop, fictional case discoveries and relation diagrams, nested dialogs, near/repeat feedback, lost response recovery, saved progress, all-correct/all-miss, image retry, sources and spoiler-free text/PNG. Clipboard only is mocked.');
 } finally { await browser?.close(); child.kill(); fs.rmSync(dir, { recursive: true, force: true }); }
