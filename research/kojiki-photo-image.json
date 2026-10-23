@@ -1,0 +1,35 @@
+{
+  "createdDateJapan": "2026-10-23",
+  "contentVersion": "kojiki-photos-v1",
+  "tool": "image_gen.imagegen",
+  "generated": true,
+  "originalPath": "/workspace/generated_images/exec-1a437fe2-0802-4398-b203-cc2dad1742a9.png",
+  "originalSha256": "07f1d677fab8e9313db639c4bebb75aec9a5ae078b8f9beb9a3a685a30a99720",
+  "assetPath": "web/public/connections/kojiki-photos.webp",
+  "assetSha256": "df4f0355d0e91a7934c919d2c0a60a6c2931a55122c6dc0b5be8112e3ea9ef6c",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "columns": 4,
+  "rows": 3,
+  "bytes": 381304,
+  "processing": "WebP format conversion quality 87 only; original preserved. CSS positions display the twelve original panels.",
+  "style": "Ordinary contemporary amateur iPhone snapshots of identifiable objects in Japanese homes and gardens; no written labels or category color coding.",
+  "objects": [
+    "comb",
+    "soybeans",
+    "peach",
+    "dentures",
+    "wheat",
+    "fictional head ornament",
+    "hand saw",
+    "silkworm",
+    "grapes",
+    "gear",
+    "rice plants",
+    "bamboo shoot"
+  ],
+  "historicalAccuracyBoundary": "The black head ornament is an invented illustrative prop, not a source-verified reconstruction of kuro-mikazura. All pictures are generated modern illustrations of objects, not photographic records of mythological events.",
+  "review": "All twelve generated panels visually inspected, actual atlas used in browser tests. Whether users recognize each object and enjoy the puzzle requires playtesting."
+}

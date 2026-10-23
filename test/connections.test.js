@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import content from '../content/word-connections.json' with { type: 'json' };
+import content from '../content/photo-connections.json' with { type: 'json' };
 import { connectionsApi, connectionsState } from '../server/connections.js';
 
 function harness() {
@@ -16,12 +16,12 @@ function harness() {
   const guess = (ids, requestId = crypto.randomUUID(), runId = state().runId) => post('guess', { tileIds: ids, requestId, runId });
   return { session, state, post, guess, saves: () => saves };
 }
-test('12 words have three disjoint groups; initial state hides categories and editor membership', () => {
+test('12 photographs have three disjoint groups; initial state hides categories and editor membership', () => {
   const h = harness(), s = h.state();
   assert.equal(s.tiles.length, 12); assert.equal(new Set(s.tiles.map(t => t.id)).size, 12);
   assert.equal(new Set(content.groups.flatMap(g => g.tileIds)).size, 12);
-  assert.equal(s.totalGroups, 3); assert.equal(s.maxPoints, 300); assert.equal(s.displayMode, 'words');
-  assert.ok(s.tiles.every(t => t.label && t.reading)); assert.equal(s.editor, undefined);
+  assert.equal(s.totalGroups, 3); assert.equal(s.maxPoints, 300); assert.equal(s.displayMode, 'photos');
+  assert.ok(s.tiles.every(t => t.label && t.reading && t.alt && Number.isInteger(t.panel))); assert.equal(s.photoColumns, 4); assert.equal(s.photoRows, 3); assert.equal(s.editor, undefined);
   for (const g of content.groups) assert.equal(g.tileIds.length, 4);
   assert.deepEqual(s.groups, []); assert.equal(s.reveal, undefined); assert.equal(s.remainingGroups, undefined);
   const serialized = JSON.stringify(s);

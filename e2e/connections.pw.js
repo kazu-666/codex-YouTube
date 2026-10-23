@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import content from '../content/word-connections.json' with { type: 'json' };
+import content from '../content/photo-connections.json' with { type: 'json' };
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'connections-browser-'));
 const port = 3121, base = `http://127.0.0.1:${port}`;
@@ -18,14 +18,21 @@ try {
   await context.addInitScript(() => { window.sharedResult = ''; Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.sharedResult = text; } } }); });
   const page = await context.newPage(), requests = [];
   page.on('pageerror', e => errors.push(e.message)); page.on('request', r => requests.push(r.url()));
-  await page.goto(base + '/'); await page.locator('[data-tile]').first().waitFor();
+  await page.goto(base + '/'); await page.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
   assert.equal(await page.locator('[data-tile]').count(), 12);
   assert.equal(await page.locator('.c-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 4);
   assert.equal(await page.locator('#c-submit').isDisabled(), true);
-  assert.equal(await page.locator('.c-found .c-group').count(), 0);
+  assert.equal(await page.locator('.c-found .c-solved-strip').count(), 0);
   assert.equal(requests.some(u => /legacy-main|casebook-|fieldwork-|maplibre|arcgisonline|openfreemap/.test(u)), false);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await page.screenshot({ path: '/tmp/ibun-connections-mobile.png', fullPage: true });
+  const previewId = await page.locator('[data-tile]').first().getAttribute('data-tile');
+  await page.locator(`[data-preview="${previewId}"]`).click();
+  await page.locator('#c-preview-photo').waitFor();
+  assert.equal(await page.locator('.c-preview-caption strong').textContent(), content.tiles.find(t => t.id === previewId).label);
+  await page.locator('#c-preview-select').click();
+  assert.equal(await page.locator(`[data-tile="${previewId}"]`).getAttribute('aria-pressed'), 'true');
+  await page.locator('#c-preview-close').click(); await page.locator('#c-clear').click();
   const firstId = await page.locator('[data-tile]').first().getAttribute('data-tile');
   await page.locator(`[data-tile="${firstId}"]`).click();
   // Simulate the viewport transition of a foldable phone while a tile is selected.
@@ -35,7 +42,8 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   }
   await page.locator('#c-clear').click();
-  assert.equal(requests.some(u => /received-001|phone-sheet|\.webp/.test(u)), false, 'the word puzzle requires no photograph assets');
+  assert.ok(requests.some(u => /kojiki-photos\.webp/.test(u)), 'the actual local generated atlas is loaded');
+  assert.equal(await page.locator('.c-word,.c-word-label').count(), 0, 'the board is photographs rather than word buttons');
   const select = async ids => { for (const id of ids) await page.locator(`[data-tile="${id}"]`).click(); };
   const near = [...content.groups[0].tileIds.slice(0, 3), content.groups[1].tileIds[0]];
   await select(near); await page.locator('#c-submit').click(); await page.locator('#c-notice.near').waitFor();
@@ -46,22 +54,42 @@ try {
   await select(content.groups[0].tileIds);
   // Simulate a committed answer whose HTTP response is lost.
   await page.route('**/api/connections/guess', async route => { await route.fetch(); await route.abort('failed'); });
-  await page.locator('#c-submit').click(); await page.locator('.c-found .c-group').waitFor();
+  await page.locator('#c-submit').click(); await page.locator('.c-found .c-solved-strip').waitFor();
   await page.unroute('**/api/connections/guess');
+  await page.locator('.c-discovery').waitFor();
+  assert.equal(await page.locator('.c-discovery .c-quartet .c-mini').count(), 4);
+  await page.waitForFunction(() => parseFloat(getComputedStyle(document.querySelector('.c-converge path')).strokeDashoffset) === 0 && getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
+  await page.screenshot({ path: '/tmp/ibun-photo-teeth-discovery.png' });
+  await page.locator('#c-discovery-close').click();
   assert.equal(await page.locator('[data-tile]').count(), 8);
   assert.equal(await page.locator('#c-submit').isDisabled(), true);
-  await page.reload(); await page.locator('[data-tile]').first().waitFor();
-  assert.equal(await page.locator('.c-found .c-group').count(), 1);
+  await page.reload(); await page.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
+  assert.equal(await page.locator('.c-found .c-solved-strip').count(), 1);
   assert.equal(await page.locator('.c-lives').getAttribute('aria-label'), '残り3回');
   await page.locator('#c-shuffle').click();
   for (const group of content.groups.slice(1)) {
     await select(group.tileIds); await page.locator('#c-submit').click();
-    await page.waitForFunction(count => document.querySelectorAll('.c-found .c-group').length === count, content.groups.indexOf(group) + 1);
+    await page.waitForFunction(count => document.querySelectorAll('.c-found .c-solved-strip').length === count, content.groups.indexOf(group) + 1);
+    await page.locator('.c-discovery').waitFor();
+    if (group.visual === 'escape') {
+      assert.equal(await page.locator('.c-discovery .c-link-row').count(), 3);
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
+      await page.screenshot({ path: '/tmp/ibun-photo-escape-discovery.png' });
+    }
+    if (group.visual === 'body') {
+      assert.equal(await page.locator('.c-discovery .c-body-item').count(), 4);
+      assert.equal(await page.locator('.c-discovery .c-anatomy svg').isVisible(), true);
+      await page.waitForFunction(() => parseFloat(getComputedStyle(document.querySelector('.c-body-lines path')).strokeDashoffset) === 0 && getComputedStyle(document.querySelector('.c-discovery')).opacity === '1');
+      await page.screenshot({ path: '/tmp/ibun-photo-body-discovery.png' });
+      // A photo can be inspected inside the discovery without losing the discovery dialog.
+      await page.locator('.c-discovery [data-preview]').first().click();
+      await page.locator('#c-preview-close').click();
+      assert.equal(await page.locator('.c-discovery').isVisible(), true);
+      assert.equal(await page.locator('body').evaluate(el => el.classList.contains('c-dialog-open')), true);
+    }
+    await page.locator('#c-discovery-close').click();
   }
   await page.locator('.c-result').waitFor();
-  assert.equal(await page.locator('.c-found .violet .c-facts dt').count(), 4);
-  assert.equal(await page.locator('.c-found .violet .c-facts').isVisible(), true);
-  await page.waitForFunction(() => getComputedStyle(document.querySelector('.c-found .violet')).opacity === '1');
   assert.equal(await page.locator('.c-score strong').textContent(), '300');
   assert.equal(await page.locator('[data-tile]').count(), 0);
   assert.equal(await page.locator('.c-sources').getAttribute('open'), null);
@@ -81,7 +109,7 @@ try {
   for (const width of [280, 320, 720, 1280]) {
     const c = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: width === 320 ? 'reduce' : 'no-preference' });
     const p = await c.newPage(); p.on('pageerror', e => errors.push(e.message));
-    await p.goto(base + '/?mode=connections&round=first'); await p.locator('[data-tile]').first().waitFor();
+    await p.goto(base + '/?mode=connections&round=first'); await p.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
     assert.equal(await p.locator('[data-tile]').count(), 12);
     assert.equal(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await p.screenshot({ path: `/tmp/ibun-connections-${width}.png`, fullPage: true });
@@ -98,6 +126,14 @@ try {
     if (width === 320) assert.equal(await p.locator('.c-group').first().evaluate(el => getComputedStyle(el).animationName), 'none');
     await c.close();
   }
+  const failedContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const failedPage = await failedContext.newPage();
+  await failedPage.route('**/kojiki-photos.webp', route => route.abort());
+  await failedPage.goto(base + '/?mode=connections'); await failedPage.locator('#c-image-retry').waitFor();
+  assert.equal(await failedPage.locator('[data-tile]').first().isDisabled(), true);
+  await failedPage.unroute('**/kojiki-photos.webp'); await failedPage.locator('#c-image-retry').click();
+  await failedPage.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
+  assert.equal(await failedPage.locator('[data-tile]').first().isDisabled(), false);
   assert.deepEqual(errors, []);
-  console.log('Word connections passed: 12 words, four columns, foldable viewport changes preserve selection, 280/320/390/720/desktop, near/repeat feedback, lost response recovery, saved progress, all-correct/all-miss, sources, spoiler-free text/PNG and reset. No photograph requests. Clipboard only is mocked.');
+  console.log('Photo connections passed: actual generated twelve-photo atlas, photo-only board, preview names, foldable selection, 280/320/390/720/desktop, photo discoveries and body map, nested dialogs, near/repeat feedback, lost response recovery, saved progress, all-correct/all-miss, image retry, sources and spoiler-free text/PNG. Clipboard only is mocked.');
 } finally { await browser?.close(); child.kill(); fs.rmSync(dir, { recursive: true, force: true }); }
