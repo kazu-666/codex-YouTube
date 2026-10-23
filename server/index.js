@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dailyKey, defaultRound, roundFor, distanceKm, score, publicQuestion, revealedQuestion, POINTS, CONTENT_VERSION, ROUND_IDS, ROUND_LABELS, MAX_ATTEMPTS } from './game.js';
+import { casebookApi } from './casebook.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dataDir = process.env.FIELDNOTES_DATA_DIR || path.join(root, '.data');
@@ -68,6 +69,7 @@ async function api(req, res, pathname) {
   if (req.method === 'POST' && !sameOrigin(req)) return send(res, 403, { error: 'Invalid origin' });
   const session = sessionFor(req, res);
   const body = req.method === 'POST' ? await readJson(req) : {};
+  if (pathname.startsWith('/api/casebook/')) return casebookApi({ req, res, pathname, session, body, root, persist, send });
   const roundId = body.roundId ?? new URL(req.url, 'http://localhost').searchParams.get('round') ?? defaultRound(dailyKey());
   if (!ROUND_IDS.includes(roundId)) return send(res, 400, { error: 'Invalid round' });
   if (pathname === '/api/state' && req.method === 'GET') return send(res, 200, state(session, roundId));

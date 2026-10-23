@@ -1,0 +1,29 @@
+[
+  {
+    "id": "amaterasu",
+    "sha256": "a122c0586cd42c63477466cbedd1ce0d12c23c0955a621cd9a604496cfa976f4",
+    "checkedAt": "2026-10-23T01:36:51.685238+00:00",
+    "result": "official_text_consulted",
+    "url": "https://amanoiwato-jinja.jp/pages/8/",
+    "checkedDateJapan": "2026-10-23",
+    "review": "本文参照済み。公開前の最終編集は継続中。"
+  },
+  {
+    "id": "dojoji",
+    "sha256": "f453cfc7473887932b95e3bcf624d7fad389c2feec1802fb2aabcd8f31f2180b",
+    "checkedAt": "2026-10-23T01:36:51.685335+00:00",
+    "result": "official_text_consulted",
+    "url": "https://dojoji.com/story/#anchin",
+    "checkedDateJapan": "2026-10-23",
+    "review": "本文参照済み。公開前の最終編集は継続中。"
+  },
+  {
+    "id": "kappa",
+    "sha256": "8e023f60f1cefaaebe780a94d198bef611509ff708f34caa46ab838673c9cde9",
+    "checkedAt": "2026-10-23T01:36:51.685612+00:00",
+    "result": "official_text_consulted",
+    "url": "https://tonojikan.jp/tourism/kappabuchi-pool/",
+    "checkedDateJapan": "2026-10-23",
+    "review": "本文参照済み。公開前の最終編集は継続中。"
+  }
+]

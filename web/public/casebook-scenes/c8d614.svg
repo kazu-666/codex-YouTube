@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" role="img" aria-label="鐘と大蛇を描いた再現イラスト">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#192128"/><stop offset="1" stop-color="#49362e"/></linearGradient><linearGradient id="bell" x1="0" x2="1"><stop stop-color="#4e5443"/><stop offset=".5" stop-color="#a1986a"/><stop offset="1" stop-color="#444a3a"/></linearGradient><radialGradient id="glow"><stop stop-color="#d89052" stop-opacity=".32"/><stop offset="1" stop-color="#c27f43" stop-opacity="0"/></radialGradient><pattern id="scales" width="30" height="22" patternUnits="userSpaceOnUse"><path d="M0 22q15-30 30 0M-15 11q15-30 30 0M15 11q15-30 30 0" fill="none" stroke="#a1aa82" stroke-opacity=".32" stroke-width="2"/></pattern></defs>
+<path d="M0 0h1000v560H0z" fill="url(#sky)"/><ellipse cx="500" cy="330" rx="420" ry="280" fill="url(#glow)"/>
+<path d="M0 122q252-17 340-94h320q88 77 340 94l-76 33H76z" fill="#101c20"/><path d="M76 144h848M174 154v371M826 154v371" stroke="#7d7460" stroke-width="16"/><path d="M192 153v355M808 153v355" stroke="#b29c6b" stroke-width="2" opacity=".5"/>
+<path d="M487 155q-2-37 13-37t13 37" fill="none" stroke="#bfad77" stroke-width="9"/>
+<path d="M351 442l17-192q4-82 132-93 128 11 132 93l17 192 19 20H332z" fill="url(#bell)" stroke="#c1ae75" stroke-width="4"/>
+<path d="M370 253h260M359 365h282M350 430h300M404 210v214M596 210v214" stroke="#d0bd82" stroke-opacity=".55" stroke-width="3"/>
+<g fill="#303d31" stroke="#bbb079" stroke-width="2"><circle cx="438" cy="254" r="7"/><circle cx="468" cy="254" r="7"/><circle cx="498" cy="254" r="7"/><circle cx="528" cy="254" r="7"/><circle cx="558" cy="254" r="7"/></g>
+<path d="M0 532q223-53 375-31t625-13v72H0" fill="#122124"/>
+<path d="M91 479q86-156 238-16t362-22q151-136 174-174" fill="none" stroke="#1b3431" stroke-width="63" stroke-linecap="round"/><path d="M91 479q86-156 238-16t362-22q151-136 174-174" fill="none" stroke="#8b9b70" stroke-width="67" stroke-opacity=".25" stroke-linecap="round"/><path d="M91 479q86-156 238-16t362-22q151-136 174-174" fill="none" stroke="url(#scales)" stroke-width="59" stroke-linecap="round"/>
+<path d="M835 290q-15-67 25-91l77 17-26 39-49 40z" fill="#53654a" stroke="#a5af7b" stroke-width="3"/><path d="M864 210l38 8-22 8z" fill="#f4c679"/><path d="M924 237l25 5 12-10m-12 10l10 11" stroke="#d59a72" stroke-width="3" fill="none"/>
+<path d="M18 74l145-32M845 56l110 25" stroke="#a9ad94" stroke-opacity=".25" stroke-width="2"/>
+</svg>

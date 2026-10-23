@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" role="img" aria-label="水辺の祠と赤い布を描いた再現イラスト">
+<defs><linearGradient id="forest" x2="0" y2="1"><stop stop-color="#183132"/><stop offset="1" stop-color="#111f25"/></linearGradient><linearGradient id="water" x2="1" y2="1"><stop stop-color="#395b5c"/><stop offset="1" stop-color="#193738"/></linearGradient><linearGradient id="red" x2="1" y2="1"><stop stop-color="#c27c6e"/><stop offset="1" stop-color="#773d3d"/></linearGradient></defs>
+<path d="M0 0h1000v560H0z" fill="url(#forest)"/>
+<g stroke="#718273" fill="none" stroke-opacity=".4"><path d="M55 0l26 404M169 0l-7 336M282 0l-26 355M818 0l-34 341M926 0l5 388" stroke-width="24"/><path d="M55 85L0 146M66 167l83-58M170 76l-65-43M815 78l79-32M926 138l74-57" stroke-width="10"/></g>
+<path d="M0 323q229-54 419 31t581-16v222H0z" fill="#243b35"/>
+<path d="M0 436q260-157 552-33t448 30v127H0z" fill="url(#water)"/>
+<g stroke="#b7c4a4" stroke-opacity=".32" fill="none" stroke-width="2"><path d="M0 458q211-126 460-10t540 14M0 480q220-111 485-3t515-2M13 512q160-48 301-2M543 517q174 45 457-8M37 531q126-22 217-4"/></g>
+<path d="M401 372h276l-11-43H414z" fill="#526359"/><path d="M427 326V171h225v155" fill="#5e6754" stroke="#9eab83" stroke-width="3"/><path d="M445 325V187h188v138" fill="#142826"/><path d="M393 179q81-24 144-76 67 52 147 76l-19 17H409z" fill="#273831" stroke="#a7ad83" stroke-width="4"/>
+<path d="M447 205q91 20 182 0" fill="none" stroke="#c0ac78" stroke-width="8"/><path d="M478 211l-9 30 19 17-12 22M593 214l-8 23 19 17-10 22" fill="none" stroke="#e4debc" stroke-width="9"/>
+<path d="M459 309h160v15H459z" fill="#ada77f"/>
+<path d="M480 309q-21-37 7-55 24-15 42 23 18-38 42-23 28 18 7 55z" fill="url(#red)" stroke="#deb39a" stroke-width="3"/><path d="M529 274v35M488 264l16 39M570 264l-14 39" fill="none" stroke="#f1b5a1" stroke-opacity=".6" stroke-width="2"/>
+<g fill="#506858" stroke="#8ba084" stroke-width="2"><path d="M228 380q-24-42 4-68 24-20 53 5 17 26-12 62z"/><ellipse cx="250" cy="312" rx="29" ry="8"/><path d="M229 344h40M237 333h2m22 0h2"/></g>
+<path d="M700 442q-29-46-4-82m10 94q34-53 8-100M334 456q-20-41-9-66" fill="none" stroke="#91a482" stroke-width="3"/><g fill="#d3c38b"><circle cx="369" cy="225" r="2"/><circle cx="734" cy="270" r="2"/><circle cx="196" cy="239" r="2"/></g>
+</svg>
