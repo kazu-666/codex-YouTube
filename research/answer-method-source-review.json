@@ -1,0 +1,113 @@
+{
+  "sources": [
+    {
+      "id": "godot_official_showcase",
+      "consultedDateJapan": "2026-10-23",
+      "sourceKind": "official_engine_showcase_with_game_developer_credit",
+      "url": "https://github.com/godotengine/godot-website/blob/87dd32bd334ab46caef6453bd40895ce2d3e6661/collections/_showcase/case-of-the-golden-idol.md",
+      "commit": "87dd32bd334ab46caef6453bd40895ce2d3e6661",
+      "sha256": "d60768f3ec0b04f3d087a8d4b514519add4c08230114f6e922c40773aa6add33"
+    },
+    {
+      "id": "golden_tutorial",
+      "consultedDateJapan": "2026-10-23",
+      "sourceKind": "independent_reimplementation_not_game_source",
+      "url": "https://github.com/YuriSizov/tutorial-gui-of-golden-idol/blob/1bf788a4f75ff71fb69facbd28a60c29b24380f9/TUTORIAL.md",
+      "commit": "1bf788a4f75ff71fb69facbd28a60c29b24380f9",
+      "sha256": "4a932f9254745066ba8bebdfae7c5ce3d60bfa00c7cf3d1eb7e72dfa0c0240ae"
+    },
+    {
+      "id": "golden_tutorial_disclaimer",
+      "consultedDateJapan": "2026-10-23",
+      "sourceKind": "explicitly_not_affiliated_with_developer",
+      "url": "https://github.com/YuriSizov/tutorial-gui-of-golden-idol/blob/1bf788a4f75ff71fb69facbd28a60c29b24380f9/README.md",
+      "commit": "1bf788a4f75ff71fb69facbd28a60c29b24380f9",
+      "sha256": "e032a9fd50c330d07959a08d625a0ec46df87d0945478822a8b942f57516ae6d"
+    },
+    {
+      "id": "connections_recreation",
+      "consultedDateJapan": "2026-10-23",
+      "sourceKind": "independent_clone_not_nyt_implementation",
+      "url": "https://github.com/and-computers/react-connections-game/blob/e5428ffc972963d3dbe95291e62cc22bfc3e8d20/src/lib/game-helpers.js",
+      "commit": "e5428ffc972963d3dbe95291e62cc22bfc3e8d20",
+      "sha256": "3d4a7833587602b075ce58e9b109d2233ac11e1d7e5ba758b3fb9a3b79ddbee2"
+    },
+    {
+      "id": "connections_controls",
+      "consultedDateJapan": "2026-10-23",
+      "sourceKind": "independent_clone_not_nyt_implementation",
+      "url": "https://github.com/and-computers/react-connections-game/blob/e5428ffc972963d3dbe95291e62cc22bfc3e8d20/src/components/GameControlButtonsPanel/GameControlButtonsPanel.js",
+      "commit": "e5428ffc972963d3dbe95291e62cc22bfc3e8d20",
+      "sha256": "8e90f03e13e14c8086559e886e1294bf22cbb51d1955a09ee307f1fa22c52540"
+    },
+    {
+      "id": "obra_player_helper",
+      "consultedDateJapan": "2026-10-23",
+      "sourceKind": "player_authored_helper_not_official_implementation",
+      "url": "https://github.com/Yide-Zhang/ObraDinn-HintsAndCheck/blob/db9067ca931edd166fffd47e82432d1c7232efeb/README.md",
+      "commit": "db9067ca931edd166fffd47e82432d1c7232efeb",
+      "sha256": "aca5f095d2f9f860d3cd167d7fa6a1266706130f35ef73b0eab39a37884d1af2"
+    },
+    {
+      "id": "obra_fate_choices",
+      "consultedDateJapan": "2026-10-23",
+      "sourceKind": "player_authored_reconstruction",
+      "url": "https://github.com/Yide-Zhang/ObraDinn-HintsAndCheck/blob/db9067ca931edd166fffd47e82432d1c7232efeb/fates_structure.json",
+      "commit": "db9067ca931edd166fffd47e82432d1c7232efeb",
+      "sha256": "f18c8bf5582815be37f072bf45eafd2c3e50730805d9ecee6e70420f841b3a27"
+    }
+  ],
+  "direct_site_attempts": [
+    {
+      "name": "golden-steam",
+      "url": "https://store.steampowered.com/app/1677770/The_Case_of_the_Golden_Idol/?l=english",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "duck-steam",
+      "url": "https://store.steampowered.com/app/2637990/Duck_Detective_The_Secret_Salami/?l=english",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "obra-steam",
+      "url": "https://store.steampowered.com/app/653530/Return_of_the_Obra_Dinn/?l=english",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "horticulture-steam",
+      "url": "https://store.steampowered.com/app/1574580/Strange_Horticulture/?l=english",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "golden-official",
+      "url": "https://www.colorgraygames.com/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "obra-official",
+      "url": "https://obradinn.com/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "duck-official",
+      "url": "https://www.happybroccoligames.com/duck-detective/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "horticulture-official",
+      "url": "https://www.strangehorticulture.com/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "nyt-game",
+      "url": "https://www.nytimes.com/games/connections",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "name": "nyt-rules",
+      "url": "https://www.nytimes.com/2023/06/12/crosswords/how-to-play-connections.html",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    }
+  ],
+  "limits": "No live official-game playtest, current review statistics or developer interview. Official hosts were blocked by managed proxy CONNECT403. Source repositories are original publicly published sources, not fetching proxies. No third-party game code or assets were added to the app."
+}

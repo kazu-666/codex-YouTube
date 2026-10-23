@@ -1,0 +1,25 @@
+{
+  "createdDateJapan": "2026-10-23",
+  "contentVersion": "borrowed-body-v1",
+  "tool": "image_gen.imagegen",
+  "generated": true,
+  "style": "Contemporary amateur iPhone snapshots of fictional props in everyday rural Japanese interiors. Four-by-four equal square panels; mundane lighting, imperfect flash, no cinematic grading, no VHS, no text.",
+  "originalPath": "/workspace/generated_images/exec-fe8cb8aa-3065-4b63-9f90-977194396598.png",
+  "originalSha256": "bcfc9a6adf761035351009fba33a004acccd26acc7a86e6d91aa9c705103c694",
+  "assetPath": "web/public/connections/received-001.webp",
+  "assetSha256": "eb13a4ebafb2f5e02dded87ccd9f447dea5651fe4c048ff4aea2543a3623788c",
+  "assetBytes": 356462,
+  "dimensions": [
+    1254,
+    1254
+  ],
+  "processing": "Format conversion to WebP quality 86 only. Original preserved; CSS background positions display the sixteen cells.",
+  "subjects": [
+    "sealed mouths",
+    "objects bound with hair",
+    "teeth in containers",
+    "hand imprints and casts"
+  ],
+  "fictionBoundary": "All pictured objects, alterations, locations and events are fictional. No claim these specific acts are documented local rituals.",
+  "review": "All sixteen generated panels visually inspected; visual-puzzle usability requires user playtesting."
+}

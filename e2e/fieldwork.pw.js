@@ -16,7 +16,7 @@ try {
   const page = await context.newPage(), errors = [], requests = [];
   await context.addInitScript(() => { window.copiedResult = ''; Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.copiedResult = text; } } }); });
   page.on('pageerror', e => errors.push(e.message)); page.on('request', r => requests.push(r.url()));
-  await page.goto(base + '/'); await page.locator('#m-submit').waitFor(); await page.locator('#m-image-status[hidden]').waitFor({ state: 'attached' });
+  await page.goto(base + '/?mode=fieldwork'); await page.locator('#m-submit').waitFor(); await page.locator('#m-image-status[hidden]').waitFor({ state: 'attached' });
   assert.equal(await page.locator('.m-photo').count(), 3);
   assert.equal(await page.locator('.m-thread button,.m-thread a,dialog,.f-hotspot').count(), 0, 'all photos and messages are available without tapping or exploring');
   assert.equal(await page.locator('[data-choice]').count(), 3);

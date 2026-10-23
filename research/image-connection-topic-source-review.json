@@ -1,0 +1,171 @@
+{
+  "checkedDateJapan": "2026-10-23",
+  "method": "寺社・観光協会等の公式サイトの本文取得。検索結果の抜粋だけでは確認済みとしない。原文書・各地域史との最終照合と写真の利用条件は別途必要。",
+  "completedPlayableGroups": 0,
+  "sources": [
+    {
+      "id": "tono-denshoen",
+      "url": "https://tonojikan.jp/tourism/denshoen/",
+      "checkedAt": "2026-10-23T07:16:58.621083+00:00",
+      "status": 200,
+      "finalUrl": "https://tonojikan.jp/tourism/denshoen/",
+      "sha256": "f5e5ec7fb4398690355db17d77221cec201a0e1ef902015ed9fc83a3c97b3bb6",
+      "reviewStatus": "body_consulted",
+      "scope": "伝承園のオシラ堂、娘と馬の伝説、布に願いを書いて着せる紹介。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "izumo-hare",
+      "url": "https://izumooyashiro.or.jp/inaba/",
+      "checkedAt": "2026-10-23T07:16:58.622294+00:00",
+      "status": 200,
+      "finalUrl": "https://izumooyashiro.or.jp/about/inaba",
+      "sha256": "dd2dfc264f98a8015c39b158a4828fff20a1322fa528bcd91cac7ef528ef3bc1",
+      "reviewStatus": "body_consulted",
+      "scope": "出雲大社の白兎神話再話。海水と風で悪化し、真水と蒲で回復するという物語。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "shimogamo",
+      "url": "https://www.shimogamo-jinja.or.jp/",
+      "checkedAt": "2026-10-23T07:16:58.622680+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "reviewStatus": "body_not_obtained",
+      "scope": "調査候補の入口。本文を確認した典拠に数えない。"
+    },
+    {
+      "id": "kifune",
+      "url": "https://kifunejinja.jp/",
+      "checkedAt": "2026-10-23T07:16:58.623070+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "reviewStatus": "body_not_obtained",
+      "scope": "調査候補の入口。本文を確認した典拠に数えない。"
+    },
+    {
+      "id": "yasui",
+      "url": "https://www.yasui-konpiragu.or.jp/",
+      "checkedAt": "2026-10-23T07:16:58.623744+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "reviewStatus": "body_not_obtained",
+      "scope": "調査候補の入口。本文を確認した典拠に数えない。"
+    },
+    {
+      "id": "hojuji",
+      "url": "https://hojuji.jp/",
+      "checkedAt": "2026-10-23T07:16:58.633537+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "reviewStatus": "body_not_obtained",
+      "scope": "調査候補の入口。本文を確認した典拠に数えない。"
+    },
+    {
+      "id": "awashima-alt",
+      "url": "https://www.kada.jp/awashima/",
+      "checkedAt": "2026-10-23T07:16:58.634578+00:00",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "reviewStatus": "body_not_obtained",
+      "scope": "調査候補の入口。本文を確認した典拠に数えない。"
+    },
+    {
+      "id": "kappa",
+      "url": "https://tonojikan.jp/tourism/kappabuchi-pool/",
+      "checkedAt": "2026-10-23T07:16:58.635006+00:00",
+      "status": 200,
+      "finalUrl": "https://tonojikan.jp/tourism/kappabuchi-pool/",
+      "sha256": "1d76785ce0cb48f50750706a660627fb72802ad479e3f2b4b72037b5d249d4c7",
+      "reviewStatus": "body_consulted",
+      "scope": "乳神と赤い布で乳の形を作り納める願かけ。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "oshira-museum",
+      "url": "https://tonojikan.jp/event/260717-tono-municipal-museum/",
+      "checkedAt": "2026-10-23T07:19:02.940012+00:00",
+      "status": 200,
+      "finalUrl": "https://tonojikan.jp/event/260717-tono-municipal-museum/",
+      "sha256": "073073af7d184fc8c6049cd24aa0ace6f656f664ae75affb479b7990565a35ee",
+      "reviewStatus": "body_consulted",
+      "scope": "桑の木などの二体一対のご神体、家・養蚕・目の神、新しい布オセンダクを着せる風習。博物館の特別展を紹介する観光協会サイトの本文。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "tono-horses",
+      "url": "https://tonojikan.jp/feature/tono-equine-culture/",
+      "checkedAt": "2026-10-23T07:19:02.940436+00:00",
+      "status": 200,
+      "finalUrl": "https://tonojikan.jp/feature/tono-equine-culture/",
+      "sha256": "438d339a8b40a52d787122655bc3f707e69bcee93c3950a256f46b62e164d24b",
+      "reviewStatus": "body_consulted",
+      "scope": "馬っこつなぎの藁馬、オシラサマ、曲り家の一般的な紹介。補助調査。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "dojoji-story",
+      "url": "https://dojoji.com/story/",
+      "checkedAt": "2026-10-23T07:19:02.945703+00:00",
+      "status": 200,
+      "finalUrl": "https://dojoji.com/story",
+      "sha256": "03070c2f5b90fc8d12fa25c914ff1e96b0db4960a5767e57ad6e9769d76ef39e",
+      "reviewStatus": "body_consulted",
+      "scope": "髪長姫・安珍清姫の概要。今回新しい中心候補として採用しなかった。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "tono-straw",
+      "url": "https://tonojikan.jp/feature/tono-kenbunroku-01/",
+      "checkedAt": "2026-10-23T07:20:56.863800+00:00",
+      "status": 200,
+      "finalUrl": "https://tonojikan.jp/feature/tono-kenbunroku-01/",
+      "sha256": "e6c042d30d2330227abc3e0e3487e777f479ae98c10b0fa09a31d9e36fb11b96",
+      "reviewStatus": "body_consulted",
+      "scope": "生活の中の藁の用途。身体の民俗パズルの中心候補として採用しなかった。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "tono-amekaze",
+      "url": "https://tonojikan.jp/event/amekaze-matsuri/",
+      "checkedAt": "2026-10-23T07:20:56.864259+00:00",
+      "status": 200,
+      "finalUrl": "https://tonojikan.jp/event/amekaze-matsuri/",
+      "sha256": "192ff3969c558c23d448fd6c3ba06b5389d241a4cf1e9dfc71a88788b37fb261",
+      "reviewStatus": "body_consulted",
+      "scope": "遠野ふるさと村の伝承行事で男女一対の人形を作り、雨風を北へ送って被害が少ないよう祈る紹介。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "tono-zashiki",
+      "url": "https://tonojikan.jp/feature/what-is-zashiki-warashi/",
+      "checkedAt": "2026-10-23T07:20:56.864590+00:00",
+      "status": 200,
+      "finalUrl": "https://tonojikan.jp/feature/what-is-zashiki-warashi/",
+      "sha256": "4949bbe009e164ce3d2b774e3c03899047b94b9ad63648efcf9a7e7f20ce08ef",
+      "reviewStatus": "body_consulted",
+      "scope": "家に棲む子供の姿の存在、足音・繁栄・離去の伝承の紹介。観光特集であり解釈や体験談も混在。超自然現象を事実認定しない。",
+      "imageRights": "not_reviewed",
+      "puzzleValidated": false
+    },
+    {
+      "id": "higashihonganji-hair-rope-lead",
+      "url": "https://www.higashihonganji.or.jp/about/keidai/",
+      "checkedDate": "2026-10-23",
+      "reviewStatus": "body_not_obtained",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "scope": "毛綱の調査先。材料・用途の本文を今回未確認。"
+    },
+    {
+      "id": "jinjahoncho-hitogata-lead",
+      "url": "https://www.jinjahoncho.or.jp/omatsuri/gyouji/oharae/",
+      "checkedDate": "2026-10-23",
+      "reviewStatus": "body_not_obtained",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>",
+      "scope": "形代の調査先候補。URL内容・手順の本文を今回未確認。"
+    }
+  ]
+}
