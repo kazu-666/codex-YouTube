@@ -119,7 +119,7 @@ try {
   assert.deepEqual(errors, []);
 
   const narrow = await browser.newContext({ viewport: { width: 320, height: 740 }, reducedMotion: 'reduce', isMobile: true, hasTouch: true });
-  const small = await narrow.newPage(); await small.goto(base + '/'); await small.locator('#show-choices').waitFor();
+  const small = await narrow.newPage(); await small.goto(base + '/?mode=casebook'); await small.locator('#show-choices').waitFor();
   await small.locator('[data-clue="a"]').click();
   assert.equal(await small.locator('.paper-sheet').evaluate(el => getComputedStyle(el).animationName), 'none');
   await small.locator('#continue-thinking').click(); await small.locator('#show-choices').click();
@@ -138,7 +138,7 @@ try {
   await narrow.close();
 
   const desktop = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  const wide = await desktop.newPage(); await wide.goto(base); await wide.locator('#show-choices').waitFor();
+  const wide = await desktop.newPage(); await wide.goto(base + '/?mode=casebook'); await wide.locator('#show-choices').waitFor();
   await wide.locator('#show-choices').click(); await wide.locator('[data-for-slot="who"][data-word="b"]').click();
   await wide.locator('[data-for-slot="why"][data-word="c"]').click();
   assert.equal(await wide.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);

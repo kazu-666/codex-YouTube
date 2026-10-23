@@ -1,0 +1,101 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fieldwork-browser-'));
+const port = 3118, base = `http://127.0.0.1:${port}`;
+const child = spawn(process.execPath, ['server/index.js'], { env: { ...process.env, NODE_ENV: 'production', PORT: String(port), FIELDNOTES_DATA_DIR: dir }, stdio: 'pipe' });
+let browser;
+try {
+  await new Promise((resolve, reject) => { const timer = setTimeout(() => reject(new Error('Server timeout')), 10000); child.stdout.on('data', d => { if (String(d).includes('Game running')) { clearTimeout(timer); resolve(); } }); child.once('exit', c => reject(new Error(`Server exit ${c}`))); });
+  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined), headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'], env: { ...process.env, XDG_CONFIG_HOME: '/tmp/fieldwork-browser-config', XDG_CACHE_HOME: '/tmp/fieldwork-browser-cache' } });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, acceptDownloads: true });
+  const page = await context.newPage(), errors = [], requests = [];
+  page.on('pageerror', e => errors.push(e.message)); page.on('request', r => requests.push(r.url()));
+  await page.goto(base + '/');
+  await page.locator('#f-deduce').waitFor(); await page.locator('.f-art-status').waitFor({ state: 'detached' });
+  assert.equal(await page.locator('h1').textContent(), '赤い包みのある集落');
+  assert.equal(await page.locator('.f-hotspot').count(), 3);
+  assert.equal(await page.locator('.f-answer-slot').count(), 0);
+  assert.equal(await page.locator('body').textContent().then(t => t.includes('カッパ淵')), false);
+  assert.equal(requests.some(u => /casebook-|legacy-main|maplibre|arcgisonline|openfreemap/.test(u)), false);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await page.screenshot({ path: '/tmp/ibun-visual-mobile-map.png', fullPage: true });
+  await page.locator('.f-hotspot[data-scene="shrine"]').click();
+  await page.locator('#f-dialog[open] .f-inspect-status').filter({ hasText: '記録しました' }).waitFor();
+  await page.waitForFunction(() => document.querySelector('.f-unseal').getAnimations().some(a => a.playState === 'running'));
+  await page.waitForFunction(() => document.querySelector('.f-unseal').getAnimations().every(a => a.playState === 'finished'));
+  await page.screenshot({ path: '/tmp/ibun-visual-mobile-photo.png' });
+  await page.locator('#f-zoom-in').click(); await page.locator('#f-zoom-in').click();
+  assert.equal(await page.locator('#f-zoom-value').textContent(), '200%');
+  assert.ok(await page.locator('.f-photo-scroll').evaluate(el => el.scrollWidth > el.clientWidth));
+  await page.locator('.f-photo-scroll').evaluate(el => { el.scrollLeft = 70; });
+  assert.ok(await page.locator('.f-photo-scroll').evaluate(el => el.scrollLeft > 0));
+  await page.locator('.f-photo-scroll').evaluate(el => {
+    const make = (id, x) => new Touch({ identifier: id, target: el, clientX: x, clientY: 250 });
+    el.dispatchEvent(new TouchEvent('touchstart', { touches: [make(1, 100), make(2, 200)], bubbles: true }));
+    el.dispatchEvent(new TouchEvent('touchmove', { touches: [make(1, 60), make(2, 240)], bubbles: true, cancelable: true }));
+    el.dispatchEvent(new TouchEvent('touchend', { touches: [], bubbles: true }));
+  });
+  assert.equal(await page.locator('#f-zoom-value').textContent(), '300%', 'two-touch movement grows the image within the viewer');
+  await page.keyboard.press('Escape');
+  await page.reload(); await page.locator('.f-place.is-seen[data-scene="shrine"]').waitFor();
+  assert.equal(await page.locator('#f-dialog').evaluate(el => el.open), false);
+  for (const id of ['workshop', 'veranda']) {
+    await page.locator(`.f-place[data-scene="${id}"]`).click();
+    await page.locator('#f-dialog[open] .f-inspect-status').filter({ hasText: '記録しました' }).waitFor();
+    await page.locator('[data-close-bottom]').click();
+  }
+  await page.locator('#f-compare').click(); assert.equal(await page.locator('.f-compare-grid article').count(), 3);
+  await page.screenshot({ path: '/tmp/ibun-visual-mobile-compare.png', fullPage: true });
+  await page.locator('#f-deduce').click(); await page.locator('.f-answer-slot').first().waitFor();
+  assert.equal(await page.locator('#f-submit').isDisabled(), true);
+  await page.locator('[data-option="eyes"]').click(); await page.locator('[data-option="milk"]').click();
+  await page.locator('#f-to-map').click(); await page.locator('#f-deduce').click();
+  assert.equal(await page.locator('[data-option="eyes"]').getAttribute('aria-pressed'), 'true', 'draft survives looking at the map again');
+  await page.locator('[data-option="breast"]').click();
+  await page.screenshot({ path: '/tmp/ibun-visual-mobile-answer.png', fullPage: true });
+  await page.locator('#f-submit').click(); await page.locator('#f-cancel').click();
+  assert.equal(await page.locator('.f-result').count(), 0, 'cancel never submits');
+  await page.locator('#f-submit').click();
+  await page.route('**/api/fieldwork/answer', async route => { await route.fetch(); await route.abort('failed'); });
+  await page.locator('#f-confirm').click(); await page.locator('.f-result').waitFor();
+  await page.unroute('**/api/fieldwork/answer');
+  assert.equal(await page.locator('.f-result-score strong').textContent(), '100 / 100');
+  assert.equal(await page.locator('.f-error').count(), 0);
+  assert.equal(await page.locator('.f-proof').count(), 3);
+  assert.equal(await page.locator('.f-real-source').getAttribute('open'), null);
+  await page.locator('.f-real-source summary').click();
+  assert.equal(await page.locator('.f-real-source a').getAttribute('href'), 'https://tonojikan.jp/tourism/kappabuchi-pool/');
+  await page.waitForFunction(() => [...document.querySelectorAll('.f-proof')].every(el => getComputedStyle(el).opacity === '1'));
+  await page.screenshot({ path: '/tmp/ibun-visual-mobile-result.png', fullPage: true });
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#f-save-result').click()]);
+  await download.saveAs('/tmp/ibun-visual-result-share.png'); assert.ok(fs.statSync('/tmp/ibun-visual-result-share.png').size > 5000);
+  await page.reload(); await page.locator('.f-result').waitFor();
+  await page.locator('#f-replay').click(); await page.locator('#f-confirm').click(); await page.locator('#f-deduce').waitFor();
+  await page.locator('#f-skip').click(); await page.locator('#f-confirm').click(); await page.locator('.f-result').waitFor();
+  assert.equal(await page.locator('.f-result-score strong').textContent(), '0 / 100');
+  assert.equal(await page.locator('.f-real-source').count(), 1, 'skipping still reveals full background and source');
+  for (const width of [320, 1280]) {
+    const c = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: width === 320 ? 'reduce' : 'no-preference' });
+    const p = await c.newPage(); p.on('pageerror', e => errors.push(e.message)); await p.goto(base + '/?mode=fieldwork&round=first');
+    await p.locator('#f-deduce').waitFor(); await p.locator('.f-art-status').waitFor({ state: 'detached' });
+    assert.equal(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await p.screenshot({ path: `/tmp/ibun-visual-${width}-map.png`, fullPage: true });
+    await p.locator('.f-place[data-scene="veranda"]').click(); await p.locator('#f-dialog[open]').waitFor();
+    if (width === 320) assert.equal(await p.locator('.f-unseal').evaluate(el => getComputedStyle(el).animationName), 'none');
+    assert.equal(await p.locator('#f-dialog').evaluate(el => el.scrollWidth <= el.clientWidth), true);
+    await p.keyboard.press('Escape'); await p.locator('#f-deduce').click(); await p.locator('#f-submit').waitFor();
+    assert.equal(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await c.close();
+  }
+  const failed = await browser.newContext({ viewport: { width: 390, height: 844 } }); const failurePage = await failed.newPage();
+  await failurePage.route('**/village-sheet.webp', route => route.abort()); await failurePage.goto(base + '/?mode=fieldwork'); await failurePage.locator('#f-image-retry').waitFor();
+  await failurePage.unroute('**/village-sheet.webp'); await failurePage.locator('#f-image-retry').click(); await failurePage.locator('.f-art-status').waitFor({ state: 'detached' });
+  assert.deepEqual(errors, []); console.log('Visual investigation passed: real generated assets, phone/320/desktop, zoom, clue persistence, conclusion, response loss, source, sharing and replay.');
+} finally {
+  await browser?.close(); child.kill(); fs.rmSync(dir, { recursive: true, force: true });
+}

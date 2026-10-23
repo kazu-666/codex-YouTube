@@ -1,0 +1,13 @@
+{
+  "createdDateJapan": "2026-10-23",
+  "tool": "image_gen.imagegen",
+  "originalPath": "/workspace/generated_images/exec-0ec7c0dd-876c-4c3c-b3e6-d8b86c31073a.png",
+  "webPath": "/fieldwork/village-sheet.webp",
+  "kind": "original_generated_illustration_for_fiction",
+  "layout": ["overview", "shrine", "workshop", "veranda"],
+  "width": 1536,
+  "height": 1024,
+  "assetProcessing": "PNG to WebP quality 86. No scene retouching, color changes or pixel cropping. CSS displays each quadrant.",
+  "review": "四場面の物の形と人物の所持品を目視確認。現実の集落・人物・建築・民具の忠実な復元ではない。",
+  "sourceReview": "deduction-demo-source-review.json#kappa"
+}
