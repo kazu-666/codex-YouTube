@@ -180,7 +180,10 @@ const server = http.createServer(async (req, res) => {
     if (vite) return vite.middlewares(req, res, () => send(res, 404, { error: 'Not found' }));
     const file = path.join(root, 'dist', pathname === '/' ? 'index.html' : pathname);
     if (!file.startsWith(path.join(root, 'dist') + path.sep) && file !== path.join(root, 'dist', 'index.html')) return send(res, 404, { error: 'Not found' });
-    const target = fs.existsSync(file) && fs.statSync(file).isFile() ? file : path.join(root, 'dist', 'index.html');
+    const exists = fs.existsSync(file) && fs.statSync(file).isFile();
+    // Old tabs may request bundles removed by a deployment. Never send HTML as JS/CSS.
+    if (!exists && (pathname.startsWith('/assets/') || path.extname(pathname))) return send(res, 404, { error: 'File not found. Reload the page for the latest version.' });
+    const target = exists ? file : path.join(root, 'dist', 'index.html');
     const headers = { 'Content-Type': mime[path.extname(target)] || 'application/octet-stream', 'Cache-Control': target.endsWith('index.html') ? 'no-cache' : /\/assets\//.test(target) ? 'public, max-age=31536000, immutable' : 'no-cache', 'Vary': 'Accept-Encoding' };
     if (/\bgzip\b/.test(req.headers['accept-encoding'] || '') && /\.(?:js|css|svg|json|html)$/.test(target)) {
       if (!staticGzipCache.has(target)) staticGzipCache.set(target, gzipSync(fs.readFileSync(target)));

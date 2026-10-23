@@ -6,9 +6,35 @@
   <meta name="theme-color" content="#0c0b0d" />
   <title>異聞調査録｜残された十二枚</title>
   <meta name="description" content="不穏な痕跡の残る12枚の写真。４枚ずつ選び、民俗・神話の意外な繋がりを見つけるパズル。生成した写真と創作の演出を使った体験版。" />
+  <style>
+    html{background:#0c0b0d}
+    .boot-message{max-width:520px;margin:60px auto;padding:24px;font:16px/1.8 -apple-system,BlinkMacSystemFont,sans-serif;color:#eee7e3}
+    .boot-message button{font:inherit;background:#823234;color:#fff2ec;border:1px solid #b3615e;padding:10px 20px;border-radius:2px;cursor:pointer}
+    .boot-message button:focus-visible{outline:3px solid #e58a80;outline-offset:3px}
+  </style>
+  <script>
+    // This stays in the HTML so recovery still works if the entry bundle is unavailable.
+    window.showGameLoadError = function () {
+      function show() {
+        document.getElementById('app').hidden = true;
+        document.getElementById('boot-error').hidden = false;
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show, { once: true });
+      else show();
+    };
+    window.addEventListener('error', function (event) {
+      if (event.target && event.target.tagName === 'SCRIPT' && event.target.type === 'module') window.showGameLoadError();
+    }, true);
+  </script>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app"><p class="boot-message" role="status">ゲームを読み込んでいます…</p></div>
+  <section id="boot-error" class="boot-message" role="alert" hidden>
+    <p>ゲームの画面を読み込めませんでした。</p>
+    <p>通信が途切れたか、サイトの更新前の画面が残っている可能性があります。読み直してお試しください。</p>
+    <button onclick="location.reload()">最新版を読み直す</button>
+  </section>
+  <noscript><p class="boot-message">このゲームにはJavaScriptが必要です。ブラウザの設定で有効にしてください。</p></noscript>
   <script type="module" src="/main.js"></script>
 </body>
 </html>

@@ -134,6 +134,26 @@ try {
   await failedPage.unroute('**/kojiki-ritual-photos.webp'); await failedPage.locator('#c-image-retry').click();
   await failedPage.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
   assert.equal(await failedPage.locator('[data-tile]').first().isDisabled(), false);
+  // Deployment and network failures must show a way back instead of a blank page.
+  for (const blocked of ['**/assets/index-*.js', '**/assets/connections-*.js', '**/assets/connections-*.css']) {
+    const recoveryContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const recoveryPage = await recoveryContext.newPage();
+    await recoveryPage.route(blocked, route => route.abort());
+    await recoveryPage.goto(base + '/?mode=connections');
+    await recoveryPage.locator('#boot-error').waitFor({ state: 'visible' });
+    assert.equal(await recoveryPage.locator('#app').isVisible(), false);
+    await recoveryPage.unroute(blocked);
+    await recoveryPage.locator('#boot-error button').click();
+    await recoveryPage.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
+    assert.equal(await recoveryPage.locator('[data-tile]').count(), 12);
+    assert.equal(await recoveryPage.locator('#boot-error').isVisible(), false);
+    await recoveryContext.close();
+  }
+  for (const missing of ['/assets/obsolete-client.js', '/assets/obsolete-style.css', '/connections/missing.webp']) {
+    const response = await page.request.get(base + missing);
+    assert.equal(response.status(), 404);
+    assert.ok(!response.headers()['content-type'].includes('text/html'));
+  }
   assert.deepEqual(errors, []);
   console.log('Photo connections passed: actual generated twelve-photo atlas, photo-only board, preview names, foldable selection, 280/320/390/720/desktop, photo discoveries and body map, nested dialogs, near/repeat feedback, lost response recovery, saved progress, all-correct/all-miss, image retry, sources and spoiler-free text/PNG. Clipboard only is mocked.');
 } finally { await browser?.close(); child.kill(); fs.rmSync(dir, { recursive: true, force: true }); }
