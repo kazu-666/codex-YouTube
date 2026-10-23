@@ -44,6 +44,15 @@ button:focus-visible, a:focus-visible, summary:focus-visible {
   outline: 2px solid var(--file-accent);
   outline-offset: -2px;
 }
+.c-image-tile.is-selected::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 2px solid var(--file-accent);
+  border-radius: inherit;
+  pointer-events: none;
+}
 .c-image-tile.is-selected .c-photo { transform: none; filter: brightness(.88); }
 .c-photo-number { background: #100c0de0; color: #f3e8e1; border-radius: 1px; }
 .c-image-tile .c-check {
