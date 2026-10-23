@@ -1,0 +1,159 @@
+/* A received photo file: charcoal surfaces, readable ash text, restrained red.
+   Category colours still describe puzzle difficulty, not the whole interface. */
+:root {
+  --file-bg: #0c0b0d;
+  --file-surface: #171416;
+  --file-text: #eee7e3;
+  --file-muted: #b6aaa8;
+  --file-line: #403537;
+  --file-accent: #e58a80;
+  --file-action: #823234;
+  color: var(--file-text);
+  background: var(--file-bg);
+}
+
+button:focus-visible, a:focus-visible, summary:focus-visible {
+  outline-color: var(--file-accent);
+}
+
+.connections-app { padding-bottom: 108px; }
+.c-header { height: 60px; border-color: var(--file-line); gap: 12px; }
+.c-header > a { font-size: 17px; font-weight: 600; }
+.c-header > a span { color: var(--file-muted); }
+.c-header > span { color: var(--file-muted); font-size: 11px; white-space: nowrap; }
+.c-header > span::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 7px 2px 0;
+  background: var(--file-accent);
+}
+.c-header > button { border-color: var(--file-line); border-radius: 3px; }
+.c-eyebrow { color: var(--file-muted); font-size: 11px; letter-spacing: .11em; }
+.photo-connections .c-heading { margin: 24px 0 15px; }
+.photo-connections h1 { color: var(--file-text); font-weight: 550; letter-spacing: .05em; }
+.c-progress { color: var(--file-muted); }
+.c-progress strong { color: var(--file-text); font-size: 28px; }
+.c-progress span { font-size: 12px; }
+.photo-connections .c-instruction { color: #d5c9c6; line-height: 1.7; margin-bottom: 16px; }
+
+.c-image-tile { border-radius: 2px; background: #211c1f; box-shadow: 0 0 0 1px #3a3032; }
+.c-photo { background-color: #211c1f; }
+.c-image-tile.is-selected {
+  outline: 2px solid var(--file-accent);
+  outline-offset: -2px;
+}
+.c-image-tile.is-selected .c-photo { transform: none; filter: brightness(.88); }
+.c-photo-number { background: #100c0de0; color: #f3e8e1; border-radius: 1px; }
+.c-image-tile .c-check {
+  left: auto;
+  top: 6px;
+  right: 6px;
+  transform: none;
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  font-size: 15px;
+  line-height: 1;
+  background: var(--file-action);
+  color: #fff5f0;
+  border: 1px solid var(--file-accent);
+  border-radius: 2px;
+  text-shadow: none;
+}
+.c-image-tile:not(.is-selected) .c-check { display: none; }
+.c-image-tile .c-enlarge { border-radius: 2px 0 0; background: #100c0dd9; }
+.c-enlarge:active { background: #5e3032; }
+.photo-connections .c-notice { color: var(--file-muted); font-size: 14px; line-height: 1.8; }
+.c-notice.near, .c-notice.error { color: #f0b1a4; }
+.c-notice.matched { color: #e1d2cb; }
+
+.c-tools button, .c-share button, .c-reset {
+  border-color: #625052;
+  border-radius: 2px;
+  color: var(--file-text);
+}
+.c-tools button:last-child { color: var(--file-muted); }
+.c-footer { border-color: var(--file-line); color: #aba09e; font-size: 12px; line-height: 1.8; }
+.c-dock { background: #0c0b0df5; border-color: #513739; }
+.c-dock-inner { gap: 16px; }
+.c-lives span { color: var(--file-muted); }
+.c-lives i { background: #dbb7b0; border-radius: 1px; width: 8px; height: 8px; }
+.c-lives i.spent { border-color: #695155; }
+.c-submit, .c-continue, .c-start button, .c-image-status button,
+.c-help-content button, #c-image-status button {
+  background: var(--file-action);
+  color: #fff2ec;
+  border: 1px solid #b3615e;
+  border-radius: 2px;
+}
+.c-submit { font-weight: 500; }
+.c-submit span { opacity: 1; color: #efc8c0; }
+.c-submit:disabled { background: #251d20; color: #aa9a9b; border-color: #4b383d; opacity: 1; }
+.c-submit:disabled span { color: #aa9a9b; }
+.c-submit:not(:disabled):active, .c-continue:active { background: #9a4041; }
+
+.c-group, .c-solved-strip { background: var(--file-surface); border-color: var(--file-line); }
+.c-solved-strip { border-radius: 2px; color: var(--file-text); }
+.c-visual-group { border-radius: 2px; }
+.c-solved-strip small { font-size: 11px; }
+.c-plus { color: var(--file-muted); }
+.c-group-detail p + p, .c-group-more p { color: #c7b8b3; }
+.c-group-more summary { color: var(--file-muted); }
+.c-result, .c-sources { border-color: var(--file-line); }
+.c-score strong { color: var(--file-text); }
+.c-score span, .c-sources small, .c-share-note { color: var(--file-muted); }
+.c-result > p:not(.c-eyebrow):not(.c-share-note), .c-sources p { color: #d2c5bf; }
+.c-facts { background: var(--file-bg); }
+.c-facts > div { border-color: var(--file-line); }
+.c-facts dt, .c-facts dd span { color: var(--file-muted); }
+.c-image-status, #c-image-status { color: var(--file-muted); }
+
+.c-dialog {
+  border-color: #735054;
+  border-radius: 3px;
+  background: #171315;
+  color: var(--file-text);
+  box-shadow: 0 20px 100px #000b;
+}
+.c-dialog::backdrop { background: #070508ec; }
+.c-preview-head { color: var(--file-muted); }
+.c-preview-head button, .c-preview-controls button {
+  border-color: #685055;
+  border-radius: 2px;
+  background: #251c20;
+  color: var(--file-text);
+}
+.c-preview-head button { border: 0; background: transparent; }
+.c-preview-controls button:nth-child(2) { border-color: #a15a5a; background: var(--file-action); color: #fff2ec; }
+.c-preview-caption > span, .c-preview-caption p { color: var(--file-muted); }
+.c-help-content p, .c-dialog .c-group-more p { color: #d0c1bb; }
+.c-help-content textarea { border-color: #685055; background: var(--file-bg); color: var(--file-text); }
+.c-mini button { border-radius: 2px; }
+.c-mini figcaption { color: #e0d2cc; }
+.c-converge > span { background: #211a1e; color: var(--file-text); }
+.c-flight { background: #211a1e; border-color: #57454b; color: #d9ccc8; }
+.c-discovery-top { color: var(--file-muted); border-bottom: 1px solid var(--file-line); padding-bottom: 13px; }
+.c-discovery-top strong { color: #e9c5bb; font-size: 24px; animation: none; }
+.c-discovery .c-visual-group { background: transparent; }
+.c-discovery .c-continue { margin-top: 22px; }
+
+@keyframes c-discovery-in {
+  from { opacity: .65; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 360px) {
+  .c-header > a { font-size: 16px; }
+  .c-dock-inner { gap: 9px; }
+  .c-lives i { width: 7px; height: 7px; }
+  .photo-connections .c-heading { margin-top: 21px; }
+}
+@media (max-width: 300px) {
+  .c-header { gap: 8px; }
+  .c-header > a { font-size: 15px; }
+  .c-header > span { font-size: 10px; }
+  .c-header > span::before { margin-right: 5px; }
+}

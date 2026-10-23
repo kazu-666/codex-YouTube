@@ -5,11 +5,11 @@ Render の無料 Web Service で、ブラウザ画面と採点 API を一緒に�
 
 ## 既存の確認サイトを更新する
 
-現在の対象は、固定１問・12枚の写真・４枚×３組の「残された十二枚」です。確認URLは <https://fieldnotes-atlas-preview.onrender.com/?mode=connections&v=15>。
+現在の対象は、固定１問・12枚の写真・４枚×３組の「残された十二枚」です。確認URLは <https://fieldnotes-atlas-preview.onrender.com/?mode=connections&v=16>。最新版は黒・灰白色・鈍い赤のUIです。問題の内容や画像版は前回のままなので、APIの版番号だけではUI更新の配信を確認できません。HTMLの `theme-color` が `#0c0b0d`、配信されたconnectionsのCSSに `--file-action:#823234` が含まれることと、生成ビルドのファイルが一致することも確認します。
 
 `main` へ反映すると、Render側の自動デプロイ設定が有効なら更新が始まります。GitHubへのpushの成功だけで、Renderへの反映を完了扱いにしないでください。`/api/connections/state` の `version` が `kojiki-photos-v1`、`imageRevision` が `ritual-atlas-v1`、`imageUrl` が `/connections/kojiki-ritual-photos.webp` であることを確認します。`displayMode` は `photos`、`tiles` は12件、`totalGroups` は3、`maxPoints` は300、トップの題名は「残された十二枚」。実際のWebP画像も取得して照合します。
 
-旧 `kojiki-words-v1`／文字カード、`borrowed-body-v1`／16枚／400点、または画像版が旧のままなら、まだ新しい版は配信されていません。Renderのサービス `fieldnotes-atlas-preview` で、接続ブランチが `main` であることと、最新デプロイの対象コミット・進行・ログを確認してください。自動更新が始まらない場合は **Manual Deploy → Deploy latest commit** を使います。失敗した場合はログの原因を修正して再デプロイします。クエリの `v=15` は確認リンクの識別用で、旧サーバーを新コードへ切り替える操作ではありません。
+旧 `kojiki-words-v1`／文字カード、`borrowed-body-v1`／16枚／400点、または画像版が旧のままなら、まだ新しい版は配信されていません。Renderのサービス `fieldnotes-atlas-preview` で、接続ブランチが `main` であることと、最新デプロイの対象コミット・進行・ログを確認してください。自動更新が始まらない場合は **Manual Deploy → Deploy latest commit** を使います。失敗した場合はログの原因を修正して再デプロイします。クエリの `v=16` は確認リンクの識別用で、旧サーバーを新コードへ切り替える操作ではありません。
 
 このクラウドからはGitHubの反映と、公開サイトへのHTTP確認を実行できます。現在Renderを操作する接続やAPI認証はなく、Render管理画面の実際のデプロイ状態までは直接確認できません。
 

@@ -1,4 +1,5 @@
 import './connections.css';
+import './connections-theme.css';
 
 const app = document.querySelector('#app');
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -174,13 +175,14 @@ async function copyResult() {
 async function saveResult() {
   if (busy) return;
   const canvas = document.createElement('canvas'); canvas.width = 1200; canvas.height = 800;
-  const ctx = canvas.getContext('2d'); ctx.fillStyle = '#101314'; ctx.fillRect(0, 0, 1200, 800);
-  ctx.fillStyle = '#a8aaa2'; ctx.font = '30px sans-serif'; ctx.fillText(`異聞調査録 / FILE ${state.fileNumber}`, 80, 100);
-  ctx.fillStyle = '#f0eee5'; ctx.font = 'bold 140px sans-serif'; ctx.fillText(String(state.points), 75, 280); ctx.font = '36px sans-serif'; ctx.fillText(`/ ${state.maxPoints} 点`, 390, 270);
-  ctx.font = '32px sans-serif'; ctx.fillStyle = '#bfc1b4'; ctx.fillText(`${state.groups.length} / ${state.totalGroups} の繋がりを発見`, 80, 355);
+  const ctx = canvas.getContext('2d'); ctx.fillStyle = '#0c0b0d'; ctx.fillRect(0, 0, 1200, 800);
+  ctx.fillStyle = '#e58a80'; ctx.fillRect(80, 45, 40, 3);
+  ctx.fillStyle = '#b6aaa8'; ctx.font = '30px sans-serif'; ctx.fillText(`異聞調査録 / FILE ${state.fileNumber}`, 80, 100);
+  ctx.fillStyle = '#eee7e3'; ctx.font = 'bold 140px sans-serif'; ctx.fillText(String(state.points), 75, 280); ctx.font = '36px sans-serif'; ctx.fillText(`/ ${state.maxPoints} 点`, 390, 270);
+  ctx.font = '32px sans-serif'; ctx.fillStyle = '#d2c5bf'; ctx.fillText(`${state.groups.length} / ${state.totalGroups} の繋がりを発見`, 80, 355);
   const colors = { sand: '#cbb38b', moss: '#a5b6a2', violet: '#b39bc8' };
   state.history.forEach((h, row) => { ctx.fillStyle = h.result === 'matched' ? colors[h.color] : '#363b3e'; for (let column = 0; column < 4; column++) ctx.fillRect(80 + column * 72, 405 + row * 36, 62, 26); });
-  ctx.fillStyle = '#a8aaa2'; ctx.font = '25px sans-serif'; ctx.fillText(`${location.origin}/?mode=connections`, 80, 740);
+  ctx.fillStyle = '#b6aaa8'; ctx.font = '25px sans-serif'; ctx.fillText(`${location.origin}/?mode=connections`, 80, 740);
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   if (!blob) { notice = '画像を作れませんでした。結果のコピーを利用できます。'; render(); return; }
   const url = URL.createObjectURL(blob), link = document.createElement('a'); link.href = url; link.download = 'ibun-photos-002.png'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 3000);
