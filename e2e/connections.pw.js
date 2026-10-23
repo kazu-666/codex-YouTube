@@ -42,7 +42,7 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   }
   await page.locator('#c-clear').click();
-  assert.ok(requests.some(u => /kojiki-photos\.webp/.test(u)), 'the actual local generated atlas is loaded');
+  assert.ok(requests.some(u => /kojiki-ritual-photos\.webp/.test(u)), 'the actual local generated atlas is loaded');
   assert.equal(await page.locator('.c-word,.c-word-label').count(), 0, 'the board is photographs rather than word buttons');
   const select = async ids => { for (const id of ids) await page.locator(`[data-tile="${id}"]`).click(); };
   const near = [...content.groups[0].tileIds.slice(0, 3), content.groups[1].tileIds[0]];
@@ -128,10 +128,10 @@ try {
   }
   const failedContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const failedPage = await failedContext.newPage();
-  await failedPage.route('**/kojiki-photos.webp', route => route.abort());
+  await failedPage.route('**/kojiki-ritual-photos.webp', route => route.abort());
   await failedPage.goto(base + '/?mode=connections'); await failedPage.locator('#c-image-retry').waitFor();
   assert.equal(await failedPage.locator('[data-tile]').first().isDisabled(), true);
-  await failedPage.unroute('**/kojiki-photos.webp'); await failedPage.locator('#c-image-retry').click();
+  await failedPage.unroute('**/kojiki-ritual-photos.webp'); await failedPage.locator('#c-image-retry').click();
   await failedPage.locator('#c-image-status[hidden]').waitFor({ state: 'attached' });
   assert.equal(await failedPage.locator('[data-tile]').first().isDisabled(), false);
   assert.deepEqual(errors, []);

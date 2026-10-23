@@ -1,0 +1,19 @@
+{
+  "createdDateJapan": "2026-10-23",
+  "contentVersion": "kojiki-photos-v1",
+  "imageRevision": "ritual-atlas-v1",
+  "tool": "image_gen.imagegen",
+  "generated": true,
+  "referenceOriginal": "/workspace/generated_images/exec-1a437fe2-0802-4398-b203-cc2dad1742a9.png",
+  "originalPath": "/workspace/generated_images/exec-c90fb8b0-79d7-4f0e-8b01-a2855cb2dc27.png",
+  "originalSha256": "8c878872b96f0e27de68ec158e77a1ef52e30730942bed3aee731c227e08f37d",
+  "assetPath": "web/public/connections/kojiki-ritual-photos.webp",
+  "assetSha256": "c26d7a35e83f7cd1cd13c245222c59cf6696e9b25347c4631760caf56cb07bd9",
+  "bytes": 399148,
+  "columns": 4,
+  "rows": 3,
+  "processing": "WebP format conversion quality 87 only. Both generated originals and the previous atlas are preserved.",
+  "artDirection": "Amateur contemporary iPhone photographs of fictional private ritual props. Unusual offerings, binding, residue, placement and damage; retain object identity. No blanket dark filter or matching four-item decorations.",
+  "historicalAccuracyBoundary": "Alterations, bindings and arrangements are fictional, not documented ritual procedures. Kuro-mikazura remains an invented illustrative prop, not a verified historical reconstruction.",
+  "progress": "Same puzzle version and IDs; existing answers and progress are preserved."
+}

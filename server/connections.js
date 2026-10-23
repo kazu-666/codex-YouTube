@@ -23,7 +23,7 @@ export function connectionsState(session) {
   return {
     version: CONNECTIONS_VERSION, runId: saved.runId, title: content.title, fileNumber: content.fileNumber,
     displayMode: content.displayMode, groupSize: content.groupSize, maxMistakes: content.maxMistakes,
-    imageUrl: content.imageUrl, photoColumns: content.photoColumns, photoRows: content.photoRows,
+    imageUrl: content.imageUrl, imageRevision: content.imageRevision, photoColumns: content.photoColumns, photoRows: content.photoRows,
     fictionNote: content.fictionNote, demo: true, status: saved.status,
     tiles: saved.order.map(id => content.tiles.find(t => t.id === id)),
     groups: saved.solved.map(id => publicGroup(content.groups.find(g => g.id === id), true)),
