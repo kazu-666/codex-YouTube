@@ -23,8 +23,8 @@ test('visual investigation keeps conclusions server-side, survives retries and r
   try {
     await start();
     let state = (await call()).data;
-    for (const k of ['answer', 'solution', 'reveal', 'slots', 'points']) assert.equal(state[k], undefined, `${k} must not be revealed`);
-    assert.equal(state.scenes.length, 3); assert.match(state.fictionNote, /創作/);
+    for (const k of ['answer', 'solution', 'reveal', 'points']) assert.equal(state[k], undefined, `${k} must not be revealed`);
+    assert.equal(state.scenes.length, 3); assert.equal(state.slots.length, 1); assert.ok(state.question); assert.match(state.fictionNote, /創作/);
     assert.ok(fs.statSync(new URL('../web/public' + state.imageUrl, import.meta.url)).size < 550000, 'one small local sprite supplies all four scenes');
     assert.equal((await call('inspect', null)).status, 400);
     assert.equal((await call('inspect', { sceneId: 'missing' })).status, 400);
@@ -33,14 +33,14 @@ test('visual investigation keeps conclusions server-side, survives retries and r
     assert.ok(inspections.every(r => r.status === 200));
     state = (await call()).data; assert.deepEqual(new Set(state.inspected), new Set(['shrine', 'veranda']));
     const requestId = crypto.randomUUID(), answer = { requestId, words: content.solution };
-    assert.equal((await call('answer', answer)).status, 409, 'explicitly open the conclusion before committing');
-    state = (await call('options', {})).data; assert.equal(state.slots.length, 2); assert.equal(state.reveal, undefined);
+    assert.equal(state.optionsOpened, false); assert.equal(state.reveal, undefined);
     assert.equal((await call('answer', { requestId, words: { shape: 'breast' } })).status, 400);
     assert.equal((await call('answer', { requestId, words: { shape: 'breast', purpose: 'unknown' } })).status, 400);
+    assert.equal(state.inspected.length, 2);
     const duplicate = await Promise.all([call('answer', answer), call('answer', answer)]);
     assert.ok(duplicate.every(r => r.status === 200 && r.data.answer.points === 100));
-    assert.equal((await call('answer', { requestId, words: { purpose: 'milk', shape: 'breast' } })).status, 200, 'retry may reorder object keys');
-    assert.equal((await call('answer', { requestId, words: { purpose: 'ward', shape: 'eyes' } })).status, 409);
+    assert.equal((await call('answer', { requestId, words: { purpose: 'milk' } })).status, 200, 'same answer is an idempotent retry');
+    assert.equal((await call('answer', { requestId, words: { purpose: 'ward' } })).status, 409);
     assert.equal((await call('answer', { ...answer, requestId: crypto.randomUUID() })).status, 409);
     state = (await call()).data; assert.equal(state.reveal.source.url, content.reveal.source.url);
     await stop(); await start();
@@ -48,12 +48,11 @@ test('visual investigation keeps conclusions server-side, survives retries and r
     const old = await fetch(base + '/api/casebook/state', { headers: { Cookie: cookie } }).then(r => r.json()); assert.equal(old.total, 0);
     assert.equal((await call('reset', {})).status, 400);
     state = (await call('reset', { confirm: true })).data; assert.equal(state.answer, undefined); assert.equal(state.inspected.length, 0);
-    await call('options', {});
-    state = (await call('answer', { requestId: crypto.randomUUID(), words: { shape: 'eyes', purpose: 'milk' } })).data;
-    assert.equal(state.answer.points, 60); assert.deepEqual(state.answer.matched, ['purpose']); assert.ok(state.reveal.story);
-    await call('reset', { confirm: true }); await call('options', {});
+    state = (await call('answer', { requestId: crypto.randomUUID(), words: { purpose: 'ward' } })).data;
+    assert.equal(state.answer.points, 0); assert.deepEqual(state.answer.matched, []); assert.ok(state.reveal.story);
+    await call('reset', { confirm: true });
     state = (await call('answer', { requestId: crypto.randomUUID(), words: null })).data;
-    assert.equal(state.answer.points, 0); assert.ok(state.reveal.source);
+    assert.equal(state.answer.points, 0); assert.ok(state.reveal.source); assert.deepEqual(state.inspected, [], 'answer and explanation do not require inspecting images');
     const stranger = await fetch(base + '/api/fieldwork/state').then(r => r.json()); assert.equal(stranger.answer, undefined);
   } finally { await stop(); fs.rmSync(dir, { recursive: true, force: true }); }
 });

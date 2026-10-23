@@ -1,57 +1,105 @@
 {
-  "id": "riverside-offering-v1",
+  "id": "riverside-message-v2",
   "title": "赤い包みのある集落",
   "intro": "川辺の祠に、同じ形の赤い包みが集まっていた。何を願って、誰が届けているのだろう。",
-  "fictionNote": "人物・集落・出来事は創作です。画像はこの物語のための生成イラストです。",
-  "imageUrl": "/fieldwork/village-sheet.webp",
+  "fictionNote": "人物・出来事は創作です。写真はスマートフォン撮影風の生成画像です。",
+  "imageUrl": "/fieldwork/phone-sheet.webp",
   "scenes": [
     {
-      "id": "shrine", "number": "01", "name": "川辺の祠", "kind": "供え物を見る", "panel": "shrine", "x": 86, "y": 53,
+      "id": "shrine",
+      "number": "01",
+      "name": "川辺の祠",
+      "kind": "供え物を見る",
+      "panel": "shrine",
+      "x": 86,
+      "y": 53,
       "alt": "祠の棚に置かれた、赤い布の丸い膨らみが二つ並ぶ手製の供え物。",
       "caption": "大きさは違う。でも、どれも丸いふくらみが二つ。",
       "voice": "「店で買う物じゃないよ。それぞれの家で縫ってくるんだ」",
-      "observation": "赤い布で作った、二つ並ぶ丸い形。"
+      "observation": "赤い布で作った、二つ並ぶ丸い形。",
+      "message": "川沿いの小さな祠で、これを見つけました。"
     },
     {
-      "id": "workshop", "number": "02", "name": "仕立て部屋", "kind": "作りかけを見る", "panel": "workshop", "x": 28, "y": 25,
+      "id": "workshop",
+      "number": "02",
+      "name": "仕立て部屋",
+      "kind": "作りかけを見る",
+      "panel": "workshop",
+      "x": 28,
+      "y": 25,
       "alt": "赤い布、綿、針と糸。片側だけふくらみを縫い付けた、作りかけの供え物。",
       "caption": "中に詰めるのは綿。食べ物でも、何かを隠す袋でもない。",
       "voice": "「形をまねて作るんだよ。中に何か入れて渡すためじゃない」",
-      "observation": "布と綿で、何かの形をまねている。"
+      "observation": "布と綿で、何かの形をまねている。",
+      "message": "近くの家にも、作りかけがありました。中には綿を詰めるそうです。"
     },
     {
-      "id": "veranda", "number": "03", "name": "民家の縁側", "kind": "届ける人を見る", "panel": "veranda", "x": 29, "y": 62,
+      "id": "veranda",
+      "number": "03",
+      "name": "民家の縁側",
+      "kind": "届ける人を見る",
+      "panel": "veranda",
+      "x": 29,
+      "y": 62,
       "alt": "赤ん坊を抱く母親。そばには祠で見た物と同じ赤い供え物と、運ぶためのかご。",
       "caption": "赤ん坊を抱く人のそばにも、同じ赤い包みがある。",
       "voice": "「この子が、お腹いっぱいになりますように。それだけをお願いしたの」",
-      "observation": "赤ん坊を育てる人が、子のために願っている。"
+      "observation": "赤ん坊を育てる人が、子のために願っている。",
+      "message": "届ける方は「この子が、お腹いっぱいになりますように」と話していました。"
     }
   ],
   "slots": [
-    {"id":"shape", "label":"包みがまねている形", "options":[
-      {"id":"fruit", "label":"二つの木の実"},
-      {"id":"breast", "label":"乳房"},
-      {"id":"eyes", "label":"見張るための目"}
-    ]},
-    {"id":"purpose", "label":"託されている願い", "options":[
-      {"id":"harvest", "label":"作物が豊かに実ること"},
-      {"id":"ward", "label":"集落に災いが入らないこと"},
-      {"id":"milk", "label":"母乳が出ること"}
-    ]}
+    {
+      "id": "purpose",
+      "label": "託されている願い",
+      "options": [
+        {
+          "id": "harvest",
+          "label": "作物が豊かに実ること"
+        },
+        {
+          "id": "ward",
+          "label": "集落に災いが入らないこと"
+        },
+        {
+          "id": "milk",
+          "label": "母乳が出ること"
+        }
+      ]
+    }
   ],
-  "solution": {"shape":"breast", "purpose":"milk"},
-  "points": {"shape":40,"purpose":60},
+  "solution": {
+    "purpose": "milk"
+  },
+  "points": {
+    "purpose": 100
+  },
   "reveal": {
     "title": "赤い布に託したのは、子を育てる願いだった。",
     "lead": "この物語の包みは、乳房の形をまねた供え物。母親は、子に飲ませる母乳が出ることを願い、祠へ届けようとしていました。",
     "proofs": [
-      {"sceneId":"shrine", "text":"棚の供え物は、どれも二つの丸いふくらみを持っています。"},
-      {"sceneId":"workshop", "text":"中身を贈る包みではなく、綿を詰めて形そのものを作っています。"},
-      {"sceneId":"veranda", "text":"同じ物を持つ人は赤ん坊を抱き、子がお腹いっぱいになることを願っています。"}
+      {
+        "sceneId": "shrine",
+        "text": "棚の供え物は、どれも二つの丸いふくらみを持っています。"
+      },
+      {
+        "sceneId": "workshop",
+        "text": "中身を贈る包みではなく、綿を詰めて形そのものを作っています。"
+      },
+      {
+        "sceneId": "veranda",
+        "text": "同じ物を持つ人は赤ん坊を抱き、子がお腹いっぱいになることを願っています。"
+      }
     ],
     "story": "調査員には、最初、赤い包みが何かを閉じ込める物に見えました。けれど、縫いかけの形と、子を抱く人の言葉を合わせると、意味が変わります。祠に集まっていたのは、誰かへの呪いではなく、子を育てたいという一人ひとりの願いでした。この集落と人物のやり取りは、このゲームのために作った物語です。",
     "realTitle": "着想元は、岩手県・遠野のカッパ淵。",
     "realStory": "遠野市観光協会の案内には、カッパ淵のほとりの小さな祠が乳神を祀り、乳の出を願う女性が、赤い布で乳房の形を作って納めたと紹介されています。ゲーム内の民家や人物は実在の住民を描いたものではありません。",
-    "source": {"label":"遠野市観光協会「カッパ淵」", "url":"https://tonojikan.jp/tourism/kappabuchi-pool/", "readAt":"2026-10-23", "scope":"乳神、乳の出を願うこと、赤い布で乳房の形を作る供え物。既存３話デモで本文確認済み。"}
-  }
+    "source": {
+      "label": "遠野市観光協会「カッパ淵」",
+      "url": "https://tonojikan.jp/tourism/kappabuchi-pool/",
+      "readAt": "2026-10-23",
+      "scope": "乳神、乳の出を願うこと、赤い布で乳房の形を作る供え物。既存３話デモで本文確認済み。"
+    }
+  },
+  "question": "この供え物に託された願いは？"
 }
