@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import content from '../content/image-connections.json' with { type: 'json' };
+import content from '../content/word-connections.json' with { type: 'json' };
 
 export const CONNECTIONS_VERSION = content.version;
 const sorted = ids => [...ids].sort().join(',');
@@ -16,13 +16,13 @@ function savedFor(session) {
   return session.connections[CONNECTIONS_VERSION] ||= newGame();
 }
 function publicGroup(group, found) {
-  return { title: group.title, lead: group.lead, detail: group.detail, color: group.color, tileIds: group.tileIds, found };
+  return { title: group.title, lead: group.lead, detail: group.detail, facts: group.facts, difficulty: group.difficulty, color: group.color, tileIds: group.tileIds, found };
 }
 export function connectionsState(session) {
   const saved = savedFor(session), ended = saved.status !== 'playing';
   return {
     version: CONNECTIONS_VERSION, runId: saved.runId, title: content.title, fileNumber: content.fileNumber,
-    imageUrl: content.imageUrl, groupSize: content.groupSize, maxMistakes: content.maxMistakes,
+    displayMode: content.displayMode, groupSize: content.groupSize, maxMistakes: content.maxMistakes,
     fictionNote: content.fictionNote, demo: true, status: saved.status,
     tiles: saved.order.map(id => content.tiles.find(t => t.id === id)),
     groups: saved.solved.map(id => publicGroup(content.groups.find(g => g.id === id), true)),
@@ -46,21 +46,21 @@ export function connectionsApi({ req, res, pathname, session, body, persist, sen
     session.connections[CONNECTIONS_VERSION] = replacement; persist(); return respond(200);
   }
   if (!['/api/connections/guess', '/api/connections/reveal'].includes(pathname)) return send(res, 404, { error: '操作が見つかりません。' });
-  if (body.runId !== saved.runId) return respond(409, { kind: 'stale', message: '記録が更新されています。写真を選び直してください。' });
+    if (body.runId !== saved.runId) return respond(409, { kind: 'stale', message: '記録が更新されています。単語を選び直してください。' });
   if (pathname === '/api/connections/reveal') {
     if (body.confirm !== true) return send(res, 400, { error: '答えを開く確認が必要です。' });
     if (saved.status === 'playing') { saved.status = 'revealed'; persist(); }
     return respond(200);
   }
   const ids = body.tileIds;
-  if (!Array.isArray(ids) || ids.length !== content.groupSize || new Set(ids).size !== content.groupSize || !ids.every(id => typeof id === 'string' && content.tiles.some(t => t.id === id))) return send(res, 400, { error: '異なる写真を４枚選んでください。' });
+  if (!Array.isArray(ids) || ids.length !== content.groupSize || new Set(ids).size !== content.groupSize || !ids.every(id => typeof id === 'string' && content.tiles.some(t => t.id === id))) return send(res, 400, { error: '異なる単語を４つ選んでください。' });
   const key = sorted(ids), receipt = saved.guesses.find(g => g.requestId === body.requestId);
-  if (receipt) return receipt.key === key ? respond(200, receipt.feedback) : send(res, 409, { error: '送信内容が変わっています。写真を選び直してください。', state: connectionsState(session) });
+  if (receipt) return receipt.key === key ? respond(200, receipt.feedback) : send(res, 409, { error: '送信内容が変わっています。単語を選び直してください。', state: connectionsState(session) });
   if (saved.status !== 'playing') return respond(409, { kind: 'ended', message: 'この記録は答え合わせ済みです。' });
   const oldGuess = saved.guesses.find(g => g.key === key);
   if (oldGuess) return respond(200, { kind: 'repeated', message: 'その組み合わせは照合済みです。残り回数は減りません。' });
   const solvedTiles = saved.solved.flatMap(id => content.groups.find(g => g.id === id).tileIds);
-  if (ids.some(id => solvedTiles.includes(id))) return respond(409, { kind: 'stale', message: 'すでに繋がった写真が含まれています。選び直してください。' });
+  if (ids.some(id => solvedTiles.includes(id))) return respond(409, { kind: 'stale', message: 'すでに繋がった単語が含まれています。選び直してください。' });
   const group = content.groups.find(g => sorted(g.tileIds) === key);
   let feedback;
   if (group) {
